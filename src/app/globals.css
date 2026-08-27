@@ -1,0 +1,220 @@
+@import "tailwindcss";
+
+/* ===========================================================================
+   Ezike Oba design tokens
+   ---------------------------------------------------------------------------
+   The palette is drawn from the region rather than from other social networks:
+   a deep palm green as the primary, harvest gold as the accent, and red-clay
+   terracotta for warmth. Deliberately not blue.
+
+   Every colour is defined here in the light block first, then overridden for
+   dark. Nothing gets its only definition inside a media query.
+   =========================================================================== */
+
+:root {
+  /* Brand ------------------------------------------------------------------ */
+  --eo-green-50: #eef7f2;
+  --eo-green-100: #d3ebdf;
+  --eo-green-200: #a7d7bf;
+  --eo-green-300: #6fbc98;
+  --eo-green-400: #3f9c73;
+  --eo-green-500: #1f7d57;
+  --eo-green-600: #146045;
+  --eo-green-700: #0f4a36;
+  --eo-green-800: #0b3628;
+  --eo-green-900: #07241b;
+
+  --eo-gold-100: #fbf0d6;
+  --eo-gold-300: #ecc879;
+  --eo-gold-500: #d99a2b;
+  --eo-gold-700: #a86f14;
+
+  --eo-clay-300: #e0a184;
+  --eo-clay-500: #b4552d;
+  --eo-clay-700: #85391b;
+
+  /* Semantic --------------------------------------------------------------- */
+  --background: #fbfaf7;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f4f2ed;
+  --foreground: #131a17;
+  --muted-foreground: #5c6b64;
+  --border: #e2e0d9;
+  --border-strong: #cbc8be;
+
+  --primary: var(--eo-green-600);
+  --primary-hover: var(--eo-green-700);
+  --primary-foreground: #ffffff;
+  --accent: var(--eo-gold-500);
+  --accent-foreground: #2a1d05;
+
+  --success: #15803d;
+  --warning: var(--eo-gold-700);
+  --danger: #b42318;
+  --danger-foreground: #ffffff;
+
+  --ring: var(--eo-green-400);
+
+  /* Elevation -------------------------------------------------------------- */
+  --shadow-sm: 0 1px 2px rgb(7 36 27 / 0.06);
+  --shadow-md: 0 4px 12px -2px rgb(7 36 27 / 0.10);
+  --shadow-lg: 0 16px 40px -12px rgb(7 36 27 / 0.18);
+
+  --radius-card: 0.875rem;
+}
+
+:root:not([data-theme="light"]) {
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --background: #0a1310;
+    --surface: #0f1b17;
+    --surface-raised: #142320;
+    --surface-sunken: #081410;
+    --foreground: #e8f0eb;
+    --muted-foreground: #93a69c;
+    --border: #1e302a;
+    --border-strong: #2c443b;
+
+    --primary: var(--eo-green-400);
+    --primary-hover: var(--eo-green-300);
+    --primary-foreground: #04150f;
+    --accent: var(--eo-gold-300);
+    --accent-foreground: #23190a;
+
+    --success: #4ade80;
+    --danger: #f87171;
+    --danger-foreground: #1a0606;
+
+    --ring: var(--eo-green-300);
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 16px 40px -12px rgb(0 0 0 / 0.6);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background: #0a1310;
+  --surface: #0f1b17;
+  --surface-raised: #142320;
+  --surface-sunken: #081410;
+  --foreground: #e8f0eb;
+  --muted-foreground: #93a69c;
+  --border: #1e302a;
+  --border-strong: #2c443b;
+
+  --primary: var(--eo-green-400);
+  --primary-hover: var(--eo-green-300);
+  --primary-foreground: #04150f;
+  --accent: var(--eo-gold-300);
+  --accent-foreground: #23190a;
+
+  --success: #4ade80;
+  --danger: #f87171;
+  --danger-foreground: #1a0606;
+
+  --ring: var(--eo-green-300);
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 16px 40px -12px rgb(0 0 0 / 0.6);
+}
+
+/* Expose the tokens to Tailwind's utility generator. */
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+
+  --color-eo-green-50: var(--eo-green-50);
+  --color-eo-green-100: var(--eo-green-100);
+  --color-eo-green-500: var(--eo-green-500);
+  --color-eo-green-600: var(--eo-green-600);
+  --color-eo-green-900: var(--eo-green-900);
+  --color-eo-gold-100: var(--eo-gold-100);
+  --color-eo-gold-500: var(--eo-gold-500);
+  --color-eo-clay-500: var(--eo-clay-500);
+
+  /* Platform UI stack: no downloaded font bytes, no CDN dependency, no
+     layout shift. See the note in app/layout.tsx. */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  --radius-card: var(--radius-card);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* A single, consistent focus treatment everywhere. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+
+  /* Respect the reader's motion preference across the whole app. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Screen-reader-only text that still receives focus when tabbed to. */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}

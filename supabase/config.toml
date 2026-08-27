@@ -1,0 +1,27 @@
+# Supabase CLI configuration.
+#
+# Deliberately minimal: the CLI supplies defaults for everything omitted, and
+# unknown keys from a mismatched CLI version cause hard errors. If you need to
+# customise local ports or auth settings, run `npx supabase init --force` to
+# regenerate a full file for your installed CLI version, then re-apply the
+# project_id below.
+#
+# This file contains no secrets. Project credentials live in .env.local.
+
+project_id = "ezike-oba"
+
+[db]
+# Must match the Postgres major version of the linked project, or `db reset`
+# and `db push` can disagree with production.
+major_version = 15
+
+[auth]
+# Overridden per environment. For production these are set in the Supabase
+# dashboard under Authentication > URL Configuration.
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/callback"]
+
+[auth.email]
+# Email confirmation is ON: Ezike Oba accounts must represent real people, so
+# an address has to be proven before the account becomes usable.
+enable_confirmations = true

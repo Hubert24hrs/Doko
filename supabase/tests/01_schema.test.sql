@@ -9,6 +9,12 @@
 -- of these fail, the corresponding claim in docs/ARCHITECTURE.md is false.
 
 begin;
+
+-- pgTAP installs into the `extensions` schema on hosted Supabase, which is not
+-- on the SQL Editor's default search_path. Without this line every assertion
+-- fails with "function plan(integer) does not exist". `set local` reverts when
+-- the surrounding transaction ends.
+set local search_path = public, extensions, pg_temp;
 select plan(38);
 
 -- ---------------------------------------------------------------------------

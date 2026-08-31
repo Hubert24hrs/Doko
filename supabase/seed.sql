@@ -133,13 +133,20 @@ on conflict do nothing;
 -- INEC council wards, recorded as 'area' entities under their town.
 -- Wards are an electoral overlay, not the traditional hierarchy, so they hang
 -- off the town rather than pretending to be districts.
+--
+-- Ward slugs are prefixed 'ward-'. Several ward names repeat a district name
+-- exactly -- 'Ezzodo' is both a district of Enugu-Ezike and one of its council
+-- wards -- and since both hang off the same town they would collide on the
+-- (parent_id, slug) unique index. Without the prefix the ward is silently
+-- dropped by ON CONFLICT DO NOTHING, which is exactly what happened on the
+-- first real run: 19 wards loaded instead of 20.
 -- ---------------------------------------------------------------------------
 
 with town as (
   select id from public.geo_entities where kind = 'town' and slug = 'enugu-ezike'
 )
 insert into public.geo_entities (parent_id, kind, name, slug, description, sort_order)
-select town.id, 'area', w.name, public.slugify(w.name)::citext, 'INEC council ward.', w.ord
+select town.id, 'area', w.name, ('ward-' || public.slugify(w.name))::citext, 'INEC council ward.', w.ord
   from town,
        (values
          ('Essodo I', 0), ('Essodo II', 1), ('Essodo III', 2),
@@ -156,7 +163,7 @@ with town as (
   select id from public.geo_entities where kind = 'town' and slug = 'ette'
 )
 insert into public.geo_entities (parent_id, kind, name, slug, description, sort_order)
-select town.id, 'area', w.name, public.slugify(w.name)::citext, 'INEC council ward.', w.ord
+select town.id, 'area', w.name, ('ward-' || public.slugify(w.name))::citext, 'INEC council ward.', w.ord
   from town,
        (values
          ('Ette I', 0), ('Ette II', 1), ('Ette Central', 2)

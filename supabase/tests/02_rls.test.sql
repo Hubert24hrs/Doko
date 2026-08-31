@@ -1,6 +1,13 @@
 -- Ezike Oba :: Row Level Security behaviour tests
 --
--- Run with:  supabase test db
+-- Run either way:
+--   * locally:  supabase test db
+--   * hosted:   paste this whole file into the Supabase SQL Editor
+--               (requires: create extension if not exists pgtap with schema extensions;)
+--
+-- Written in portable SQL only -- no psql meta-commands -- so the same file
+-- works in both. The whole run is wrapped in begin/rollback, so it leaves
+-- nothing behind even against a live database.
 --
 -- These are the tests that decide whether the authorization model actually
 -- holds. Each one impersonates a real role via `set local role` plus a forged
@@ -14,26 +21,22 @@ select plan(24);
 -- Fixtures
 -- ---------------------------------------------------------------------------
 
--- Deterministic ids so assertions can reference them.
-\set citizen_a  '11111111-1111-1111-1111-111111111111'
-\set citizen_b  '22222222-2222-2222-2222-222222222222'
-\set outsider   '33333333-3333-3333-3333-333333333333'
-\set admin_id   '44444444-4444-4444-4444-444444444444'
-\set super_id   '55555555-5555-5555-5555-555555555555'
+-- Deterministic ids, written literally. The Supabase SQL Editor is not
+-- psql, so backslash-set and :'var' meta-syntax cannot be used there.
 
 -- auth.users rows. The handle_new_user trigger creates matching profiles and
 -- a 'citizen' role for each.
 insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
 values
-  (:'citizen_a'::uuid, '00000000-0000-0000-0000-000000000000', 'authenticated',
+  ('11111111-1111-1111-1111-111111111111'::uuid, '00000000-0000-0000-0000-000000000000', 'authenticated',
    'authenticated', 'a@example.com', '{"username":"citizen_a","full_name":"Citizen A"}'),
-  (:'citizen_b'::uuid, '00000000-0000-0000-0000-000000000000', 'authenticated',
+  ('22222222-2222-2222-2222-222222222222'::uuid, '00000000-0000-0000-0000-000000000000', 'authenticated',
    'authenticated', 'b@example.com', '{"username":"citizen_b","full_name":"Citizen B"}'),
-  (:'outsider'::uuid,  '00000000-0000-0000-0000-000000000000', 'authenticated',
+  ('33333333-3333-3333-3333-333333333333'::uuid,  '00000000-0000-0000-0000-000000000000', 'authenticated',
    'authenticated', 'c@example.com', '{"username":"outsider","full_name":"Outsider"}'),
-  (:'admin_id'::uuid,  '00000000-0000-0000-0000-000000000000', 'authenticated',
+  ('44444444-4444-4444-4444-444444444444'::uuid,  '00000000-0000-0000-0000-000000000000', 'authenticated',
    'authenticated', 'admin@example.com', '{"username":"the_admin","full_name":"The Admin"}'),
-  (:'super_id'::uuid,  '00000000-0000-0000-0000-000000000000', 'authenticated',
+  ('55555555-5555-5555-5555-555555555555'::uuid,  '00000000-0000-0000-0000-000000000000', 'authenticated',
    'authenticated', 'super@example.com', '{"username":"the_super","full_name":"The Super"}');
 
 -- The trigger should have created five profiles.
@@ -44,22 +47,22 @@ select is(
 );
 
 select is(
-  (select username::text from public.profiles where id = :'citizen_a'::uuid),
+  (select username::text from public.profiles where id = '11111111-1111-1111-1111-111111111111'::uuid),
   'citizen_a',
   'the signup trigger honours the requested username'
 );
 
 select is(
   (select count(*)::int from public.user_roles
-    where user_id = :'citizen_a'::uuid and role = 'citizen'),
+    where user_id = '11111111-1111-1111-1111-111111111111'::uuid and role = 'citizen'),
   1,
   'every new member starts as a citizen'
 );
 
 -- Grant elevated roles.
 insert into public.user_roles (user_id, role) values
-  (:'admin_id'::uuid, 'admin'),
-  (:'super_id'::uuid, 'super_admin');
+  ('44444444-4444-4444-4444-444444444444'::uuid, 'admin'),
+  ('55555555-5555-5555-5555-555555555555'::uuid, 'super_admin');
 
 -- Geography, and shared community membership for A and B.
 insert into public.geo_entities (id, parent_id, kind, name, slug)
@@ -70,12 +73,12 @@ values ('aaaaaaaa-0000-0000-0000-000000000002',
 
 update public.profiles
    set town_id = 'aaaaaaaa-0000-0000-0000-000000000002'
- where id in (:'citizen_a'::uuid, :'citizen_b'::uuid);
+ where id in ('11111111-1111-1111-1111-111111111111'::uuid, '22222222-2222-2222-2222-222222222222'::uuid);
 
 -- Visibility fixtures.
-update public.profiles set visibility = 'public'    where id = :'citizen_a'::uuid;
-update public.profiles set visibility = 'community' where id = :'citizen_b'::uuid;
-update public.profiles set visibility = 'private'   where id = :'outsider'::uuid;
+update public.profiles set visibility = 'public'    where id = '11111111-1111-1111-1111-111111111111'::uuid;
+update public.profiles set visibility = 'community' where id = '22222222-2222-2222-2222-222222222222'::uuid;
+update public.profiles set visibility = 'private'   where id = '33333333-3333-3333-3333-333333333333'::uuid;
 
 -- Seed one audit row through the only supported path.
 set local role authenticated;
@@ -108,7 +111,7 @@ end $$;
 -- audit_logs
 -- ===========================================================================
 
-select pg_temp.become(:'citizen_a'::uuid);
+select pg_temp.become('11111111-1111-1111-1111-111111111111'::uuid);
 select is(
   (select count(*)::int from public.audit_logs),
   0,
@@ -116,7 +119,7 @@ select is(
 );
 reset role;
 
-select pg_temp.become(:'admin_id'::uuid);
+select pg_temp.become('44444444-4444-4444-4444-444444444444'::uuid);
 select ok(
   (select count(*) from public.audit_logs) > 0,
   'an admin can read audit_logs'
@@ -124,7 +127,7 @@ select ok(
 reset role;
 
 -- Nobody may rewrite history -- not even a super_admin.
-select pg_temp.become(:'super_id'::uuid);
+select pg_temp.become('55555555-5555-5555-5555-555555555555'::uuid);
 select is(
   (with attempted as (
      update public.audit_logs set action = 'tampered' returning 1
@@ -145,7 +148,7 @@ reset role;
 -- user_roles -- the privilege escalation boundary
 -- ===========================================================================
 
-select pg_temp.become(:'citizen_a'::uuid);
+select pg_temp.become('11111111-1111-1111-1111-111111111111'::uuid);
 select throws_ok(
   $$insert into public.user_roles (user_id, role)
     values ('11111111-1111-1111-1111-111111111111', 'admin')$$,
@@ -161,14 +164,14 @@ select throws_ok(
   'a citizen cannot grant themselves moderator'
 );
 select is(
-  (select count(*)::int from public.user_roles where user_id = :'citizen_b'::uuid),
+  (select count(*)::int from public.user_roles where user_id = '22222222-2222-2222-2222-222222222222'::uuid),
   0,
   'a citizen cannot read another member''s roles'
 );
 reset role;
 
 -- An admin may appoint a moderator but NOT another admin.
-select pg_temp.become(:'admin_id'::uuid);
+select pg_temp.become('44444444-4444-4444-4444-444444444444'::uuid);
 select lives_ok(
   $$insert into public.user_roles (user_id, role)
     values ('22222222-2222-2222-2222-222222222222', 'moderator')$$,
@@ -183,7 +186,7 @@ select throws_ok(
 );
 reset role;
 
-select pg_temp.become(:'super_id'::uuid);
+select pg_temp.become('55555555-5555-5555-5555-555555555555'::uuid);
 select lives_ok(
   $$insert into public.user_roles (user_id, role)
     values ('33333333-3333-3333-3333-333333333333', 'admin')$$,
@@ -197,51 +200,51 @@ reset role;
 
 -- A citizen cannot verify or unsuspend themselves; the guard trigger silently
 -- restores the previous values rather than erroring.
-select pg_temp.become(:'citizen_a'::uuid);
+select pg_temp.become('11111111-1111-1111-1111-111111111111'::uuid);
 update public.profiles set is_verified = true, verified_at = now()
- where id = :'citizen_a'::uuid;
+ where id = '11111111-1111-1111-1111-111111111111'::uuid;
 reset role;
 
 select is(
-  (select is_verified from public.profiles where id = :'citizen_a'::uuid),
+  (select is_verified from public.profiles where id = '11111111-1111-1111-1111-111111111111'::uuid),
   false,
   'a member cannot grant themselves a verified badge'
 );
 
-select pg_temp.become(:'citizen_a'::uuid);
-update public.profiles set is_suspended = false where id = :'citizen_a'::uuid;
-update public.profiles set bio = 'I am from Enugu-Ezike' where id = :'citizen_a'::uuid;
+select pg_temp.become('11111111-1111-1111-1111-111111111111'::uuid);
+update public.profiles set is_suspended = false where id = '11111111-1111-1111-1111-111111111111'::uuid;
+update public.profiles set bio = 'I am from Enugu-Ezike' where id = '11111111-1111-1111-1111-111111111111'::uuid;
 reset role;
 
 select is(
-  (select bio from public.profiles where id = :'citizen_a'::uuid),
+  (select bio from public.profiles where id = '11111111-1111-1111-1111-111111111111'::uuid),
   'I am from Enugu-Ezike',
   'a member CAN still edit their own ordinary fields'
 );
 
 -- Visibility: outsider shares no community with B.
-select pg_temp.become(:'outsider'::uuid);
+select pg_temp.become('33333333-3333-3333-3333-333333333333'::uuid);
 select is(
-  (select count(*)::int from public.profiles where id = :'citizen_b'::uuid),
+  (select count(*)::int from public.profiles where id = '22222222-2222-2222-2222-222222222222'::uuid),
   0,
   'a community-only profile is hidden from someone outside the community'
 );
 select is(
-  (select count(*)::int from public.profiles where id = :'citizen_a'::uuid),
+  (select count(*)::int from public.profiles where id = '11111111-1111-1111-1111-111111111111'::uuid),
   1,
   'a public profile is visible to any signed-in member'
 );
 select is(
-  (select count(*)::int from public.profiles where id = :'outsider'::uuid),
+  (select count(*)::int from public.profiles where id = '33333333-3333-3333-3333-333333333333'::uuid),
   1,
   'a member can always see their own profile, even when private'
 );
 reset role;
 
 -- A shares a town with B, so the community-only profile resolves.
-select pg_temp.become(:'citizen_a'::uuid);
+select pg_temp.become('11111111-1111-1111-1111-111111111111'::uuid);
 select is(
-  (select count(*)::int from public.profiles where id = :'citizen_b'::uuid),
+  (select count(*)::int from public.profiles where id = '22222222-2222-2222-2222-222222222222'::uuid),
   1,
   'a community-only profile IS visible within the same community'
 );

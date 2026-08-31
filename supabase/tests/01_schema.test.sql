@@ -1,6 +1,8 @@
 -- Ezike Oba :: schema and integrity tests
 --
--- Run with:  supabase test db
+-- Run either way:
+--   * locally:  supabase test db
+--   * hosted:   paste this whole file into the Supabase SQL Editor
 -- Requires pgTAP, which the Supabase local stack enables automatically.
 --
 -- These verify the structural guarantees the application relies on. If any

@@ -10,7 +10,7 @@ npm run verify        # typecheck + lint + test
 
 ## Current state -- honest
 
-**44 unit tests, 4 files, all passing.** Typecheck clean, lint clean,
+**56 unit tests, 5 files, all passing.** Typecheck clean, lint clean,
 production build clean.
 
 **No integration, RLS, or end-to-end tests exist yet**, because no database
@@ -23,6 +23,7 @@ until it has actually run.
 | Redirect guard | `tests/unit/redirect.test.ts` | 9 | open-redirect defence incl. protocol-relative, backslash, control chars |
 | Geo tree | `tests/unit/geo-tree.test.ts` | 9 | hierarchy nesting, siblings, orphan promotion, immutability |
 | Env schema | `tests/unit/env.test.ts` | 6 | required variables, URL validation, site-URL default, multi-error reporting |
+| Profile schema | `tests/unit/profile-schemas.test.ts` | 12 | blank optionals -> null, optional village, phone normalisation, http(s)-only website, bio length, visibility enum, privileged fields stripped |
 
 ## Configuration
 

@@ -46,10 +46,11 @@ be without a live Supabase project.**
 * Auth: register + login + sign-out + email-callback route, all server-validated
 * Route protection via `src/proxy.ts`
 * Session/role helpers (`requireUser`, `requireStaff`, `requireAdmin`)
-* Public landing page, communities directory, authenticated home, admin overview, admin communities
+* Public landing page, communities directory, authenticated home, profile
+  settings, admin overview, admin communities
 * SQL migrations 001-006 (schema, RLS, audit, rate limits) -- **written, not yet executed**
 * Seed data for the real Igbo-Eze North hierarchy -- **written, not yet executed**
-* 44 unit tests passing; typecheck clean; lint clean; production build clean
+* 56 unit tests passing; typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
   `/login?next=...`, and no secrets appear in the HTML
@@ -102,6 +103,7 @@ src/
     (auth)/login|register/  auth route group
     admin/                  staff console
     auth/callback/          email-confirmation handler
+    settings/               profile editing
     communities/            public directory
     home/                   authenticated landing
     globals.css             ALL design tokens live here
@@ -113,6 +115,7 @@ src/
     admin/queries.ts
     auth/{actions,schemas,session}.ts, components/
     geo/{queries,snapshot}.ts
+    profile/{actions,schemas}.ts, components/
   lib/
     env.ts                  public env (browser-safe)
     env.server.ts           secrets, `server-only` guarded

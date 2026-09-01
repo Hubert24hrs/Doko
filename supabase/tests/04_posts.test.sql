@@ -14,7 +14,7 @@ begin;
 -- pgTAP installs into the `extensions` schema on hosted Supabase, which is not
 -- on the SQL Editor's default search_path.
 set local search_path = public, extensions, pg_temp;
-select plan(21);
+select plan(22);
 
 -- Assertion output is captured so failures arrive named. A real table, not
 -- TEMP: assertions run under SET ROLE and reaching another role's temporary
@@ -46,10 +46,14 @@ values
    'authenticated', 'authenticated', 'pm@example.com', '{"username":"post_mod","full_name":"Post Mod"}'),
   -- A suspended member.
   ('a5555555-5555-5555-5555-555555555555'::uuid, '00000000-0000-0000-0000-000000000000',
-   'authenticated', 'authenticated', 'ps@example.com', '{"username":"post_susp","full_name":"Post Susp"}');
+   'authenticated', 'authenticated', 'ps@example.com', '{"username":"post_susp","full_name":"Post Susp"}'),
+  -- An admin, whose only job is to carry out the suspension below.
+  ('a6666666-6666-6666-6666-666666666666'::uuid, '00000000-0000-0000-0000-000000000000',
+   'authenticated', 'authenticated', 'pad@example.com', '{"username":"post_admin","full_name":"Post Admin"}');
 
-insert into public.user_roles (user_id, role)
-values ('a4444444-4444-4444-4444-444444444444'::uuid, 'moderator');
+insert into public.user_roles (user_id, role) values
+  ('a4444444-4444-4444-4444-444444444444'::uuid, 'moderator'),
+  ('a6666666-6666-6666-6666-666666666666'::uuid, 'admin');
 
 -- Geography: one town, two villages beneath it.
 insert into public.geo_entities (id, parent_id, kind, name, slug) values
@@ -69,8 +73,18 @@ update public.profiles set village_id = 'b0000000-0000-0000-0000-000000000004',
                            town_id    = 'b0000000-0000-0000-0000-000000000002'
  where id = 'a3333333-3333-3333-3333-333333333333'::uuid;
 
-update public.profiles set is_suspended = true
- where id = 'a5555555-5555-5555-5555-555555555555'::uuid;
+-- Suspension must be carried out BY AN ADMIN, not by raw SQL.
+--
+-- profiles_guard_privileged_columns() silently restores is_suspended for any
+-- caller that is not an admin, and a statement run directly as postgres has no
+-- auth.uid(), so is_admin() is false and the guard treats it as an ordinary
+-- member. Suspending here without impersonating an admin looked like it
+-- worked, changed nothing, and made the next assertion fail for a reason that
+-- had nothing to do with posting.
+--
+-- The trigger is behaving correctly; the fixture was wrong. Doing it the way
+-- the platform really does it also proves an admin CAN suspend, which is
+-- asserted immediately below.
 
 -- Posts: one public, one scoped to Village One.
 insert into public.posts (id, author_id, body, geo_id, visibility) values
@@ -94,6 +108,20 @@ begin
   execute 'set local role anon';
   execute 'set local request.jwt.claims to ''{"role":"anon"}''';
 end $$;
+
+-- Now suspend, as the admin.
+select pg_temp.become('a6666666-6666-6666-6666-666666666666'::uuid);
+update public.profiles set is_suspended = true
+ where id = 'a5555555-5555-5555-5555-555555555555'::uuid;
+reset role;
+
+-- Confirm the suspension actually took. Without this, the guard silently
+-- undoing it would surface later as an unrelated-looking failure.
+insert into public._tap_out(line) select ok(
+  (select is_suspended from public.profiles
+    where id = 'a5555555-5555-5555-5555-555555555555'::uuid),
+  'an admin can suspend a member, and the change persists'
+);
 
 -- ===========================================================================
 -- Reading

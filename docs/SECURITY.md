@@ -216,3 +216,38 @@ here -- availability beats a partial abuse control, and Supabase Auth throttles
 independently. But a fail-open control cannot be trusted to announce its own
 death. It needs a test that calls it and asserts it actually refuses, which is
 what `02_rls` now does. Any future fail-open control gets the same treatment.
+
+---
+
+## Gotcha: privileged profile fields cannot be set from raw SQL
+
+`profiles_guard_privileged_columns()` restores `is_verified`, `is_suspended`,
+`suspended_until`, `deleted_at` and `created_at` from the previous row for any
+caller where `public.is_admin()` is false. It does this **silently**, because a
+client sending a whole row back should not be able to grant itself a badge, and
+raising there would turn an ordinary profile save into an error.
+
+A statement run directly in the SQL Editor has no `auth.uid()`, so `is_admin()`
+is false and the guard treats it as an ordinary member. The consequence:
+
+```sql
+-- Looks like it works. Changes nothing.
+update public.profiles set is_suspended = true where username = 'someone';
+```
+
+To suspend or verify a member from the SQL Editor, adopt an admin identity
+first:
+
+```sql
+begin;
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"<an-admin-user-uuid>","role":"authenticated"}';
+update public.profiles set is_suspended = true where username = 'someone';
+reset role;
+commit;
+```
+
+This cost a confusing test failure: a suspended-member fixture that was never
+actually suspended, surfacing as "a suspended member CANNOT post" failing, with
+nothing wrong in the posts policies at all. The behaviour is correct and worth
+keeping; it just needs to be known.

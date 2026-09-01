@@ -20,6 +20,12 @@ export interface PostActionState {
    * setState during render.
    */
   postedAt?: string;
+  /**
+   * The new post's id. Images cannot be uploaded before this exists: the
+   * storage policy authorises against the post at the path's first segment,
+   * so there is nothing to check until the post is real.
+   */
+  postId?: string;
 }
 
 function toFieldErrors(
@@ -74,12 +80,15 @@ export async function createPostAction(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("posts").insert({
-    author_id: user.id,
-    body: parsed.data.body,
-    geo_id: parsed.data.geoId,
-    visibility: parsed.data.visibility,
-  });
+  const { data, error } = await supabase
+    .from("posts")
+    .insert({
+      author_id: user.id,
+      body: parsed.data.body,
+      geo_id: parsed.data.geoId,
+      visibility: parsed.data.visibility,
+    })
+    .select("id");
 
   if (error) {
     console.error("[posts.create] insert failed", error.message);
@@ -95,9 +104,18 @@ export async function createPostAction(
     return { ok: false, formError: "Your post could not be saved. Please try again." };
   }
 
+  if (!data || data.length === 0) {
+    return { ok: false, formError: "Your post could not be saved. Please try again." };
+  }
+
   revalidatePath("/feed");
   revalidatePath("/home");
-  return { ok: true, message: "Posted.", postedAt: new Date().toISOString() };
+  return {
+    ok: true,
+    message: "Posted.",
+    postedAt: new Date().toISOString(),
+    postId: data[0].id,
+  };
 }
 
 export async function updatePostAction(

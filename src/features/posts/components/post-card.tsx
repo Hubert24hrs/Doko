@@ -8,6 +8,8 @@ import type { FeedPost } from "../queries";
 
 import { PostActions } from "./post-actions";
 import { PostBody } from "./post-body";
+import { PostImages } from "./post-images";
+import type { PostImage } from "../media-queries";
 
 /** Relative time, in words, without pulling in a date library for one string. */
 function timeAgo(iso: string): { label: string; exact: string } {
@@ -38,6 +40,7 @@ export function PostCard({
   canManage,
   canEdit = false,
   showConversationLink = false,
+  images = [],
   className,
 }: {
   post: FeedPost;
@@ -51,6 +54,7 @@ export function PostCard({
   canEdit?: boolean;
   /** Feed cards link into the post; the post page itself does not. */
   showConversationLink?: boolean;
+  images?: PostImage[];
   className?: string;
 }) {
   const author = post.author;
@@ -126,6 +130,8 @@ export function PostCard({
         </div>
 
         <PostBody postId={post.id} body={post.body} canEdit={canEdit} />
+
+        <PostImages images={images} />
 
         {showConversationLink ? (
           <Link

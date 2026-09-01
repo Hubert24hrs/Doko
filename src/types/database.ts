@@ -166,6 +166,20 @@ export type ReactionRow = {
   created_at: string;
 }
 
+export type PostMediaRow = {
+  id: string;
+  post_id: string;
+  /** '<post_id>/<uuid>.<ext>' — the first segment is read by storage policies. */
+  storage_path: string;
+  mime_type: string;
+  byte_size: number;
+  width: number | null;
+  height: number | null;
+  alt_text: string | null;
+  sort_order: number;
+  created_at: string;
+}
+
 export type GeoTreeNodeRow = {
   id: string;
   kind: GeoKind;
@@ -243,6 +257,15 @@ export interface Database {
         Update: Partial<PostRow>;
         Relationships: [];
       };
+      post_media: {
+        Row: PostMediaRow;
+        Insert: Insertable<
+          PostMediaRow,
+          "id" | "width" | "height" | "alt_text" | "sort_order" | "created_at"
+        >;
+        Update: Partial<PostMediaRow>;
+        Relationships: [];
+      };
       comments: {
         Row: CommentRow;
         Insert: Insertable<
@@ -306,6 +329,7 @@ export interface Database {
         Returns: boolean;
       };
       is_active_member: { Args: { check_user_id?: string }; Returns: boolean };
+      storage_path_post_id: { Args: { object_name: string }; Returns: string | null };
       member_of_geo: {
         Args: { target_geo_id: string | null; check_user_id?: string };
         Returns: boolean;

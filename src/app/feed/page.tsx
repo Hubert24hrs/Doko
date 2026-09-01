@@ -9,6 +9,7 @@ import { requireUser, isStaff } from "@/features/auth/session";
 import { signOutAction } from "@/features/auth/actions";
 import { getVillageOptions } from "@/features/geo/queries";
 import { getFeedPage } from "@/features/posts/queries";
+import { getPostImages } from "@/features/posts/media-queries";
 import { PostComposer, VisibilityHint } from "@/features/posts/components/post-composer";
 import { PostCard } from "@/features/posts/components/post-card";
 
@@ -33,6 +34,9 @@ export default async function FeedPage({
   ]);
 
   const staff = isStaff(user);
+
+  // One query and one batch signing for the whole page, rather than per post.
+  const imagesByPost = await getPostImages(page.posts.map((p) => p.id));
 
   return (
     <>
@@ -102,6 +106,7 @@ export default async function FeedPage({
                 post={post}
                 canManage={post.author_id === user.id || staff}
                 canEdit={post.author_id === user.id}
+                images={imagesByPost.get(post.id) ?? []}
                 showConversationLink
               />
             ))

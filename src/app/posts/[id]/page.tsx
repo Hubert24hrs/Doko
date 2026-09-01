@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/brand/logo";
 import { getSessionUser, isStaff } from "@/features/auth/session";
 import { PostCard } from "@/features/posts/components/post-card";
+import { getPostImages } from "@/features/posts/media-queries";
 import {
   getComments,
   getPostById,
@@ -71,9 +72,10 @@ export default async function PostPage({
   const [post, user] = await Promise.all([getPostById(id), getSessionUser()]);
   if (!post) notFound();
 
-  const [comments, reactions] = await Promise.all([
+  const [comments, reactions, imagesByPost] = await Promise.all([
     getComments(post.id),
     getViewerReactions([post.id]),
+    getPostImages([post.id]),
   ]);
 
   const staff = user ? isStaff(user) : false;
@@ -100,7 +102,12 @@ export default async function PostPage({
       </header>
 
       <main id="main" className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
-        <PostCard post={post} canManage={canManage} canEdit={canEdit} />
+        <PostCard
+          post={post}
+          canManage={canManage}
+          canEdit={canEdit}
+          images={imagesByPost.get(post.id) ?? []}
+        />
 
         {user ? (
           <div className="mt-3">

@@ -23,6 +23,22 @@ begin;
 set local search_path = public, extensions, pg_temp;
 select plan(24);
 
+-- Assertion output is captured so that every failure is NAMED at the end.
+-- The SQL Editor shows only the final statement's result, so pgTAP's
+-- per-assertion "not ok" lines would otherwise scroll past unseen, leaving
+-- only finish()'s summary count -- which tells you how many failed but not
+-- which ones.
+--
+-- A real table rather than TEMP: assertions execute while the session has
+-- SET ROLE to 'authenticated', and reaching another role's temporary schema
+-- is not dependable. It is created inside the transaction, so the closing
+-- rollback removes it completely.
+create table public._tap_out (
+  at   timestamptz not null default clock_timestamp(),
+  line text
+);
+grant insert, select on public._tap_out to public;
+
 -- ---------------------------------------------------------------------------
 -- Fixtures
 -- ---------------------------------------------------------------------------
@@ -46,19 +62,19 @@ values
    'authenticated', 'super@example.com', '{"username":"the_super","full_name":"The Super"}');
 
 -- The trigger should have created five profiles.
-select is(
+insert into public._tap_out(line) select is(
   (select count(*)::int from public.profiles),
   5,
   'handle_new_user created a profile for every new auth user'
 );
 
-select is(
+insert into public._tap_out(line) select is(
   (select username::text from public.profiles where id = '11111111-1111-1111-1111-111111111111'::uuid),
   'citizen_a',
   'the signup trigger honours the requested username'
 );
 
-select is(
+insert into public._tap_out(line) select is(
   (select count(*)::int from public.user_roles
     where user_id = '11111111-1111-1111-1111-111111111111'::uuid and role = 'citizen'),
   1,
@@ -143,7 +159,7 @@ end $$;
 -- ===========================================================================
 
 select pg_temp.become('11111111-1111-1111-1111-111111111111'::uuid);
-select is(
+insert into public._tap_out(line) select is(
   (select count(*)::int from public.audit_logs),
   0,
   'a citizen cannot read audit_logs'
@@ -151,7 +167,7 @@ select is(
 reset role;
 
 select pg_temp.become('44444444-4444-4444-4444-444444444444'::uuid);
-select ok(
+insert into public._tap_out(line) select ok(
   (select count(*) from public.audit_logs) > 0,
   'an admin can read audit_logs'
 );
@@ -159,12 +175,12 @@ reset role;
 
 -- Nobody may rewrite history -- not even a super_admin.
 select pg_temp.become('55555555-5555-5555-5555-555555555555'::uuid);
-select is(
+insert into public._tap_out(line) select is(
   pg_temp.rows_updated_in_audit(),
   0,
   'not even a super_admin can UPDATE an audit row'
 );
-select is(
+insert into public._tap_out(line) select is(
   pg_temp.rows_deleted_from_audit(),
   0,
   'not even a super_admin can DELETE an audit row'
@@ -176,21 +192,21 @@ reset role;
 -- ===========================================================================
 
 select pg_temp.become('11111111-1111-1111-1111-111111111111'::uuid);
-select throws_ok(
+insert into public._tap_out(line) select throws_ok(
   $$insert into public.user_roles (user_id, role)
     values ('11111111-1111-1111-1111-111111111111', 'admin')$$,
   '42501',
   null,
   'a citizen cannot grant themselves admin'
 );
-select throws_ok(
+insert into public._tap_out(line) select throws_ok(
   $$insert into public.user_roles (user_id, role)
     values ('11111111-1111-1111-1111-111111111111', 'moderator')$$,
   '42501',
   null,
   'a citizen cannot grant themselves moderator'
 );
-select is(
+insert into public._tap_out(line) select is(
   (select count(*)::int from public.user_roles where user_id = '22222222-2222-2222-2222-222222222222'::uuid),
   0,
   'a citizen cannot read another member''s roles'
@@ -199,12 +215,12 @@ reset role;
 
 -- An admin may appoint a moderator but NOT another admin.
 select pg_temp.become('44444444-4444-4444-4444-444444444444'::uuid);
-select lives_ok(
+insert into public._tap_out(line) select lives_ok(
   $$insert into public.user_roles (user_id, role)
     values ('22222222-2222-2222-2222-222222222222', 'moderator')$$,
   'an admin can appoint a moderator'
 );
-select throws_ok(
+insert into public._tap_out(line) select throws_ok(
   $$insert into public.user_roles (user_id, role)
     values ('22222222-2222-2222-2222-222222222222', 'admin')$$,
   '42501',
@@ -214,7 +230,7 @@ select throws_ok(
 reset role;
 
 select pg_temp.become('55555555-5555-5555-5555-555555555555'::uuid);
-select lives_ok(
+insert into public._tap_out(line) select lives_ok(
   $$insert into public.user_roles (user_id, role)
     values ('33333333-3333-3333-3333-333333333333', 'admin')$$,
   'a super_admin can mint an admin'
@@ -232,7 +248,7 @@ update public.profiles set is_verified = true, verified_at = now()
  where id = '11111111-1111-1111-1111-111111111111'::uuid;
 reset role;
 
-select is(
+insert into public._tap_out(line) select is(
   (select is_verified from public.profiles where id = '11111111-1111-1111-1111-111111111111'::uuid),
   false,
   'a member cannot grant themselves a verified badge'
@@ -243,7 +259,7 @@ update public.profiles set is_suspended = false where id = '11111111-1111-1111-1
 update public.profiles set bio = 'I am from Enugu-Ezike' where id = '11111111-1111-1111-1111-111111111111'::uuid;
 reset role;
 
-select is(
+insert into public._tap_out(line) select is(
   (select bio from public.profiles where id = '11111111-1111-1111-1111-111111111111'::uuid),
   'I am from Enugu-Ezike',
   'a member CAN still edit their own ordinary fields'
@@ -251,17 +267,17 @@ select is(
 
 -- Visibility: outsider shares no community with B.
 select pg_temp.become('33333333-3333-3333-3333-333333333333'::uuid);
-select is(
+insert into public._tap_out(line) select is(
   (select count(*)::int from public.profiles where id = '22222222-2222-2222-2222-222222222222'::uuid),
   0,
   'a community-only profile is hidden from someone outside the community'
 );
-select is(
+insert into public._tap_out(line) select is(
   (select count(*)::int from public.profiles where id = '11111111-1111-1111-1111-111111111111'::uuid),
   1,
   'a public profile is visible to any signed-in member'
 );
-select is(
+insert into public._tap_out(line) select is(
   (select count(*)::int from public.profiles where id = '33333333-3333-3333-3333-333333333333'::uuid),
   1,
   'a member can always see their own profile, even when private'
@@ -270,7 +286,7 @@ reset role;
 
 -- A shares a town with B, so the community-only profile resolves.
 select pg_temp.become('11111111-1111-1111-1111-111111111111'::uuid);
-select is(
+insert into public._tap_out(line) select is(
   (select count(*)::int from public.profiles where id = '22222222-2222-2222-2222-222222222222'::uuid),
   1,
   'a community-only profile IS visible within the same community'
@@ -279,7 +295,7 @@ reset role;
 
 -- Anonymous visitors see only public, non-suspended profiles.
 select pg_temp.become_anon();
-select is(
+insert into public._tap_out(line) select is(
   (select count(*)::int from public.profiles),
   1,
   'an anonymous visitor sees only the public profile'
@@ -291,24 +307,24 @@ reset role;
 -- ===========================================================================
 
 -- Limit of 2 in one window: calls 1 and 2 pass, call 3 is refused.
-select is(
+insert into public._tap_out(line) select is(
   (select allowed from public.consume_rate_limit('test:bucket', 2, 60000)),
   true,
   'request 1 of 2 is allowed'
 );
-select is(
+insert into public._tap_out(line) select is(
   (select allowed from public.consume_rate_limit('test:bucket', 2, 60000)),
   true,
   'request 2 of 2 is allowed'
 );
-select is(
+insert into public._tap_out(line) select is(
   (select allowed from public.consume_rate_limit('test:bucket', 2, 60000)),
   false,
   'request 3 exceeds the limit and is refused'
 );
 
 -- A different bucket key is counted independently.
-select is(
+insert into public._tap_out(line) select is(
   (select allowed from public.consume_rate_limit('other:bucket', 2, 60000)),
   true,
   'a separate bucket has its own counter'
@@ -319,9 +335,13 @@ select is(
 -- nothing and be indistinguishable from a run whose output simply scrolled by.
 -- Coalescing guarantees exactly one visible row either way: the failure
 -- diagnostics, or an explicit all-clear.
+insert into public._tap_out(line) select * from finish();
+
+-- Everything that is not a plain pass: the named failures and any summary.
 select coalesce(
-  (select string_agg(f, chr(10) order by n)
-     from finish() with ordinality as t(f, n)),
+  (select string_agg(line, chr(10) order by at)
+     from public._tap_out
+    where line not like 'ok %'),
   'ALL ASSERTIONS PASSED'
 ) as result;
 rollback;

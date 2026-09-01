@@ -42,6 +42,31 @@ export async function createClient() {
 }
 
 /**
+ * Anonymous client: the anon key, and no cookies at all.
+ *
+ * For request-independent work such as the sitemap, where there is no caller
+ * to act on behalf of. Reading cookies there would be both meaningless and
+ * harmful — it makes the route dynamic, so it cannot be cached, and it would
+ * tie a shared artefact to whichever session happened to trigger the build.
+ *
+ * RLS still applies, as the anonymous role. For a sitemap that is exactly
+ * right: what it lists is precisely what a signed-out crawler can reach, with
+ * no separate "is this public" filter that could disagree with the policies.
+ */
+export function createAnonymousClient() {
+  const env = getClientEnv();
+
+  return createServerClient<Database>(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: { getAll: () => [], setAll: () => {} },
+      auth: { persistSession: false, autoRefreshToken: false },
+    },
+  );
+}
+
+/**
  * Service-role client. Bypasses RLS completely.
  *
  * Only for deliberate privileged operations — seeding, backfills, webhook

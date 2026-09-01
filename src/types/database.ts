@@ -40,7 +40,7 @@ export type GeoStatus = "active" | "historical" | "archived";
 
 export type ProfileVisibility = "public" | "community" | "private";
 
-export type PostVisibility = "public" | "community";
+export type PostVisibility = "public" | "community" | "followers";
 
 export type ReactionKind = "like" | "celebrate" | "support" | "sad";
 

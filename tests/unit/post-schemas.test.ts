@@ -60,13 +60,26 @@ describe("createPostSchema", () => {
     ).toBe(false);
   });
 
-  it("accepts only the two known visibility values", () => {
-    expect(createPostSchema.safeParse({ ...base, visibility: "public" }).success).toBe(true);
-    expect(createPostSchema.safeParse({ ...base, visibility: "community" }).success).toBe(true);
-    // 'followers' is not offered until following exists: a visibility nobody
-    // can satisfy would be a trap.
-    expect(createPostSchema.safeParse({ ...base, visibility: "followers" }).success).toBe(false);
-    expect(createPostSchema.safeParse({ ...base, visibility: "private" }).success).toBe(false);
+  it("accepts all three known visibility values", () => {
+    // 'followers' was withheld until following existed, because a visibility
+    // nobody could satisfy would have been a trap. It exists now.
+    for (const visibility of ["public", "community", "followers"]) {
+      expect(
+        createPostSchema.safeParse({ ...base, visibility }).success,
+        visibility,
+      ).toBe(true);
+    }
+  });
+
+  it("still rejects anything outside that set", () => {
+    // The enum exists in the database too, so an unknown value must fail here
+    // rather than reaching a constraint violation.
+    for (const visibility of ["private", "friends", "PUBLIC", ""]) {
+      expect(
+        createPostSchema.safeParse({ ...base, visibility }).success,
+        visibility,
+      ).toBe(false);
+    }
   });
 
   it("does not accept an author id from the client", () => {

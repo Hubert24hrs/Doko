@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Globe2, Users } from "lucide-react";
+import { Globe2, UserCheck, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -144,6 +144,7 @@ export function PostComposer({
               >
                 <option value="public">Everyone</option>
                 <option value="community">My community only</option>
+                <option value="followers">People who follow me</option>
               </FieldSelect>
             </Field>
           </div>
@@ -204,6 +205,10 @@ export function VisibilityHint() {
       <span className="inline-flex items-center gap-1.5">
         <Users className="size-3.5" aria-hidden="true" />
         My community — only people from that community
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <UserCheck className="size-3.5" aria-hidden="true" />
+        My followers — only people who follow you
       </span>
     </p>
   );

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Globe2, MapPin, MessageCircle, Users } from "lucide-react";
+import { Globe2, MapPin, MessageCircle, UserCheck, Users } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { VerifiedBadge } from "@/components/ui/badge";
@@ -117,22 +117,41 @@ export function PostCard({
 
               <span aria-hidden="true">·</span>
 
-              {post.visibility === "public" ? (
-                <span className="inline-flex items-center gap-1" title="Visible to everyone">
-                  <Globe2 className="size-3" aria-hidden="true" />
-                  <span className="sr-only">Visible to everyone</span>
-                  Public
-                </span>
-              ) : (
-                <span
-                  className="inline-flex items-center gap-1"
-                  title="Visible only to this community"
-                >
-                  <Users className="size-3" aria-hidden="true" />
-                  <span className="sr-only">Visible only to this community</span>
-                  Community
-                </span>
-              )}
+              {/*
+                A lookup rather than a chain of ternaries. When `followers` was
+                added, a two-way if/else would have silently labelled it
+                "Community" -- the wrong answer, and the kind that looks right.
+              */}
+              {(() => {
+                const V = {
+                  public: {
+                    Icon: Globe2,
+                    label: "Public",
+                    description: "Visible to everyone",
+                  },
+                  community: {
+                    Icon: Users,
+                    label: "Community",
+                    description: "Visible only to this community",
+                  },
+                  followers: {
+                    Icon: UserCheck,
+                    label: "Followers",
+                    description: "Visible only to people who follow the author",
+                  },
+                }[post.visibility];
+
+                return (
+                  <span
+                    className="inline-flex items-center gap-1"
+                    title={V.description}
+                  >
+                    <V.Icon className="size-3" aria-hidden="true" />
+                    <span className="sr-only">{V.description}</span>
+                    {V.label}
+                  </span>
+                );
+              })()}
             </div>
           </div>
 

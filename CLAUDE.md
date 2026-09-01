@@ -127,11 +127,8 @@ Recommended order, and why:
 
 1. **Enable Google sign-in.** Closes the registration gap above. The code is
    built; it needs credentials and one env var. Free, roughly 20 minutes.
-2. **Followers-only post visibility.** Following now exists, so the third
-   `post_visibility` value deliberately left out can finally be added. NOTE:
-   `ALTER TYPE ... ADD VALUE` cannot be used in the same transaction that
-   creates the policy referring to it, so this needs TWO migration files.
-3. **Groups**, then Phase 3 messaging.
+2. **Groups** -- the last piece of Phase 2.
+3. Phase 3 messaging.
 
 Operational notes that will otherwise be rediscovered painfully:
 
@@ -486,3 +483,6 @@ flows, and every page's real data path.
 | Follow sends the desired END STATE, not a toggle | a toggle read from stale UI does the opposite of what the member meant -- a double click would follow then immediately unfollow |
 | Unfollowing hard-deletes, like withdrawing a reaction | a follow is a current relationship, not speech; a tombstone would misstate who someone follows today |
 | An empty following list means an empty feed | treating it as "no filter" would silently show everything, which is the opposite of what was asked for |
+| `followers` visibility arrived only once following existed | a visibility nobody can satisfy is a trap |
+| Adding an enum value needs its OWN migration file | Postgres refuses to USE a new enum value in the transaction that added it, and the SQL Editor runs a pasted script as one transaction |
+| Comments, reactions and media needed no change for the third tier | they ask an EXISTS against `posts` rather than restating visibility, so a new tier is inherited; 08_followers_posts asserts exactly this |

@@ -10,7 +10,15 @@ import { z } from "zod";
 
 export const POST_MAX_LENGTH = 5000;
 
-export const postVisibilityValues = ["public", "community"] as const;
+/**
+ * Three tiers. `followers` was deliberately absent until following existed,
+ * because a visibility nobody could satisfy would have been a trap.
+ */
+export const postVisibilityValues = [
+  "public",
+  "community",
+  "followers",
+] as const;
 
 /** Empty optional select values arrive as "" and mean "not chosen". */
 const optionalUuid = z

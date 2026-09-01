@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Compass, MapPin, ShieldCheck, MessageSquareText } from "lucide-react";
+import { Compass, MapPin, ShieldCheck, MessageSquareText, UsersRound } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge, VerifiedBadge } from "@/components/ui/badge";
@@ -106,6 +106,26 @@ export default async function HomePage({
                 className="text-sm font-medium text-primary hover:underline"
               >
                 Open the directory
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="mb-1 text-primary">
+                <UsersRound className="size-5" aria-hidden="true" />
+              </div>
+              <CardTitle as="h2">Groups</CardTitle>
+              <CardDescription>
+                Village meetings, youth associations, trades and interests.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link
+                href="/groups"
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                Browse groups
               </Link>
             </CardContent>
           </Card>

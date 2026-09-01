@@ -55,6 +55,12 @@ export default async function FeedPage({
           </Link>
           <div className="flex items-center gap-1">
             <Link
+              href="/groups"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken"
+            >
+              Groups
+            </Link>
+            <Link
               href="/communities"
               className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken"
             >

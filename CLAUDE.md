@@ -112,7 +112,7 @@ be without a live Supabase project.**
   is enabled, so a member can register with an address they do not control.
   Acceptable while the audience is known personally; NOT acceptable once the
   URL is shared. Resolve before public launch -- see docs/DEPLOYMENT.md section 6.
-* Rest of Phase 2: groups
+* Phase 2 is complete once migration 014 and 09_groups are applied
 * Phase 3 messaging; Phase 4 events, jobs, marketplace, directory, issues, map;
   Phase 5 verification, moderation queue, advertising, payments; Phase 6
   hardening
@@ -129,8 +129,8 @@ Recommended order, and why:
 
 1. **Enable Google sign-in.** Closes the registration gap above. The code is
    built; it needs credentials and one env var. Free, roughly 20 minutes.
-2. **Groups** -- the last piece of Phase 2.
-3. Phase 3 messaging.
+2. **Phase 3: messaging.** One-to-one and group chat, realtime, presence.
+3. Phase 4: events, jobs, marketplace, directory, community issues, map.
 
 Operational notes that will otherwise be rediscovered painfully:
 
@@ -256,6 +256,8 @@ events and issues will reference it.
 | `reactions` | one per person per post, four kinds |
 | `post_media` | up to 4 images per post; bytes live in the private `post-media` bucket |
 | `follows` | one-directional, no approval; the pair is the primary key |
+| `groups` | public or private; optional geographic anchor |
+| `group_members` | membership IS the access rule; owner/moderator/member |
 
 **`posts.author_id` and `comments.author_id` reference `public.profiles`, not
 `auth.users`.** The identity is the same, since `profiles.id` IS the auth user
@@ -488,3 +490,8 @@ flows, and every page's real data path.
 | `followers` visibility arrived only once following existed | a visibility nobody can satisfy is a trap |
 | Adding an enum value needs its OWN migration file | Postgres refuses to USE a new enum value in the transaction that added it, and the SQL Editor runs a pasted script as one transaction |
 | Comments, reactions and media needed no change for the third tier | they ask an EXISTS against `posts` rather than restating visibility, so a new tier is inherited; 08_followers_posts asserts exactly this |
+| A group post ignores `post_visibility` entirely | membership IS the access rule; applying both would let a member accidentally hide a post from the group they posted it in |
+| Existing post policies were narrowed to `group_id is null` | permissive policies are OR'd, so without this a private group's post marked `visibility='public'` would have been world-readable while the group looked locked |
+| A group must always keep one owner | the guard trigger refuses the last owner leaving OR self-demoting; otherwise nobody could edit, admit or close the group |
+| The creator is made owner by trigger, not by the application | a group can then never exist without someone responsible for it, however it was created |
+| Private groups cannot be joined at all | that is what makes them private; an invitation flow would add rows through a definer function rather than a third visibility value |

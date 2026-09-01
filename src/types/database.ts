@@ -44,6 +44,19 @@ export type PostVisibility = "public" | "community" | "followers";
 
 export type ReactionKind = "like" | "celebrate" | "support" | "sad";
 
+export type GroupKind =
+  | "community"
+  | "village"
+  | "interest"
+  | "youth"
+  | "professional"
+  | "organization"
+  | "other";
+
+export type GroupVisibility = "public" | "private";
+
+export type GroupRole = "owner" | "moderator" | "member";
+
 export type GeoEntityRow = {
   id: string;
   parent_id: string | null;
@@ -148,6 +161,11 @@ export type PostRow = {
   /** Maintained by trigger; see recount_post_engagement() for repair. */
   comment_count: number;
   reaction_count: number;
+  /**
+   * When set, the group governs access entirely -- `visibility` is not
+   * consulted, because being in the group IS the rule.
+   */
+  group_id: string | null;
 }
 
 export type CommentRow = {
@@ -181,6 +199,29 @@ export type PostMediaRow = {
   alt_text: string | null;
   sort_order: number;
   created_at: string;
+}
+
+export type GroupRow = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  kind: GroupKind;
+  /** Optional geographic anchor; NULL means not tied to one place. */
+  geo_id: string | null;
+  visibility: GroupVisibility;
+  created_by: string | null;
+  member_count: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export type GroupMemberRow = {
+  group_id: string;
+  user_id: string;
+  role: GroupRole;
+  joined_at: string;
 }
 
 export type FollowRow = {
@@ -262,8 +303,32 @@ export interface Database {
           // Defaulted to 0 and maintained by trigger; never sent by a client.
           | "comment_count"
           | "reaction_count"
+          | "group_id"
         >;
         Update: Partial<PostRow>;
+        Relationships: [];
+      };
+      groups: {
+        Row: GroupRow;
+        Insert: Insertable<
+          GroupRow,
+          | "id"
+          | "description"
+          | "kind"
+          | "geo_id"
+          | "visibility"
+          | "member_count"
+          | "created_at"
+          | "updated_at"
+          | "deleted_at"
+        >;
+        Update: Partial<GroupRow>;
+        Relationships: [];
+      };
+      group_members: {
+        Row: GroupMemberRow;
+        Insert: Insertable<GroupMemberRow, "role" | "joined_at">;
+        Update: Partial<GroupMemberRow>;
         Relationships: [];
       };
       follows: {
@@ -344,6 +409,18 @@ export interface Database {
         Returns: boolean;
       };
       is_active_member: { Args: { check_user_id?: string }; Returns: boolean };
+      is_group_member: {
+        Args: { target_group_id: string; check_user_id?: string };
+        Returns: boolean;
+      };
+      leads_group: {
+        Args: { target_group_id: string; check_user_id?: string };
+        Returns: boolean;
+      };
+      can_see_group: {
+        Args: { target_group_id: string; check_user_id?: string };
+        Returns: boolean;
+      };
       follows_profile: {
         Args: { target_profile_id: string; check_user_id?: string };
         Returns: boolean;
@@ -381,6 +458,9 @@ export interface Database {
       profile_visibility: ProfileVisibility;
       post_visibility: PostVisibility;
       reaction_kind: ReactionKind;
+      group_kind: GroupKind;
+      group_visibility: GroupVisibility;
+      group_role: GroupRole;
     };
     CompositeTypes: Record<never, never>;
   };

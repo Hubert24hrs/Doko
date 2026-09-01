@@ -39,6 +39,21 @@ create table public._tap_out (
 );
 grant insert, select on public._tap_out to public;
 
+-- Supabase auto-enables RLS on new tables in the public schema, which would
+-- make this capture table reject its own inserts:
+--   ERROR 42501: new row violates row-level security policy for "_tap_out"
+-- It holds no user data and exists only for the length of this transaction,
+-- so RLS is switched off explicitly. The permissive policy is belt-and-braces
+-- in case a project setting re-enables it.
+alter table public._tap_out disable row level security;
+do $guard$
+begin
+  execute 'create policy _tap_out_open on public._tap_out for all to public using (true) with check (true)';
+exception when others then
+  null;  -- policy already exists, or RLS is off and it is unnecessary
+end
+$guard$;
+
 -- ---------------------------------------------------------------------------
 -- Fixtures
 -- ---------------------------------------------------------------------------

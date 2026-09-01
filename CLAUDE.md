@@ -51,10 +51,14 @@ be without a live Supabase project.**
 * SQL migrations 001-006 (schema, RLS, audit, rate limits) -- **executed
   against the hosted project on 2026-09-01**
 * Seed data for the real Igbo-Eze North hierarchy -- **applied and verified**
-* **71 database assertions passing** against live Postgres via pgTAP:
-  38 structural (`01_schema`), 24 RLS behaviour (`02_rls`), 9 seed integrity
-  (`03_seed`). RLS enforcement, the privilege-escalation boundary, the
-  append-only audit trail and the rate limiter are now VERIFIED, not assumed.
+* **62 database assertions passing** against live Postgres via pgTAP:
+  38 structural (`01_schema`) and 24 RLS behaviour (`02_rls`). RLS
+  enforcement, the privilege-escalation boundary, the append-only audit trail
+  and the rate limiter are VERIFIED, not assumed.
+* `03_seed` (9 assertions) is **not currently passing**: re-running an
+  outdated copy of the seed inserted a second, unprefixed set of council
+  wards (39 rows where 20 belong). Correction 003 removes them. Re-verify
+  before treating the directory as correct.
 * 56 unit tests passing; typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to

@@ -99,7 +99,7 @@ export async function registerAction(
     return { ok: false, fieldErrors: { username: "That username is taken" } };
   }
 
-  const { error } = await supabase.auth.signUp({
+  const { data: signUpData, error } = await supabase.auth.signUp({
     email: input.email,
     password: input.password,
     options: {
@@ -129,6 +129,15 @@ export async function registerAction(
       ok: false,
       formError: "We could not complete your sign-up. Please try again.",
     };
+  }
+
+  // With email confirmation disabled, signUp returns a live session and the
+  // member is already signed in -- send them to the welcome page. If
+  // confirmation is ever switched back on, no session is returned and they
+  // must check their inbox instead. Branching on the actual response rather
+  // than assuming the dashboard setting keeps both paths correct.
+  if (signUpData.session) {
+    redirect("/welcome");
   }
 
   redirect("/register/check-email");

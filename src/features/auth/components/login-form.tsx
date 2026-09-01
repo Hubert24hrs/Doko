@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
+import { PasswordField } from "@/components/ui/password-field";
 import { Field, FieldInput, FieldLabel } from "@/components/ui/field";
 
 import { loginAction, type AuthActionState } from "../actions";
@@ -53,9 +54,8 @@ export function LoginForm() {
 
       <Field error={state.fieldErrors?.password}>
         <FieldLabel required>Password</FieldLabel>
-        <FieldInput
+        <PasswordField
           name="password"
-          type="password"
           autoComplete="current-password"
           required
         />

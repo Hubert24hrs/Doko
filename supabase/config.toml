@@ -22,6 +22,11 @@ site_url = "http://localhost:3000"
 additional_redirect_urls = ["http://localhost:3000/auth/callback"]
 
 [auth.email]
-# Email confirmation is ON: Ezike Oba accounts must represent real people, so
-# an address has to be proven before the account becomes usable.
-enable_confirmations = true
+# Email confirmation is OFF by product decision: members sign in and reach the
+# community immediately, with a welcome page instead of an inbox round trip.
+#
+# The trade-off, recorded deliberately: an address is no longer proven at
+# sign-up, so someone can register with an email they do not control. Google
+# and Apple sign-in do not have this gap, because the provider has already
+# verified the address -- which is part of why they are offered first.
+enable_confirmations = false

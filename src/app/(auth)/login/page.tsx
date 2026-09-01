@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { Logo } from "@/components/brand/logo";
 import { LoginForm } from "@/features/auth/components/login-form";
+import { OAuthButtons, AuthDivider } from "@/features/auth/components/oauth-buttons";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -25,6 +26,8 @@ export default function LoginPage() {
           Sign in to continue to your community.
         </p>
 
+        <OAuthButtons next="/home" />
+        <AuthDivider label="or sign in with email" />
         <LoginForm />
 
         <p className="mt-6 text-center text-sm text-muted-foreground">

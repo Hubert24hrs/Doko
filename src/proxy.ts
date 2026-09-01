@@ -10,6 +10,7 @@ import { updateSession } from "@/lib/supabase/middleware";
  */
 const PROTECTED_PREFIXES = [
   "/home",
+  "/welcome",
   "/feed",
   "/my-community",
   "/messages",

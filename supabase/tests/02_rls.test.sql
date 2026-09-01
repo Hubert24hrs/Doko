@@ -21,7 +21,7 @@ begin;
 -- fails with "function plan(integer) does not exist". `set local` reverts when
 -- the surrounding transaction ends.
 set local search_path = public, extensions, pg_temp;
-select plan(24);
+select plan(29);
 
 -- Assertion output is captured so that every failure is NAMED at the end.
 -- The SQL Editor shows only the final statement's result, so pgTAP's
@@ -82,12 +82,19 @@ values
   -- every profile, and the community-visibility assertion failed for a reason
   -- that had nothing to do with community visibility.
   ('66666666-6666-6666-6666-666666666666'::uuid,  '00000000-0000-0000-0000-000000000000', 'authenticated',
-   'authenticated', 'promotable@example.com', '{"username":"promotable","full_name":"Promotable"}');
+   'authenticated', 'promotable@example.com', '{"username":"promotable","full_name":"Promotable"}'),
+  -- Google shape: a name and an avatar, but NO username.
+  ('77777777-7777-7777-7777-777777777777'::uuid,  '00000000-0000-0000-0000-000000000000', 'authenticated',
+   'authenticated', 'ada.nwosu@gmail.com',
+   '{"full_name":"Ada Nwosu","avatar_url":"https://lh3.example/a.jpg"}'),
+  -- Apple shape on a repeat sign-in: an email and nothing else at all.
+  ('88888888-8888-8888-8888-888888888888'::uuid,  '00000000-0000-0000-0000-000000000000', 'authenticated',
+   'authenticated', 'ada.nwosu@icloud.com', '{}');
 
 -- The trigger should have created five profiles.
 insert into public._tap_out(line) select is(
   (select count(*)::int from public.profiles),
-  6,
+  8,
   'handle_new_user created a profile for every new auth user'
 );
 
@@ -331,6 +338,53 @@ insert into public._tap_out(line) select is(
   'an anonymous visitor sees only the public profile'
 );
 reset role;
+
+-- ===========================================================================
+-- OAuth sign-ups (migration 007)
+-- ===========================================================================
+
+-- Google supplies a name; it must be used rather than the generic fallback.
+insert into public._tap_out(line) select is(
+  (select full_name from public.profiles
+    where id = '77777777-7777-7777-7777-777777777777'::uuid),
+  'Ada Nwosu',
+  'a Google sign-up keeps the name the provider supplied'
+);
+
+-- No username is ever supplied by a provider, so one is derived from the
+-- email local part, with dots stripped to satisfy the CHECK constraint.
+insert into public._tap_out(line) select is(
+  (select username::text from public.profiles
+    where id = '77777777-7777-7777-7777-777777777777'::uuid),
+  'adanwosu',
+  'a username is derived from the email when the provider sends none'
+);
+
+-- The same person signing in with Apple has the same email local part, so the
+-- derived username collides and must be disambiguated rather than failing.
+insert into public._tap_out(line) select is(
+  (select username::text from public.profiles
+    where id = '88888888-8888-8888-8888-888888888888'::uuid),
+  'adanwosu_1',
+  'a colliding derived username is disambiguated, not rejected'
+);
+
+-- Apple sends no name at all on repeat sign-ins.
+insert into public._tap_out(line) select is(
+  (select full_name from public.profiles
+    where id = '88888888-8888-8888-8888-888888888888'::uuid),
+  'Ezike Oba member',
+  'a nameless provider sign-up falls back to a neutral display name'
+);
+
+-- Provider members are ordinary citizens, exactly like email members.
+insert into public._tap_out(line) select is(
+  (select count(*)::int from public.user_roles
+    where user_id = '77777777-7777-7777-7777-777777777777'::uuid
+      and role = 'citizen'),
+  1,
+  'a provider sign-up starts as a citizen like everyone else'
+);
 
 -- ===========================================================================
 -- Rate limiting

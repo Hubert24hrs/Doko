@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
+import { PasswordField } from "@/components/ui/password-field";
 import {
   Field,
   FieldDescription,
@@ -114,9 +115,8 @@ export function RegisterForm({ villages }: { villages: VillageOption[] }) {
 
       <Field error={errors.password}>
         <FieldLabel required>Password</FieldLabel>
-        <FieldInput
+        <PasswordField
           name="password"
-          type="password"
           autoComplete="new-password"
           required
         />
@@ -128,9 +128,8 @@ export function RegisterForm({ villages }: { villages: VillageOption[] }) {
 
       <Field error={errors.confirmPassword}>
         <FieldLabel required>Confirm password</FieldLabel>
-        <FieldInput
+        <PasswordField
           name="confirmPassword"
-          type="password"
           autoComplete="new-password"
           required
         />

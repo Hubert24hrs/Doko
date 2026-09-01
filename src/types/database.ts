@@ -249,7 +249,7 @@ export interface Database {
         Returns: {
           allowed: boolean;
           current_count: number;
-          window_start: string;
+          window_started_at: string;
         }[];
       };
     };

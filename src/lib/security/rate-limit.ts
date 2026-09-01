@@ -49,7 +49,7 @@ export async function checkRateLimit({
       return { allowed: true, currentCount: 0, retryAfterMinutes: 0 };
     }
 
-    const windowStartMs = new Date(row.window_start).getTime();
+    const windowStartMs = new Date(row.window_started_at).getTime();
     const msRemaining = Math.max(0, windowStartMs + windowMs - Date.now());
 
     return {

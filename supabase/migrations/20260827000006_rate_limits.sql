@@ -36,7 +36,15 @@ create or replace function public.consume_rate_limit(
   p_limit      integer,
   p_window_ms  bigint
 )
-returns table (allowed boolean, current_count integer, window_start timestamptz)
+-- NOTE: the third output column is deliberately NOT called `window_start`.
+-- A RETURNS TABLE column becomes a PL/pgSQL variable inside the body, and a
+-- variable sharing a name with a column of the table being written makes every
+-- reference ambiguous:
+--   ERROR 42702: column reference "window_start" is ambiguous
+-- The function then fails at RUNTIME (plpgsql bodies are not fully validated
+-- at CREATE time), and because checkRateLimit() fails open, the limiter would
+-- silently never limit anything.
+returns table (allowed boolean, current_count integer, window_started_at timestamptz)
 language plpgsql
 security definer
 set search_path = public, pg_temp

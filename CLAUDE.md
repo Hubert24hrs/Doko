@@ -48,8 +48,13 @@ be without a live Supabase project.**
 * Session/role helpers (`requireUser`, `requireStaff`, `requireAdmin`)
 * Public landing page, communities directory, authenticated home, profile
   settings, admin overview, admin communities
-* SQL migrations 001-006 (schema, RLS, audit, rate limits) -- **written, not yet executed**
-* Seed data for the real Igbo-Eze North hierarchy -- **written, not yet executed**
+* SQL migrations 001-006 (schema, RLS, audit, rate limits) -- **executed
+  against the hosted project on 2026-09-01**
+* Seed data for the real Igbo-Eze North hierarchy -- **applied and verified**
+* **71 database assertions passing** against live Postgres via pgTAP:
+  38 structural (`01_schema`), 24 RLS behaviour (`02_rls`), 9 seed integrity
+  (`03_seed`). RLS enforcement, the privilege-escalation boundary, the
+  append-only audit trail and the rate limiter are now VERIFIED, not assumed.
 * 56 unit tests passing; typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
@@ -57,9 +62,9 @@ be without a live Supabase project.**
 
 ### Not yet done
 
-* **No Supabase project is connected.** Migrations have never run against a
-  database. RLS policies are unverified. Auth has not been exercised end-to-end.
-  See section 12 for exactly what is needed.
+* **Auth has not been exercised end-to-end.** Sign-up, email confirmation,
+  sign-in and the admin gate have never run against the live project. The app
+  is not yet wired to it (no `.env.local`). This is the immediate next step.
 * Phases 2-6 of the platform (feed, groups, messaging, events, jobs,
   marketplace, issues, map, verification, moderation, payments)
 * The entire AI intelligence layer (Oba AI, RAG, semantic search, moderation,
@@ -327,9 +332,14 @@ append-only is expressed with RLS, not with types.
 
 ## 12. What is blocked, and on what
 
-**Everything database-dependent is blocked on a Supabase project.** There is
-no Docker and no `psql` on this machine, so migrations cannot even be run
-locally.
+**The database is live.** A hosted Supabase project (`ezike-oba`) holds the
+schema, the seed and all policies, verified by the pgTAP suites. There is
+still no Docker and no `psql` here, so database work is done by pasting
+`supabase/migrations/*.sql` and `supabase/tests/*.sql` into the hosted SQL
+Editor. Both test suites are written in portable SQL for exactly that reason.
+
+Remaining: wire the app to the project (`.env.local`) and exercise auth
+end-to-end.
 
 To unblock, one of:
 

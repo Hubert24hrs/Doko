@@ -177,3 +177,42 @@ Before production, run against a real project:
 8. `consume_rate_limit` actually blocks at the configured threshold
 
 Tracked in [`TESTING.md`](./TESTING.md).
+
+---
+
+## Incident: rate limiting was silently inert (found 2026-09-01)
+
+Found by the first execution of `supabase/tests/02_rls.test.sql` against a real
+database. Worth recording in full, because the failure mode is the dangerous
+kind.
+
+`consume_rate_limit()` declared its third output column as `window_start`. A
+`RETURNS TABLE` column becomes a PL/pgSQL variable inside the function body,
+and `rate_limit_counters` has a column of the same name, so every reference in
+the `INSERT ... ON CONFLICT` was ambiguous:
+
+    ERROR 42702: column reference "window_start" is ambiguous
+
+Three things combined to make this invisible:
+
+1. PL/pgSQL bodies are not fully validated at `CREATE` time, so migration 006
+   applied cleanly and the function looked healthy.
+2. It failed only when **called** -- on every login and registration attempt.
+3. `checkRateLimit()` **fails open** by design, so a limiter outage cannot lock
+   every member out of sign-in.
+
+The result: login and registration rate limiting would have been entirely
+inert in production. No failed requests, no user-visible symptom, one console
+line per attempt. A brute-force control that was documented, unit-tested,
+reviewed -- and worthless.
+
+**Fixed** by renaming the output column to `window_started_at`, in the
+migration, `src/lib/security/rate-limit.ts` and the generated types together.
+Verified by calling the function four times against a limit of three and
+confirming the fourth call returns `allowed = false`.
+
+**The lesson for fail-open controls.** Failing open is still the right choice
+here -- availability beats a partial abuse control, and Supabase Auth throttles
+independently. But a fail-open control cannot be trusted to announce its own
+death. It needs a test that calls it and asserts it actually refuses, which is
+what `02_rls` now does. Any future fail-open control gets the same treatment.

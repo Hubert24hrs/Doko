@@ -55,7 +55,7 @@ database.
 
 ## Required before production
 
-### RLS policy tests -- WRITTEN, awaiting a database
+### Database tests -- RUN AND PASSING against the hosted project
 
 `supabase/tests/01_schema.test.sql` (38 assertions) and
 `supabase/tests/02_rls.test.sql` (24 assertions) are written and ready. Run
@@ -65,8 +65,20 @@ both with:
 supabase test db
 ```
 
-They have **not been executed** -- no database has been available. Expect to
-fix a few assertions on first run; that is what the first run is for.
+**All 71 assertions pass** against the live project as of 2026-09-01:
+38 structural, 24 RLS behaviour, 9 seed integrity.
+
+The first real run found five defects -- four in the tests and scaffolding,
+one in production code. See docs/SECURITY.md for the rate limiter, which is
+the one that mattered.
+
+Because there is no Docker here, the suites are written in portable SQL and
+run by pasting them into the hosted SQL Editor. Two consequences shaped how
+they are written: no psql meta-commands (no `\set`), and each file ends with a
+`coalesce` over `finish()` so exactly one row is always returned -- either the
+named failures or `ALL ASSERTIONS PASSED`. The editor shows only the final
+statement's result, so a suite that reported nothing on success was
+indistinguishable from one whose failures scrolled past.
 
 `01_schema` asserts structure: extensions, enums, tables, that RLS is enabled
 on every exposed table, that `audit_logs` has no write policy for anyone, that

@@ -10,20 +10,30 @@ npm run verify        # typecheck + lint + test
 
 ## Current state -- honest
 
-**56 unit tests, 5 files, all passing.** Typecheck clean, lint clean,
+**127 unit tests, 9 files, all passing.** Typecheck clean, lint clean,
 production build clean.
 
-**No integration, RLS, or end-to-end tests exist yet**, because no database
-has ever been connected. Nothing below should be described as "verified"
-until it has actually run.
+**191 database assertions pass against the live hosted project**, across nine
+pgTAP suites. They are run by pasting each file into the Supabase SQL Editor,
+not by `supabase test db` -- there is no Docker here. See "Database tests"
+below.
+
+No end-to-end (browser) tests exist yet. Everything else below has actually
+run; nothing here is aspirational.
+
+### Unit suites
 
 | Suite | File | Tests | Covers |
 |---|---|---|---|
-| Auth schemas | `tests/unit/auth-schemas.test.ts` | 20 | username rules, reserved names, email normalisation, Nigerian phone -> E.164, password policy, optional village, password match, consent |
-| Redirect guard | `tests/unit/redirect.test.ts` | 9 | open-redirect defence incl. protocol-relative, backslash, control chars |
-| Geo tree | `tests/unit/geo-tree.test.ts` | 9 | hierarchy nesting, siblings, orphan promotion, immutability |
-| Env schema | `tests/unit/env.test.ts` | 6 | required variables, URL validation, site-URL default, multi-error reporting |
+| Auth schemas | `tests/unit/auth-schemas.test.ts` | 22 | username rules, reserved names, email normalisation, Nigerian phone -> E.164, password policy, optional village, password match, consent |
+| Group schemas | `tests/unit/group-schemas.test.ts` | 21 | slug derivation incl. Igbo diacritics, the empty-slug fallback the action depends on, bounds mirroring the CHECK constraints, end-state membership intent |
+| Media | `tests/unit/media.test.ts` | 18 | storage path shape, accepted types, per-post limit, aspect ratio |
+| Comment schemas | `tests/unit/comment-schemas.test.ts` | 15 | body bounds, trimming, parent id, edit payload |
+| Post schemas | `tests/unit/post-schemas.test.ts` | 14 | body bounds, optional community -> null, visibility enum |
 | Profile schema | `tests/unit/profile-schemas.test.ts` | 12 | blank optionals -> null, optional village, phone normalisation, http(s)-only website, bio length, visibility enum, privileged fields stripped |
+| Redirect guard | `tests/unit/redirect.test.ts` | 12 | open-redirect defence incl. protocol-relative, backslash, control chars |
+| Geo tree | `tests/unit/geo-tree.test.ts` | 7 | hierarchy nesting, siblings, orphan promotion, immutability |
+| Env schema | `tests/unit/env.test.ts` | 6 | required variables, URL validation, site-URL default, multi-error reporting |
 
 ## Configuration
 
@@ -57,17 +67,30 @@ database.
 
 ### Database tests -- RUN AND PASSING against the hosted project
 
-`supabase/tests/01_schema.test.sql` (38 assertions) and
-`supabase/tests/02_rls.test.sql` (24 assertions) are written and ready. Run
-both with:
+**All 191 assertions pass** against the live project as of 2026-09-01:
 
-```bash
-supabase test db
-```
+| Suite | Assertions | Covers |
+|---|---|---|
+| `01_schema.test.sql` | 38 | structure, RLS enabled, definer helpers pin `search_path` |
+| `02_rls.test.sql` | 29 | behaviour under impersonation; the privilege-escalation boundary |
+| `03_seed.test.sql` | 9 | the seeded Igbo-Eze North hierarchy |
+| `04_posts.test.sql` | 22 | post visibility tiers, soft deletion, moderator limits |
+| `05_comments.test.sql` | 18 | replies and reactions; both author FKs target `profiles` |
+| `06_media.test.sql` | 19 | storage policies; an image is visible exactly when its post is |
+| `07_follows.test.sql` | 16 | one-directional follows, counts, self-follow refused |
+| `08_followers_posts.test.sql` | 13 | the followers-only tier, inherited by replies and images |
+| `09_groups.test.sql` | 27 | membership as the access rule; the private-group leak below |
 
-**All 112 assertions pass** against the live project as of 2026-09-01:
-38 structural, 29 RLS behaviour, 9 seed integrity, 22 post visibility,
-18 comments and reactions.
+With a linked local database they would run as `supabase test db`; here each
+file is pasted into the SQL Editor instead.
+
+The assertion that most earned its place is in `09_groups`: a post inside a
+**private** group, left at the column default `visibility = 'public'`, must be
+invisible to an anonymous reader. Permissive policies are OR'd, so before
+migration 014 narrowed the four existing post policies to `group_id is null`,
+that post would have been readable by the entire internet while the group
+itself looked locked. The suite uses a default-visibility post deliberately,
+because that is the shape the application actually inserts.
 
 A third lesson, added after the feed shipped broken: **verify the thing, not a
 proxy for it.** posts.author_id referenced auth.users while the feed embedded

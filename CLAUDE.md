@@ -35,8 +35,9 @@ find opportunities, trade, attend events and report community issues.
 
 ## 2. Current implementation status
 
-**Honest status: Phase 1 (Foundation) is built and verified as far as it can
-be without a live Supabase project.**
+**Honest status: Phase 1 (Foundation) and Phase 2 (Social core) are built,
+deployed and verified against the live Supabase project.** What remains open
+is listed under "Not yet done" and is honest about being open.
 
 ### Done and verified
 
@@ -67,10 +68,21 @@ be without a live Supabase project.**
   four reactions, trigger-maintained engagement counts, and a public
   `/posts/[id]` page. Verified against the hosted project with real data,
   including the author embed and the generated SEO metadata for public posts.
-* **160 database assertions passing**: 38 schema, 29 RLS, 9 seed, 22 posts,
-  18 comments/reactions, 19 media, 16 follows, 13 followers-only posts.
+* **191 database assertions passing** against the live project: 38 schema,
+  29 RLS, 9 seed, 22 posts, 18 comments/reactions, 19 media, 16 follows,
+  13 followers-only posts, 27 groups.
 * **Followers-only posts verified**, including that replies and images inherit
   the tier without those tables having been modified.
+* **Phase 2 slice 7 (groups) verified against the live database.** 27
+  assertions cover creator-as-owner, member counts, who may see a private
+  group, who may join one, the last-owner guard, and -- the one that mattered
+  -- that a post inside a private group is unreadable by the public **despite
+  carrying the column default `visibility = 'public'`**. Permissive policies
+  are OR'd, so migration 014 had to narrow the four existing post policies to
+  `group_id is null`; without that narrowing a private group's posts would
+  have been world-readable while the group itself looked locked.
+* **Phase 2 is complete**: posts, images, comments, reactions, member
+  profiles, following, followers-only visibility, and groups.
 * **Phase 2 slices 4 and 5 verified on the live site**: member profiles at
   `/members/[username]`, and following -- Follow button, counts, and the
   Everyone / Following feed views, including the empty-following case showing
@@ -91,7 +103,7 @@ be without a live Supabase project.**
      and check the affected rows.
   3. `?next=` was computed by the proxy and discarded by every consumer, so
      sign-in always landed on /home.
-* 56 unit tests passing; typecheck clean; lint clean; production build clean
+* 127 unit tests passing; typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
   `/login?next=...`, and no secrets appear in the HTML
@@ -112,7 +124,6 @@ be without a live Supabase project.**
   is enabled, so a member can register with an address they do not control.
   Acceptable while the audience is known personally; NOT acceptable once the
   URL is shared. Resolve before public launch -- see docs/DEPLOYMENT.md section 6.
-* Phase 2 is complete once migration 014 and 09_groups are applied
 * Phase 3 messaging; Phase 4 events, jobs, marketplace, directory, issues, map;
   Phase 5 verification, moderation queue, advertising, payments; Phase 6
   hardening
@@ -129,7 +140,11 @@ Recommended order, and why:
 
 1. **Enable Google sign-in.** Closes the registration gap above. The code is
    built; it needs credentials and one env var. Free, roughly 20 minutes.
+   Until this is done, a member can register with an address they do not
+   control -- which is fine for an audience known personally and not fine
+   once the URL is shared.
 2. **Phase 3: messaging.** One-to-one and group chat, realtime, presence.
+   Groups already give a membership table for group conversations to lean on.
 3. Phase 4: events, jobs, marketplace, directory, community issues, map.
 
 Operational notes that will otherwise be rediscovered painfully:
@@ -431,25 +446,25 @@ append-only is expressed with RLS, not with types.
 
 ## 12. What is blocked, and on what
 
-**The database is live.** A hosted Supabase project (`ezike-oba`) holds the
-schema, the seed and all policies, verified by the pgTAP suites. There is
-still no Docker and no `psql` here, so database work is done by pasting
-`supabase/migrations/*.sql` and `supabase/tests/*.sql` into the hosted SQL
-Editor. Both test suites are written in portable SQL for exactly that reason.
+Nothing about Phases 1 and 2 is blocked. The hosted Supabase project
+(`ezike-oba`) holds the schema, the seed and every policy; the app is wired to
+it, deployed, and exercised end to end. Three things ARE blocked, and none of
+them are code:
 
-Remaining: wire the app to the project (`.env.local`) and exercise auth
-end-to-end.
+| Blocked | On what | Consequence while it waits |
+|---|---|---|
+| Google sign-in | Google Cloud OAuth credentials + one env var | Registration verifies nothing -- see section 2 |
+| Apple sign-in | Paid Developer Program membership ($99/yr) | Deferred indefinitely; not on the critical path |
+| Passkey sign-in | A real device to complete the ceremony on | Enrolment works, sign-in unconfirmed; PARKED |
 
-To unblock, one of:
+**Database work is still done by hand.** There is no Docker and no `psql` on
+this machine, so migrations and pgTAP suites are pasted into the hosted SQL
+Editor. That is why every file under `supabase/` is portable SQL with no psql
+meta-commands, and why an `ALTER TYPE ... ADD VALUE` needs its own file: the
+editor runs a pasted script as one transaction.
 
-* **Hosted (recommended):** create a Supabase project, put its URL + anon key
-  in `.env.local`, then `npm run db:push` and apply `supabase/seed.sql`.
-* **Local:** install Docker Desktop, then `npx supabase start` and
-  `npm run db:reset`.
-
-Until then, these remain **unverified** and must not be described as working:
-migration execution, RLS policy behaviour, the signup trigger, live auth
-flows, and every page's real data path.
+If a local database is ever wanted, install Docker Desktop, then
+`npx supabase start` and `npm run db:reset`.
 
 ---
 

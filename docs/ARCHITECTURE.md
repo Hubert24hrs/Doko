@@ -183,8 +183,10 @@ This trade-off is recorded in [`SECURITY.md`](./SECURITY.md).
 
 ### Visibility is decided once, in one place
 
-A post carries a `visibility` (`public` or `community`) and a `geo_id`. RLS on
-`posts` turns those into an answer. Everything else defers to it:
+A post carries a `visibility` (`public`, `community` or `followers`) and a
+`geo_id` -- or it carries a `group_id`, in which case visibility is ignored
+entirely and membership of the group decides. RLS on `posts` turns that into
+an answer. Everything else defers to it:
 
 * `comments` and `reactions` policies are an `EXISTS` against `posts`. They do
   not restate who may see what. A second copy of those rules would be a second
@@ -199,6 +201,46 @@ A post carries a `visibility` (`public` or `community`) and a `geo_id`. RLS on
 `geo_id NULL` means the whole LGA, which is the right default rather than a
 special case: village affiliation is optional, so a member who never chose one
 must still be able to post to somebody.
+
+### Groups, and the leak that OR'd policies would have caused
+
+A group is a place with a membership, and **membership IS the access rule**. A
+group post therefore ignores `post_visibility` completely -- applying both
+would let a member accidentally hide a post from the very group they posted it
+in, so the group composer offers no visibility selector at all.
+
+That decision has a consequence that is easy to get wrong. **Multiple
+permissive policies are OR'd together.** A post inside a private group still
+carries the `visibility` column, and its default is `'public'` -- so
+`posts_select_public` would have matched it, and the post would have been
+readable by the entire internet while the group looked properly locked.
+Replies and images, which ask an `EXISTS` against `posts`, would have followed
+it out.
+
+Migration 014 therefore does two jobs. It creates groups, and it narrows
+`posts_select_public`, `posts_select_community`, `posts_select_followers` and
+`posts_insert_own` to `group_id is null`, so a group post matches exactly one
+policy: `posts_select_group`. `posts_select_own` and `posts_select_staff` are
+deliberately left alone -- an author should still see their own post after
+leaving a group, and staff moderate everything.
+
+Reading a public group does not entitle you to write in it:
+`posts_insert_group` requires membership whatever the group's visibility.
+
+Two smaller rules keep a group coherent:
+
+* **The creator is made owner by a trigger**, not by the application, so a
+  group can never exist without somebody responsible for it -- however it was
+  created.
+* **A group must always keep one owner.** The guard refuses both the last
+  owner leaving and the last owner self-demoting, which are the same problem
+  by two routes. It raises rather than filtering, so unlike most refusals here
+  it fails loudly and gets its own message in the UI.
+
+Private groups cannot be joined at all; that is what makes them private. A
+"request to join" tier would mean a `join_requests` table adding rows through
+a definer function, not a third enum value -- which is why
+`group_visibility` has exactly two.
 
 ### Deletion has two different meanings
 

@@ -313,3 +313,31 @@ the lowest cost per call — but they were the one action originally shipped wit
 no limit at all, which made them the cheapest thing on the platform to abuse:
 one click, two round trips and two revalidations, repeatable as fast as a
 script can send them.
+
+---
+
+## Registration verification
+
+Email confirmation is off by product decision, so a member can register with an
+address they do not control. That is acceptable while the audience is people
+you know personally and unacceptable on a public URL.
+
+**Google sign-in is the resolution, not email confirmation.** The provider has
+already verified the address, so it closes the gap without reintroducing the
+inbox round trip that confirmation was switched off to avoid.
+
+The order matters, because getting it wrong produces a button that fails:
+
+1. Google Cloud Console -> Credentials -> OAuth client ID (Web application).
+2. Authorised redirect URI must be **Supabase's** callback, not the app's:
+   `https://<project-ref>.supabase.co/auth/v1/callback`.
+   This is the step most often got wrong. The browser goes Google -> Supabase
+   -> `/auth/callback` in the app; Google never redirects to the app directly.
+3. Paste the client ID and secret into Supabase -> Authentication ->
+   Sign In / Providers -> Google, and enable it.
+4. ONLY THEN set `NEXT_PUBLIC_OAUTH_PROVIDERS=google` in Vercel and redeploy.
+   Doing this first would render a button with nothing behind it.
+
+The Vercel variable is what actually shows the button, and it is separate from
+`.env.example`, so committing a change to that file does not enable anything in
+production.

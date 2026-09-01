@@ -5,6 +5,7 @@ import { Logo } from "@/components/brand/logo";
 import { LoginForm } from "@/features/auth/components/login-form";
 import { OAuthButtons } from "@/features/auth/components/oauth-buttons";
 import { safeRelativePath } from "@/lib/security/redirect";
+import { AuthNotice } from "@/components/ui/auth-notice";
 import { PasskeySignIn } from "@/features/auth/components/passkey-sign-in";
 
 export const metadata: Metadata = {
@@ -16,12 +17,12 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; error?: string }>;
 }) {
   // The proxy puts the interrupted destination here. Validated once on the
   // way in so every sign-in path below gets a value already known to be a
   // same-origin path.
-  const { next: rawNext } = await searchParams;
+  const { next: rawNext, error } = await searchParams;
   const next = safeRelativePath(rawNext, "/home");
 
   return (
@@ -37,6 +38,8 @@ export default async function LoginPage({
         <p className="mb-6 mt-1 text-sm text-muted-foreground">
           Sign in to continue to your community.
         </p>
+
+        <AuthNotice error={error} className="mb-4" />
 
         <PasskeySignIn next={next} className="mb-2.5" />
         <OAuthButtons next={next} dividerLabel="or sign in with email" />

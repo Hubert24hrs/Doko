@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
 import { requireUser, isStaff } from "@/features/auth/session";
 import { signOutAction } from "@/features/auth/actions";
+import { AuthNotice } from "@/components/ui/auth-notice";
 
 export const metadata: Metadata = {
   title: "Home",
@@ -16,8 +17,13 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   const user = await requireUser("/home");
+  const { error } = await searchParams;
   const profile = user.profile;
   const displayName = profile?.full_name ?? "there";
 
@@ -48,6 +54,8 @@ export default async function HomePage() {
       </header>
 
       <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
+        <AuthNotice error={error} className="mb-6" />
+
         <div className="mb-8 flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Welcome, {displayName}

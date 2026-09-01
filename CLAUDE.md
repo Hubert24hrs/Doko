@@ -67,8 +67,10 @@ be without a live Supabase project.**
   four reactions, trigger-maintained engagement counts, and a public
   `/posts/[id]` page. Verified against the hosted project with real data,
   including the author embed and the generated SEO metadata for public posts.
-* **112 database assertions passing**: 38 schema, 29 RLS, 9 seed, 22 posts,
-  18 comments/reactions.
+* **131 database assertions passing**: 38 schema, 29 RLS, 9 seed, 22 posts,
+  18 comments/reactions, 19 media.
+* **Phase 2 slice 3 (images on posts)**: up to four per post, private bucket,
+  signed URLs, visible exactly when the post is.
 * **Deployed to production and verified on the live URL**: public routes serve,
   protected routes redirect, real community data renders, canonical URLs and
   the sitemap carry the production host, and no secret appears in the HTML.
@@ -102,7 +104,7 @@ be without a live Supabase project.**
   is enabled, so a member can register with an address they do not control.
   Acceptable while the audience is known personally; NOT acceptable once the
   URL is shared. Resolve before public launch -- see docs/DEPLOYMENT.md section 6.
-* Rest of Phase 2: media on posts (Supabase Storage), following, groups
+* Rest of Phase 2: following, groups
 * Phase 3 messaging; Phase 4 events, jobs, marketplace, directory, issues, map;
   Phase 5 verification, moderation queue, advertising, payments; Phase 6
   hardening
@@ -119,11 +121,9 @@ Recommended order, and why:
 
 1. **Enable Google sign-in.** Closes the registration gap above. The code is
    built; it needs credentials and one env var. Free, roughly 20 minutes.
-2. **Media on posts.** The largest single change in how the feed feels.
-   Needs a Storage bucket with its own policies -- upload rules are a
-   different problem from row policies, so budget real care for it.
-3. **Following.** Turns the feed from "everything" into "yours", and unlocks
+2. **Following.** Turns the feed from "everything" into "yours", and unlocks
    the followers-only visibility deliberately left out of `post_visibility`.
+3. **Groups**, then Phase 3 messaging.
 
 Operational notes that will otherwise be rediscovered painfully:
 
@@ -246,6 +246,7 @@ events and issues will reference it.
 | `posts` | member posts; `geo_id` NULL means LGA-wide |
 | `comments` | replies; visibility follows the post's |
 | `reactions` | one per person per post, four kinds |
+| `post_media` | up to 4 images per post; bytes live in the private `post-media` bucket |
 
 **`posts.author_id` and `comments.author_id` reference `public.profiles`, not
 `auth.users`.** The identity is the same, since `profiles.id` IS the auth user
@@ -464,3 +465,8 @@ flows, and every page's real data path.
 | Identity providers behind `NEXT_PUBLIC_OAUTH_PROVIDERS`, defaulting to none | which providers exist is an account and billing decision, not an engineering one, and a button with no credentials behind it is worse than no button |
 | Sitemap uses a cookie-free anonymous client | a sitemap has no caller; reading cookies made the route dynamic and silently shipped it empty |
 | An invisible post 404s, not 403s | a 403 would confirm the post exists |
+| Media bucket is private, read via signed URLs | a public bucket serves any object to anyone holding the URL with no policy consulted; unguessable ids are obscurity, not access control |
+| Storage path is `<post_id>/<uuid>.<ext>` | storage policies read the first segment to find the owning post; a malformed path matches no policy and is denied |
+| Post saved before images upload | if an upload fails the member keeps their words; the other order loses the post because a photo would not transfer |
+| Plain `<img>`, not `next/image`, for post media | the optimiser caches under a key that outlives the signed URL and would serve a broken image |
+| Alt text asked for always, required never | refusing the upload costs the community the photograph rather than gaining it a description |

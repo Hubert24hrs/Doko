@@ -8,9 +8,12 @@ import { Button } from "@/components/ui/button";
 import { VerifiedBadge } from "@/components/ui/badge";
 import { Field, FieldLabel, FieldTextarea } from "@/components/ui/field";
 
+import { EditableText } from "@/components/ui/editable-text";
+
 import {
   createCommentAction,
   deleteCommentAction,
+  updateCommentAction,
   type CommentActionState,
 } from "../actions";
 import { COMMENT_MAX_LENGTH } from "../schemas";
@@ -88,6 +91,48 @@ export function CommentComposer({ postId }: { postId: string }) {
       ) : null}
       <ReplyBody key={state.postedAt ?? "reply"} error={state.fieldErrors?.body} />
     </form>
+  );
+}
+
+/**
+ * A reply's text, editable in place by its author.
+ *
+ * Author only, for the same reason as posts: the comments guard trigger
+ * restores `body` for anyone else, so a moderator's edit would silently do
+ * nothing.
+ */
+function ReplyBodyText({
+  commentId,
+  postId,
+  body,
+  canEdit,
+}: {
+  commentId: string;
+  postId: string;
+  body: string;
+  canEdit: boolean;
+}) {
+  const [state, formAction] = useActionState(updateCommentAction, INITIAL);
+
+  return (
+    <>
+      {state.formError ? (
+        <p role="alert" className="mt-1 text-xs text-danger">
+          {state.formError}
+        </p>
+      ) : null}
+      <EditableText
+        key={state.postedAt ?? "view"}
+        body={body}
+        canEdit={canEdit}
+        formAction={formAction}
+        hiddenFields={{ commentId, postId }}
+        maxLength={COMMENT_MAX_LENGTH}
+        error={state.fieldErrors?.body}
+        className="mt-1 text-sm text-foreground"
+        editLabel="Edit reply"
+      />
+    </>
   );
 }
 
@@ -180,11 +225,12 @@ export function CommentList({
                   ) : null}
                 </div>
 
-                {/* Text, never HTML: React escapes it and pre-wrap keeps the
-                    author's line breaks without any markup being involved. */}
-                <p className="mt-1 whitespace-pre-wrap break-words text-sm text-foreground">
-                  {comment.body}
-                </p>
+                <ReplyBodyText
+                  commentId={comment.id}
+                  postId={postId}
+                  body={comment.body}
+                  canEdit={viewerId !== null && comment.author_id === viewerId}
+                />
               </div>
 
               {canManage ? (

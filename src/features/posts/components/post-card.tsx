@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils/cn";
 import type { FeedPost } from "../queries";
 
 import { PostActions } from "./post-actions";
+import { PostBody } from "./post-body";
 
 /** Relative time, in words, without pulling in a date library for one string. */
 function timeAgo(iso: string): { label: string; exact: string } {
@@ -35,12 +36,19 @@ function timeAgo(iso: string): { label: string; exact: string } {
 export function PostCard({
   post,
   canManage,
+  canEdit = false,
   showConversationLink = false,
   className,
 }: {
   post: FeedPost;
-  /** True when the viewer authored it, or is staff. Controls the menu only. */
+  /** Author or staff: controls removal. */
   canManage: boolean;
+  /**
+   * Author ONLY. Separate from canManage because the guard trigger restores
+   * `body` for anyone who is not the author, so a moderator's edit would
+   * silently do nothing — offering them the control would be a lie.
+   */
+  canEdit?: boolean;
   /** Feed cards link into the post; the post page itself does not. */
   showConversationLink?: boolean;
   className?: string;
@@ -117,14 +125,7 @@ export function PostCard({
           {canManage ? <PostActions postId={post.id} /> : null}
         </div>
 
-        {/*
-          Rendered as text, never as HTML. React escapes it, and `whitespace-
-          pre-wrap` preserves the member's line breaks without needing markup,
-          so there is no path from a post body to injected markup.
-        */}
-        <p className="mt-3 whitespace-pre-wrap break-words text-foreground">
-          {post.body}
-        </p>
+        <PostBody postId={post.id} body={post.body} canEdit={canEdit} />
 
         {showConversationLink ? (
           <Link

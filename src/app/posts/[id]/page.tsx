@@ -78,6 +78,9 @@ export default async function PostPage({
 
   const staff = user ? isStaff(user) : false;
   const canManage = Boolean(user && (post.author_id === user.id || staff));
+  // Editing is the author's alone: the guard trigger restores `body` for
+  // everyone else, so a moderator's edit would silently do nothing.
+  const canEdit = Boolean(user && post.author_id === user.id);
 
   return (
     <>
@@ -97,7 +100,7 @@ export default async function PostPage({
       </header>
 
       <main id="main" className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
-        <PostCard post={post} canManage={canManage} />
+        <PostCard post={post} canManage={canManage} canEdit={canEdit} />
 
         {user ? (
           <div className="mt-3">

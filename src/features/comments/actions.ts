@@ -10,6 +10,7 @@ import {
   createCommentSchema,
   deleteCommentSchema,
   setReactionSchema,
+  updateCommentSchema,
 } from "./schemas";
 
 export interface CommentActionState {
@@ -77,6 +78,46 @@ export async function createCommentAction(
       };
     }
     return { ok: false, formError: "Your reply could not be saved." };
+  }
+
+  revalidatePath(`/posts/${parsed.data.postId}`);
+  revalidatePath("/feed");
+  return { ok: true, postedAt: new Date().toISOString() };
+}
+
+/**
+ * Edit one's own reply.
+ *
+ * The database is already set up for this: comments_update_own permits it, and
+ * the guard trigger stamps edited_at when the author changes the body while
+ * restoring it for anyone else. Only the way in was missing, which meant the
+ * "edited" label in the UI described a state nothing could produce.
+ */
+export async function updateCommentAction(
+  _prev: CommentActionState,
+  formData: FormData,
+): Promise<CommentActionState> {
+  await requireUser("/feed");
+
+  const parsed = updateCommentSchema.safeParse({
+    commentId: formData.get("commentId"),
+    postId: formData.get("postId"),
+    body: formData.get("body"),
+  });
+
+  if (!parsed.success) {
+    return { ok: false, fieldErrors: toFieldErrors(parsed.error.issues) };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("comments")
+    .update({ body: parsed.data.body })
+    .eq("id", parsed.data.commentId);
+
+  if (error) {
+    console.error("[comments.update] failed", error.message);
+    return { ok: false, formError: "Your edit could not be saved." };
   }
 
   revalidatePath(`/posts/${parsed.data.postId}`);

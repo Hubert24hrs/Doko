@@ -4,6 +4,7 @@ import {
   COMMENT_MAX_LENGTH,
   createCommentSchema,
   setReactionSchema,
+  updateCommentSchema,
 } from "@/features/comments/schemas";
 
 // Ids must be conforming UUIDs: zod v4 enforces the RFC 4122 version and
@@ -91,6 +92,62 @@ describe("setReactionSchema", () => {
   it("requires a valid post id", () => {
     expect(
       setReactionSchema.safeParse({ postId: "nope", kind: "like" }).success,
+    ).toBe(false);
+  });
+});
+
+describe("updateCommentSchema", () => {
+  const COMMENT_ID = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
+
+  it("accepts an edit with valid ids and a body", () => {
+    expect(
+      updateCommentSchema.safeParse({
+        commentId: COMMENT_ID,
+        postId: POST_ID,
+        body: "Corrected: the meeting is on Saturday.",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("will not let an edit blank a reply", () => {
+    expect(
+      updateCommentSchema.safeParse({
+        commentId: COMMENT_ID,
+        postId: POST_ID,
+        body: "   ",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("requires the post id as well as the comment id", () => {
+    // The action revalidates the post page, so it needs to know which one.
+    expect(
+      updateCommentSchema.safeParse({
+        commentId: COMMENT_ID,
+        body: "hello",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("does not accept an author id from the client", () => {
+    const result = updateCommentSchema.parse({
+      commentId: COMMENT_ID,
+      postId: POST_ID,
+      body: "hello",
+      authorId: POST_ID,
+    } as never);
+    // Who may edit is decided by RLS and the guard trigger, never by the
+    // request body.
+    expect(result).not.toHaveProperty("authorId");
+  });
+
+  it("enforces the same length cap as creating a reply", () => {
+    expect(
+      updateCommentSchema.safeParse({
+        commentId: COMMENT_ID,
+        postId: POST_ID,
+        body: "a".repeat(COMMENT_MAX_LENGTH + 1),
+      }).success,
     ).toBe(false);
   });
 });

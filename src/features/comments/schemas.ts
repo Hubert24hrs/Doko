@@ -18,6 +18,19 @@ export const createCommentSchema = z.object({
     ),
 });
 
+export const updateCommentSchema = z.object({
+  commentId: z.uuid(),
+  postId: z.uuid(),
+  body: z
+    .string()
+    .trim()
+    .min(1, "A reply cannot be empty")
+    .max(
+      COMMENT_MAX_LENGTH,
+      `A reply can be at most ${COMMENT_MAX_LENGTH.toLocaleString("en-NG")} characters`,
+    ),
+});
+
 export const deleteCommentSchema = z.object({
   commentId: z.uuid(),
 });

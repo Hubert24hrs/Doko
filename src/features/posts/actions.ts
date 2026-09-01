@@ -127,7 +127,12 @@ export async function updatePostAction(
   }
 
   revalidatePath("/feed");
-  return { ok: true, message: "Post updated." };
+  revalidatePath(`/posts/${parsed.data.postId}`);
+  return {
+    ok: true,
+    message: "Post updated.",
+    postedAt: new Date().toISOString(),
+  };
 }
 
 export async function deletePostAction(

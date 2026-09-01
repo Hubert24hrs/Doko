@@ -65,8 +65,22 @@ both with:
 supabase test db
 ```
 
-**All 71 assertions pass** against the live project as of 2026-09-01:
-38 structural, 24 RLS behaviour, 9 seed integrity.
+**All 76 assertions pass** against the live project as of 2026-09-01:
+38 structural, 29 RLS behaviour, 9 seed integrity.
+
+Two lessons the first live runs taught, both now structural rather than
+remembered:
+
+* **Never count whole tables.** Assertions that counted every row in
+  `profiles` broke the moment a real member signed up, reporting a defect in
+  the signup trigger when the only thing that changed was the platform gaining
+  a user. Membership counts are scoped to the suite's own fixture UUIDs.
+  Absolute counts remain where they are the stronger claim -- a citizen must
+  see ZERO audit rows however many exist.
+* **Fixtures are deny-by-default.** Every fixture profile is set private
+  first, and only the ones an assertion needs are opened up. Twice a new
+  fixture inherited the `public` column default and silently joined the
+  anonymous-visitor count.
 
 The first real run found five defects -- four in the tests and scaffolding,
 one in production code. See docs/SECURITY.md for the rate limiter, which is

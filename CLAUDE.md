@@ -51,14 +51,16 @@ be without a live Supabase project.**
 * SQL migrations 001-006 (schema, RLS, audit, rate limits) -- **executed
   against the hosted project on 2026-09-01**
 * Seed data for the real Igbo-Eze North hierarchy -- **applied and verified**
-* **62 database assertions passing** against live Postgres via pgTAP:
-  38 structural (`01_schema`) and 24 RLS behaviour (`02_rls`). RLS
-  enforcement, the privilege-escalation boundary, the append-only audit trail
-  and the rate limiter are VERIFIED, not assumed.
-* `03_seed` (9 assertions) is **not currently passing**: re-running an
-  outdated copy of the seed inserted a second, unprefixed set of council
-  wards (39 rows where 20 belong). Correction 003 removes them. Re-verify
-  before treating the directory as correct.
+* **76 database assertions passing** against live Postgres via pgTAP:
+  38 structural (`01_schema`), 29 RLS behaviour (`02_rls`), 9 seed integrity
+  (`03_seed`). RLS enforcement, the privilege-escalation boundary, the
+  append-only audit trail, the rate limiter, provider sign-up handling and
+  the seeded directory are VERIFIED, not assumed.
+* The suites run against the live database and leave nothing behind: verified
+  independently that no fixture user, no capture table and no altered row
+  survives the closing rollback.
+* Auth verified end to end through the running app: sign-up, the profile
+  trigger, sign-in, `/settings`, and `/admin` correctly refusing a citizen.
 * 56 unit tests passing; typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
@@ -66,9 +68,11 @@ be without a live Supabase project.**
 
 ### Not yet done
 
-* **Auth has not been exercised end-to-end.** Sign-up, email confirmation,
-  sign-in and the admin gate have never run against the live project. The app
-  is not yet wired to it (no `.env.local`). This is the immediate next step.
+* **Biometric sign-in (passkeys) is built but unexercised.** The enrolment and
+  sign-in paths have never been run by a real device. Passkeys are in Supabase
+  beta and must be enabled in the dashboard.
+* **Identity providers are switched off.** Google needs credentials; Apple
+  needs paid Developer Program membership. Both are one env var away.
 * Phases 2-6 of the platform (feed, groups, messaging, events, jobs,
   marketplace, issues, map, verification, moderation, payments)
 * The entire AI intelligence layer (Oba AI, RAG, semantic search, moderation,

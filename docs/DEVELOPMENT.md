@@ -120,3 +120,47 @@ This Next.js version ships its own docs. Prefer them over memory:
 ```
 node_modules/next/dist/docs/
 ```
+
+---
+
+## Applying database changes
+
+There is no Docker and no `psql` on the development machine, so the Supabase
+CLI cannot run migrations locally. **Migrations are applied by hand through the
+Supabase SQL Editor**, and everything is written to suit that:
+
+* Migrations and pgTAP suites use portable SQL only — no psql meta-commands
+  such as `\set`, which the SQL Editor cannot parse.
+* Each pgTAP suite sets `search_path = public, extensions, pg_temp`, because
+  pgTAP installs into `extensions` on hosted Supabase and its functions are
+  otherwise unresolvable.
+* Each suite ends with a `coalesce` over `finish()` so exactly one row always
+  comes back: the named failures, or `ALL ASSERTIONS PASSED`. The editor shows
+  only the final statement's result, so a suite that returned nothing on
+  success was indistinguishable from one whose failures scrolled past.
+* Suites wrap everything in `begin … rollback`, so they can run against the
+  live database and leave nothing behind.
+
+To apply a change:
+
+1. Open the Supabase SQL Editor, new query.
+2. Paste the whole migration file. Run.
+3. Paste the relevant `supabase/tests/*.sql` suite. Run. Expect
+   `ALL ASSERTIONS PASSED`.
+
+**Deployment does not run migrations.** Apply them before merging code that
+depends on them, or production will query columns that do not exist.
+
+## Two traps that have already cost time
+
+**After `next build`, restart the server.** A running `next start` keeps
+serving the previous build. Worse, a signed-out `curl` cannot tell a missing
+route from a proxy redirect — both return 307 — so a route can appear to work
+while returning 404 to a signed-in member. Verify with
+`ls .next/server/app/<route>` instead.
+
+**Privileged profile columns cannot be set from raw SQL.**
+`profiles_guard_privileged_columns()` silently restores `is_verified`,
+`is_suspended` and friends whenever `is_admin()` is false, and a statement run
+directly in the SQL Editor has no `auth.uid()`. Adopt an admin identity first —
+see `docs/SECURITY.md`.

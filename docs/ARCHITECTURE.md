@@ -176,3 +176,58 @@ This trade-off is recorded in [`SECURITY.md`](./SECURITY.md).
   `npm run db:types` regenerates it from the live schema.
 * The AI layer is not built. It presupposes a social core with real content to
   ground answers in; that content does not exist yet.
+
+---
+
+## The social core (Phase 2)
+
+### Visibility is decided once, in one place
+
+A post carries a `visibility` (`public` or `community`) and a `geo_id`. RLS on
+`posts` turns those into an answer. Everything else defers to it:
+
+* `comments` and `reactions` policies are an `EXISTS` against `posts`. They do
+  not restate who may see what. A second copy of those rules would be a second
+  thing to keep in sync, and the copy outside the source of truth is the one
+  that drifts.
+* The feed query applies **no** visibility filter. It asks for posts and lets
+  the policies decide. This is why the feed cannot leak: there is no
+  application-level filter that could disagree with the database.
+* `/posts/[id]` serves 404, not 403, for a post the caller cannot see. A 403
+  would confirm the post exists.
+
+`geo_id NULL` means the whole LGA, which is the right default rather than a
+special case: village affiliation is optional, so a member who never chose one
+must still be able to post to somebody.
+
+### Deletion has two different meanings
+
+| | Removal | Why |
+|---|---|---|
+| Posts, comments | soft (`deleted_at`) | moderation must stay auditable, and an author should see that their post was removed rather than watch it vanish |
+| Reactions | hard `DELETE` | a reaction is a signal, not speech; a withdrawn one leaves nothing worth keeping, and a tombstone would misstate what the member currently thinks |
+
+Neither `posts` nor `comments` has a `DELETE` policy for any role, including
+`super_admin`. The guard triggers additionally restore `body` for anyone who
+is not the author, so a moderator can remove but never rewrite. Moderation
+must never be able to put words in a member's mouth.
+
+### Reading the feed
+
+* **Keyset pagination** on `created_at`, not `OFFSET`. Offsets slow with depth
+  and skip or repeat rows when new posts arrive mid-scroll — on a feed that is
+  the normal case, not an edge case.
+* **Author and community are embedded** in the same query. Per-row lookups
+  would be twenty-one round trips per page.
+* **Engagement counts are denormalised** on `posts` and trigger-maintained.
+  Counting per post at read time is twenty aggregates per page and gets worse
+  as the platform grows. `recount_post_engagement()` repairs drift.
+
+### One constraint worth remembering
+
+`posts.author_id` and `comments.author_id` reference `public.profiles`, not
+`auth.users`. The identity is identical — `profiles.id` IS the auth user id —
+but **PostgREST can only embed across a foreign key whose target is in the
+exposed schema**. Pointing them at `auth.users` makes `author:author_id(...)`
+fail with PGRST200, which takes down the entire feed query rather than merely
+omitting a name. This shipped broken once. `05_comments` now asserts it.

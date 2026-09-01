@@ -4,22 +4,45 @@ The digital home of **Igbo-Eze North Local Government Area, Enugu State,
 Nigeria** — one place where citizens can find each other, discover their
 communities, share what matters, find opportunities and build together.
 
-> **Status: Phase 1 (Foundation).** The application builds, typechecks, lints
-> and passes its tests. **No Supabase project is connected yet**, so the
-> database migrations and RLS policies are written but have never been
-> executed. See [`CLAUDE.md`](./CLAUDE.md) §12 for exactly what that blocks.
+**Live: <https://doko-delta.vercel.app>**
+
+> **Status: Phase 1 complete, Phase 2 in progress.** Deployed and running
+> against a hosted Supabase project. 112 database assertions and 79 unit tests
+> pass; typecheck, lint and the production build are clean.
+>
+> **Before sharing the link publicly:** registration currently verifies
+> nothing — email confirmation is off and no identity provider is enabled, so
+> a member can register with an address they do not control. See
+> [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) §6.
 
 ---
 
 ## What exists today
 
 * Public landing page and a communities directory covering the real
-  Igbo-Eze North hierarchy — 2 towns, 4 districts, 31 villages, 20 council wards
-* Registration and sign-in, validated on both client and server
+  Igbo-Eze North hierarchy — 2 towns, 4 districts, 31 villages, 20 council
+  wards, seeded from cited sources and editable by administrators
+* Registration and sign-in, validated on both client and server, with a
+  password reveal toggle and a welcome flow
+* Profile settings, including optional village and profile visibility
+* A community feed: posts scoped to a village, a town or the whole LGA, with
+  public or community-only visibility
+* Replies and four reactions — like, celebrate, support, sad — chosen for a
+  community where funerals and festivals both matter
+* Public post pages with real metadata, a sitemap and robots rules
 * Role-based access control enforced in the database, not the UI
-* An admin console foundation with a live platform overview
+* An admin console with a live platform overview and the community directory
 * A design system with light/dark themes, accessible primitives, and
   reduced-motion support
+
+## What does not work yet
+
+* **Biometric sign-in (passkeys).** Built, enrolment succeeds, sign-in
+  unconfirmed. Recorded honestly rather than described as working.
+* Google and Apple sign-in are switched off — Google needs credentials,
+  Apple needs paid Developer Program membership.
+* Media on posts, following, groups, messaging, events, jobs, marketplace,
+  community issues, the map, and the AI layer.
 
 ## Quick start
 
@@ -30,8 +53,13 @@ npm run dev
 ```
 
 The app runs without credentials — data pages show an honest "unavailable"
-state instead of crashing. To connect a database, see
+state instead of crashing, which is deliberate: a misconfigured deploy should
+still serve public content. To connect a database, see
 [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md).
+
+Database changes are applied by hand through the Supabase SQL Editor. Every
+migration and test is written in portable SQL for that reason — no psql
+meta-commands.
 
 ## Commands
 

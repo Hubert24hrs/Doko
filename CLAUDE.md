@@ -93,13 +93,39 @@ be without a live Supabase project.**
   is enabled, so a member can register with an address they do not control.
   Acceptable while the audience is known personally; NOT acceptable once the
   URL is shared. Resolve before public launch -- see docs/DEPLOYMENT.md section 6.
-* Phases 2-6 of the platform (feed, groups, messaging, events, jobs,
-  marketplace, issues, map, verification, moderation, payments)
+* Rest of Phase 2: media on posts (Supabase Storage), following, groups
+* Phase 3 messaging; Phase 4 events, jobs, marketplace, directory, issues, map;
+  Phase 5 verification, moderation queue, advertising, payments; Phase 6
+  hardening
 * The entire AI intelligence layer (Oba AI, RAG, semantic search, moderation,
   translation). **Note:** the AI brief assumes an existing platform to
   integrate into. That platform is what is being built now; AI work starts
-  once the social core exists and there is real content to ground answers in.
+  once there is real content to ground answers in. Posts and comments exist
+  now, so the ground is beginning to be there.
 * Mobile apps
+
+### Where to pick up
+
+Recommended order, and why:
+
+1. **Enable Google sign-in.** Closes the registration gap above. The code is
+   built; it needs credentials and one env var. Free, roughly 20 minutes.
+2. **Media on posts.** The largest single change in how the feed feels.
+   Needs a Storage bucket with its own policies -- upload rules are a
+   different problem from row policies, so budget real care for it.
+3. **Following.** Turns the feed from "everything" into "yours", and unlocks
+   the followers-only visibility deliberately left out of `post_visibility`.
+
+Operational notes that will otherwise be rediscovered painfully:
+
+* Migrations are applied BY HAND through the Supabase SQL Editor. There is no
+  Docker or `psql` on the development machine, which is why every migration
+  and pgTAP suite is written in portable SQL with no psql meta-commands.
+* Deployment does NOT run migrations. Apply them before merging code that
+  depends on them, or production queries columns that do not exist.
+* After `next build`, RESTART the dev server. A running server keeps serving
+  the old build, and a signed-out `curl` cannot tell a missing route from a
+  proxy redirect -- both return 307. Check `.next/server/app/<route>` instead.
 
 ---
 
@@ -135,10 +161,15 @@ src/
   app/                      routes only; thin, delegate to features/
     (auth)/login|register/  auth route group
     admin/                  staff console
-    auth/callback/          email-confirmation handler
-    settings/               profile editing
+    auth/callback/          email + OAuth callback
+    settings/               profile editing, passkey enrolment
     communities/            public directory
     home/                   authenticated landing
+    welcome/                post-registration greeting
+    feed/                   the community feed
+    posts/[id]/             public post page, indexable
+    robots.ts sitemap.ts    SEO surface
+    not-found.tsx error.tsx global-error.tsx
     globals.css             ALL design tokens live here
     layout.tsx
   components/
@@ -149,6 +180,8 @@ src/
     auth/{actions,schemas,session}.ts, components/
     geo/{queries,snapshot}.ts
     profile/{actions,schemas}.ts, components/
+    posts/{actions,queries,schemas}.ts, components/
+    comments/{actions,queries,schemas}.ts, components/
   lib/
     env.ts                  public env (browser-safe)
     env.server.ts           secrets, `server-only` guarded
@@ -160,6 +193,7 @@ src/
 supabase/
   migrations/               numbered, idempotent
   seed.sql                  real Igbo-Eze North data
+supabase/tests/             pgTAP suites 01-05, portable SQL
 tests/unit/                 vitest suites
 docs/                       ARCHITECTURE, DEVELOPMENT, TESTING, SECURITY, DEPLOYMENT
 ```
@@ -190,7 +224,7 @@ Protections: a cycle-guard trigger, `ON DELETE RESTRICT` on `parent_id`, a
 deletion via `deleted_at`. Geography is never hard-deleted casually -- posts,
 events and issues will reference it.
 
-### Tables (migrations 001-006)
+### Tables (migrations 001-009, all applied to the live project)
 
 | Table | Purpose |
 |---|---|
@@ -200,12 +234,27 @@ events and issues will reference it.
 | `user_roles` | roles, **never** stored on `profiles` |
 | `audit_logs` | append-only administrative trail |
 | `rate_limit_counters` | durable rate limiting |
+| `posts` | member posts; `geo_id` NULL means LGA-wide |
+| `comments` | replies; visibility follows the post's |
+| `reactions` | one per person per post, four kinds |
+
+**`posts.author_id` and `comments.author_id` reference `public.profiles`, not
+`auth.users`.** The identity is the same, since `profiles.id` IS the auth user
+id, but PostgREST can only embed across a foreign key whose target is in the
+exposed schema. Pointing them at `auth.users` makes
+`author:author_id ( ... )` fail with PGRST200 and takes the whole feed query
+down, not just the author's name. This shipped broken once; do not undo it.
+
+**`posts.comment_count` and `posts.reaction_count` are denormalised** and
+maintained by triggers, because a feed page would otherwise run twenty
+aggregates. `recount_post_engagement()` repairs drift.
 
 ### Helper functions
 
 `has_role`, `is_staff`, `is_admin`, `is_super_admin`, `administers_geo`,
 `shares_community_with`, `geo_ancestors`, `geo_descendants`,
-`log_admin_action`, `consume_rate_limit`, `slugify`.
+`log_admin_action`, `consume_rate_limit`, `slugify`,
+`is_active_member`, `member_of_geo`, `recount_post_engagement`.
 
 All RBAC helpers are `SECURITY DEFINER` with `set search_path = public,
 pg_temp`.
@@ -396,3 +445,13 @@ flows, and every page's real data path.
 | `force-dynamic` on data pages | they read per-request session/live data; also keeps builds working with no DB |
 | Counts render `--` on failure | a failed query must not look like real zero |
 | Missing env degrades, never 500s | a misconfigured deploy must still serve public content; `tryGetClientEnv()` returns null and the caller is treated as signed out |
+| Posts and comments soft-delete; reactions hard-delete | moderation must stay auditable, and an author must be able to see that their own post was removed rather than watch it vanish. A reaction is a signal, not speech: a withdrawn one leaves nothing worth keeping |
+| Moderators may remove, never rewrite | the guard triggers restore `body` for anyone who is not the author, so moderation can never put words in a member's mouth |
+| Author foreign keys point at `profiles` | PostgREST embeds only across keys targeting the exposed schema; pointing at `auth.users` broke the entire feed query |
+| Comment and reaction visibility is an EXISTS against `posts` | restating the rules would create a second copy, and the copy outside the source of truth is the one that drifts |
+| Engagement counts denormalised on `posts` | twenty aggregates per feed page does not scale; `recount_post_engagement()` repairs drift |
+| Keyset pagination on the feed | OFFSET slows with depth and skips or repeats rows when new posts arrive mid-scroll, which on a feed is normal |
+| Reactions are like/celebrate/support/sad | chosen for this community: funerals and festivals are both major events here, and a thumbs-up handles condolence badly |
+| Identity providers behind `NEXT_PUBLIC_OAUTH_PROVIDERS`, defaulting to none | which providers exist is an account and billing decision, not an engineering one, and a button with no credentials behind it is worse than no button |
+| Sitemap uses a cookie-free anonymous client | a sitemap has no caller; reading cookies made the route dynamic and silently shipped it empty |
+| An invisible post 404s, not 403s | a 403 would confirm the post exists |

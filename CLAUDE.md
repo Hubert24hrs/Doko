@@ -67,8 +67,10 @@ be without a live Supabase project.**
   four reactions, trigger-maintained engagement counts, and a public
   `/posts/[id]` page. Verified against the hosted project with real data,
   including the author embed and the generated SEO metadata for public posts.
-* **147 database assertions passing**: 38 schema, 29 RLS, 9 seed, 22 posts,
-  18 comments/reactions, 19 media, 16 follows.
+* **160 database assertions passing**: 38 schema, 29 RLS, 9 seed, 22 posts,
+  18 comments/reactions, 19 media, 16 follows, 13 followers-only posts.
+* **Followers-only posts verified**, including that replies and images inherit
+  the tier without those tables having been modified.
 * **Phase 2 slices 4 and 5 verified on the live site**: member profiles at
   `/members/[username]`, and following -- Follow button, counts, and the
   Everyone / Following feed views, including the empty-following case showing

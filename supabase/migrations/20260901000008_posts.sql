@@ -21,7 +21,12 @@ exception when duplicate_object then null; end $$;
 
 create table if not exists public.posts (
   id          uuid primary key default gen_random_uuid(),
-  author_id   uuid not null references auth.users(id) on delete cascade,
+  -- References profiles, NOT auth.users. profiles.id IS the auth user id, so
+  -- the identity is the same, but the foreign key has to point at a table in
+  -- the `public` schema for PostgREST to embed the author with the post.
+  -- Pointing it at auth.users makes `author:author_id(...)` fail with
+  -- PGRST200 "no matches were found", and the feed cannot render a name.
+  author_id   uuid not null references public.profiles(id) on delete cascade,
   body        text not null,
 
   -- Which community this post belongs to. NULL means the whole LGA, which is

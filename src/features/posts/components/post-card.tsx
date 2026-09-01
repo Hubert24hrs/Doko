@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Globe2, MapPin, Users } from "lucide-react";
+import { Globe2, MapPin, MessageCircle, Users } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { VerifiedBadge } from "@/components/ui/badge";
@@ -35,11 +35,14 @@ function timeAgo(iso: string): { label: string; exact: string } {
 export function PostCard({
   post,
   canManage,
+  showConversationLink = false,
   className,
 }: {
   post: FeedPost;
   /** True when the viewer authored it, or is staff. Controls the menu only. */
   canManage: boolean;
+  /** Feed cards link into the post; the post page itself does not. */
+  showConversationLink?: boolean;
   className?: string;
 }) {
   const author = post.author;
@@ -122,6 +125,26 @@ export function PostCard({
         <p className="mt-3 whitespace-pre-wrap break-words text-foreground">
           {post.body}
         </p>
+
+        {showConversationLink ? (
+          <Link
+            href={`/posts/${post.id}`}
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+          >
+            <MessageCircle className="size-4" aria-hidden="true" />
+            {post.comment_count === 0
+              ? "Reply"
+              : `${post.comment_count.toLocaleString("en-NG")} ${
+                  post.comment_count === 1 ? "reply" : "replies"
+                }`}
+            {post.reaction_count > 0 ? (
+              <span className="text-muted-foreground">
+                · {post.reaction_count.toLocaleString("en-NG")} reaction
+                {post.reaction_count === 1 ? "" : "s"}
+              </span>
+            ) : null}
+          </Link>
+        ) : null}
       </CardContent>
     </Card>
   );

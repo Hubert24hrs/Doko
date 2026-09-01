@@ -101,6 +101,7 @@ export default async function FeedPage({
                 key={post.id}
                 post={post}
                 canManage={post.author_id === user.id || staff}
+                showConversationLink
               />
             ))
           )}

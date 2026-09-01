@@ -48,7 +48,7 @@ export async function getFeedPage(cursor?: string): Promise<FeedPage> {
       .from("posts")
       .select(
         `id, author_id, body, geo_id, visibility, created_at, updated_at,
-         edited_at, deleted_at,
+         edited_at, deleted_at, comment_count, reaction_count,
          author:author_id ( username, full_name, avatar_path, is_verified ),
          community:geo_id ( name, slug )`,
       )
@@ -95,7 +95,7 @@ export async function getPostsByAuthor(
       .from("posts")
       .select(
         `id, author_id, body, geo_id, visibility, created_at, updated_at,
-         edited_at, deleted_at,
+         edited_at, deleted_at, comment_count, reaction_count,
          author:author_id ( username, full_name, avatar_path, is_verified ),
          community:geo_id ( name, slug )`,
       )

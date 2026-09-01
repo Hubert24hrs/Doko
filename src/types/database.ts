@@ -42,6 +42,8 @@ export type ProfileVisibility = "public" | "community" | "private";
 
 export type PostVisibility = "public" | "community";
 
+export type ReactionKind = "like" | "celebrate" | "support" | "sad";
+
 export type GeoEntityRow = {
   id: string;
   parent_id: string | null;
@@ -140,6 +142,28 @@ export type PostRow = {
   /** Set only when the author edits the body, never by a trigger touch. */
   edited_at: string | null;
   deleted_at: string | null;
+  /** Maintained by trigger; see recount_post_engagement() for repair. */
+  comment_count: number;
+  reaction_count: number;
+}
+
+export type CommentRow = {
+  id: string;
+  post_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+  edited_at: string | null;
+  deleted_at: string | null;
+}
+
+export type ReactionRow = {
+  id: string;
+  post_id: string;
+  user_id: string;
+  kind: ReactionKind;
+  created_at: string;
 }
 
 export type GeoTreeNodeRow = {
@@ -212,8 +236,26 @@ export interface Database {
           | "updated_at"
           | "edited_at"
           | "deleted_at"
+          // Defaulted to 0 and maintained by trigger; never sent by a client.
+          | "comment_count"
+          | "reaction_count"
         >;
         Update: Partial<PostRow>;
+        Relationships: [];
+      };
+      comments: {
+        Row: CommentRow;
+        Insert: Insertable<
+          CommentRow,
+          "id" | "created_at" | "updated_at" | "edited_at" | "deleted_at"
+        >;
+        Update: Partial<CommentRow>;
+        Relationships: [];
+      };
+      reactions: {
+        Row: ReactionRow;
+        Insert: Insertable<ReactionRow, "id" | "kind" | "created_at">;
+        Update: Partial<ReactionRow>;
         Relationships: [];
       };
       audit_logs: {
@@ -295,6 +337,7 @@ export interface Database {
       geo_status: GeoStatus;
       profile_visibility: ProfileVisibility;
       post_visibility: PostVisibility;
+      reaction_kind: ReactionKind;
     };
     CompositeTypes: Record<never, never>;
   };

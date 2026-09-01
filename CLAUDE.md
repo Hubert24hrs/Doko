@@ -16,6 +16,8 @@ citizens can find each other, discover their communities, share what matters,
 find opportunities, trade, attend events and report community issues.
 
 * Repository: <https://github.com/Hubert24hrs/Doko>
+* **Live: <https://doko-delta.vercel.app>** (Vercel, deploys from `main`)
+* Database: hosted Supabase project `ezike-oba`
 * Local path: `C:\EzikeObaWebsite`
 * Target platforms: responsive web (now), Android + iOS (later)
 
@@ -67,6 +69,9 @@ be without a live Supabase project.**
   including the author embed and the generated SEO metadata for public posts.
 * **112 database assertions passing**: 38 schema, 29 RLS, 9 seed, 22 posts,
   18 comments/reactions.
+* **Deployed to production and verified on the live URL**: public routes serve,
+  protected routes redirect, real community data renders, canonical URLs and
+  the sitemap carry the production host, and no secret appears in the HTML.
 * 56 unit tests passing; typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
@@ -84,6 +89,10 @@ be without a live Supabase project.**
   working. See docs/SECURITY.md.
 * **Identity providers are switched off.** Google needs credentials; Apple
   needs paid Developer Program membership. Both are one env var away.
+* **Registration verifies nothing.** Email confirmation is off and no provider
+  is enabled, so a member can register with an address they do not control.
+  Acceptable while the audience is known personally; NOT acceptable once the
+  URL is shared. Resolve before public launch -- see docs/DEPLOYMENT.md section 6.
 * Phases 2-6 of the platform (feed, groups, messaging, events, jobs,
   marketplace, issues, map, verification, moderation, payments)
 * The entire AI intelligence layer (Oba AI, RAG, semantic search, moderation,

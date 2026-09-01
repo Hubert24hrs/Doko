@@ -95,5 +95,14 @@ select is(
   'every council ward slug carries the ward- prefix'
 );
 
-select * from finish();
+-- The SQL Editor displays only the FINAL statement's result, and pgTAP's
+-- finish() emits rows only when something failed -- so a clean run would show
+-- nothing and be indistinguishable from a run whose output simply scrolled by.
+-- Coalescing guarantees exactly one visible row either way: the failure
+-- diagnostics, or an explicit all-clear.
+select coalesce(
+  (select string_agg(f, chr(10) order by n)
+     from finish() with ordinality as t(f, n)),
+  'ALL ASSERTIONS PASSED'
+) as result;
 rollback;

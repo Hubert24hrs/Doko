@@ -40,8 +40,21 @@ export const FEED_PAGE_SIZE = 20;
  * keep in sync, and the copy that drifts is always the one outside the
  * database.
  */
-export async function getFeedPage(cursor?: string): Promise<FeedPage> {
+export async function getFeedPage(
+  cursor?: string,
+  /**
+   * When present, restricts the feed to these authors. An EMPTY array is
+   * meaningful and must not be confused with "no filter": it means the member
+   * follows nobody, and the honest answer is an empty feed rather than
+   * everything on the platform.
+   */
+  authorIds?: string[],
+): Promise<FeedPage> {
   try {
+    if (authorIds && authorIds.length === 0) {
+      return { posts: [], nextCursor: null, available: true };
+    }
+
     const supabase = await createClient();
 
     let query = supabase
@@ -56,6 +69,7 @@ export async function getFeedPage(cursor?: string): Promise<FeedPage> {
       .order("created_at", { ascending: false })
       .limit(FEED_PAGE_SIZE);
 
+    if (authorIds) query = query.in("author_id", authorIds);
     if (cursor) query = query.lt("created_at", cursor);
 
     const { data, error } = await query;

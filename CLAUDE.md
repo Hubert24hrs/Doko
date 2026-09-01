@@ -106,7 +106,7 @@ be without a live Supabase project.**
   is enabled, so a member can register with an address they do not control.
   Acceptable while the audience is known personally; NOT acceptable once the
   URL is shared. Resolve before public launch -- see docs/DEPLOYMENT.md section 6.
-* Rest of Phase 2: following, groups
+* Rest of Phase 2: groups
 * Phase 3 messaging; Phase 4 events, jobs, marketplace, directory, issues, map;
   Phase 5 verification, moderation queue, advertising, payments; Phase 6
   hardening
@@ -123,9 +123,10 @@ Recommended order, and why:
 
 1. **Enable Google sign-in.** Closes the registration gap above. The code is
    built; it needs credentials and one env var. Free, roughly 20 minutes.
-2. **Following.** Member profiles now exist at `/members/[username]`, so a
-   Follow button has somewhere to live. Unlocks the followers-only visibility
-   deliberately left out of `post_visibility`.
+2. **Followers-only post visibility.** Following now exists, so the third
+   `post_visibility` value deliberately left out can finally be added. NOTE:
+   `ALTER TYPE ... ADD VALUE` cannot be used in the same transaction that
+   creates the policy referring to it, so this needs TWO migration files.
 3. **Groups**, then Phase 3 messaging.
 
 Operational notes that will otherwise be rediscovered painfully:
@@ -251,6 +252,7 @@ events and issues will reference it.
 | `comments` | replies; visibility follows the post's |
 | `reactions` | one per person per post, four kinds |
 | `post_media` | up to 4 images per post; bytes live in the private `post-media` bucket |
+| `follows` | one-directional, no approval; the pair is the primary key |
 
 **`posts.author_id` and `comments.author_id` reference `public.profiles`, not
 `auth.users`.** The identity is the same, since `profiles.id` IS the auth user
@@ -476,3 +478,7 @@ flows, and every page's real data path.
 | Alt text asked for always, required never | refusing the upload costs the community the photograph rather than gaining it a description |
 | Post image containers carry the recorded aspect ratio | an `<img>` sized only by `w-auto` has no dimensions until it loads, so its box collapses -- and `loading="lazy"` then never fires, because a zero-height element never enters the viewport. It could not load because it had no size, and had no size because it had not loaded |
 | A profile that is not visible 404s, like a post | indistinguishable from one that does not exist, so probing usernames reveals nothing |
+| Following is one-directional and needs no approval | a community noticeboard, not a private network; profile visibility already controls who sees what, so a request-and-accept dance would be friction with no safety gain |
+| Follow sends the desired END STATE, not a toggle | a toggle read from stale UI does the opposite of what the member meant -- a double click would follow then immediately unfollow |
+| Unfollowing hard-deletes, like withdrawing a reaction | a follow is a current relationship, not speech; a tombstone would misstate who someone follows today |
+| An empty following list means an empty feed | treating it as "no filter" would silently show everything, which is the opposite of what was asked for |

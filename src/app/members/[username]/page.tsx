@@ -19,6 +19,8 @@ import { getPostsByAuthor } from "@/features/posts/queries";
 import { getPostImages } from "@/features/posts/media-queries";
 import { PostCard } from "@/features/posts/components/post-card";
 import { SocialLinks } from "@/features/profile/components/social-links";
+import { FollowButton } from "@/features/follows/components/follow-button";
+import { viewerFollows } from "@/features/follows/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -78,7 +80,10 @@ export default async function MemberPage({
   const isOwnProfile = viewer?.id === profile.id;
   const staff = viewer ? isStaff(viewer) : false;
 
-  const posts = await getPostsByAuthor(profile.id);
+  const [posts, following] = await Promise.all([
+    getPostsByAuthor(profile.id),
+    viewerFollows(profile.id),
+  ]);
   const imagesByPost = await getPostImages(posts.posts.map((p) => p.id));
 
   const where = [profile.villageName, profile.townName]
@@ -125,7 +130,20 @@ export default async function MemberPage({
                 >
                   Edit profile
                 </Link>
-              ) : null}
+              ) : viewer ? (
+                <FollowButton
+                  profileId={profile.id}
+                  username={profile.username}
+                  following={following}
+                />
+              ) : (
+                <Link
+                  href={`/login?next=${encodeURIComponent(`/members/${profile.username}`)}`}
+                  className="inline-flex h-9 items-center rounded-lg border border-border-strong px-4 text-sm font-medium text-foreground transition-colors hover:bg-surface-sunken"
+                >
+                  Sign in to follow
+                </Link>
+              )}
             </div>
 
             {profile.bio ? (
@@ -134,7 +152,26 @@ export default async function MemberPage({
               </p>
             ) : null}
 
-            <dl className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+            <dl className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+              <div className="flex items-center gap-1.5">
+                <dt className="sr-only">Followers</dt>
+                <dd className="font-medium tabular-nums text-foreground">
+                  {profile.follower_count.toLocaleString("en-NG")}
+                </dd>
+                <span className="text-muted-foreground">
+                  {profile.follower_count === 1 ? "follower" : "followers"}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <dt className="sr-only">Following</dt>
+                <dd className="font-medium tabular-nums text-foreground">
+                  {profile.following_count.toLocaleString("en-NG")}
+                </dd>
+                <span className="text-muted-foreground">following</span>
+              </div>
+            </dl>
+
+            <dl className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
               {where ? (
                 <div className="flex items-center gap-1.5">
                   <dt className="sr-only">Community</dt>

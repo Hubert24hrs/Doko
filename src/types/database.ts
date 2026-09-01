@@ -87,6 +87,9 @@ export type ProfileRow = {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  /** Maintained by trigger; see recount_follows() for repair. */
+  follower_count: number;
+  following_count: number;
 }
 
 export type ProfileSocialLinkRow = {
@@ -180,6 +183,12 @@ export type PostMediaRow = {
   created_at: string;
 }
 
+export type FollowRow = {
+  follower_id: string;
+  following_id: string;
+  created_at: string;
+}
+
 export type GeoTreeNodeRow = {
   id: string;
   kind: GeoKind;
@@ -257,6 +266,12 @@ export interface Database {
         Update: Partial<PostRow>;
         Relationships: [];
       };
+      follows: {
+        Row: FollowRow;
+        Insert: Insertable<FollowRow, "created_at">;
+        Update: Partial<FollowRow>;
+        Relationships: [];
+      };
       post_media: {
         Row: PostMediaRow;
         Insert: Insertable<
@@ -329,6 +344,10 @@ export interface Database {
         Returns: boolean;
       };
       is_active_member: { Args: { check_user_id?: string }; Returns: boolean };
+      follows_profile: {
+        Args: { target_profile_id: string; check_user_id?: string };
+        Returns: boolean;
+      };
       storage_path_post_id: { Args: { object_name: string }; Returns: string | null };
       member_of_geo: {
         Args: { target_geo_id: string | null; check_user_id?: string };

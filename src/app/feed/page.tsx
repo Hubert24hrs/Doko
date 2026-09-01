@@ -10,6 +10,7 @@ import { signOutAction } from "@/features/auth/actions";
 import { getVillageOptions } from "@/features/geo/queries";
 import { getFeedPage } from "@/features/posts/queries";
 import { getPostImages } from "@/features/posts/media-queries";
+import { getFollowedIds } from "@/features/follows/queries";
 import { PostComposer, VisibilityHint } from "@/features/posts/components/post-composer";
 import { PostCard } from "@/features/posts/components/post-card";
 
@@ -23,14 +24,21 @@ export const dynamic = "force-dynamic";
 export default async function FeedPage({
   searchParams,
 }: {
-  searchParams: Promise<{ before?: string }>;
+  searchParams: Promise<{ before?: string; view?: string }>;
 }) {
   const user = await requireUser("/feed");
-  const { before } = await searchParams;
+  const { before, view } = await searchParams;
+
+  const followingOnly = view === "following";
+
+  // Only fetched when needed. An empty result is passed through as an empty
+  // array rather than undefined, so getFeedPage shows an empty feed instead of
+  // silently falling back to everything.
+  const followedIds = followingOnly ? await getFollowedIds() : undefined;
 
   const [villages, page] = await Promise.all([
     getVillageOptions(),
-    getFeedPage(before),
+    getFeedPage(before, followedIds),
   ]);
 
   const staff = isStaff(user);
@@ -87,7 +95,32 @@ export default async function FeedPage({
           <VisibilityHint />
         </div>
 
-        <section aria-label="Posts" className="mt-8 space-y-4">
+        <nav aria-label="Feed view" className="mt-8 flex gap-1 border-b border-border">
+          <Link
+            href="/feed"
+            aria-current={followingOnly ? undefined : "page"}
+            className={
+              followingOnly
+                ? "border-b-2 border-transparent px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+                : "border-b-2 border-primary px-4 py-2 text-sm font-medium text-primary"
+            }
+          >
+            Everyone
+          </Link>
+          <Link
+            href="/feed?view=following"
+            aria-current={followingOnly ? "page" : undefined}
+            className={
+              followingOnly
+                ? "border-b-2 border-primary px-4 py-2 text-sm font-medium text-primary"
+                : "border-b-2 border-transparent px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+            }
+          >
+            Following
+          </Link>
+        </nav>
+
+        <section aria-label="Posts" className="mt-4 space-y-4">
           {!page.available ? (
             <ErrorState
               title="The feed could not be loaded"
@@ -96,8 +129,16 @@ export default async function FeedPage({
           ) : page.posts.length === 0 ? (
             <EmptyState
               icon={<MessageSquareText className="size-6" />}
-              title="Nothing here yet"
-              description="Be the first to share something with Igbo-Eze North."
+              title={
+                followingOnly
+                  ? "Nothing from the people you follow"
+                  : "Nothing here yet"
+              }
+              description={
+                followingOnly
+                  ? "Follow neighbours from their profile and their posts will appear here."
+                  : "Be the first to share something with Igbo-Eze North."
+              }
             />
           ) : (
             page.posts.map((post) => (
@@ -116,7 +157,7 @@ export default async function FeedPage({
         {page.nextCursor ? (
           <div className="mt-6 flex justify-center">
             <Link
-              href={`/feed?before=${encodeURIComponent(page.nextCursor)}`}
+              href={`/feed?${followingOnly ? "view=following&" : ""}before=${encodeURIComponent(page.nextCursor)}`}
               className="inline-flex h-10 items-center rounded-lg border border-border-strong px-5 text-sm font-medium text-foreground transition-colors hover:bg-surface-sunken"
             >
               Show older posts
@@ -127,7 +168,7 @@ export default async function FeedPage({
         {before ? (
           <div className="mt-4 flex justify-center">
             <Link
-              href="/feed"
+              href={followingOnly ? "/feed?view=following" : "/feed"}
               className="text-sm font-medium text-primary hover:underline"
             >
               Back to the newest posts

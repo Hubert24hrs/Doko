@@ -22,6 +22,28 @@ const publicSchema = z.object({
     .string()
     .url("NEXT_PUBLIC_SITE_URL must be a valid URL")
     .default("http://localhost:3000"),
+
+  /**
+   * Which identity providers to offer, comma separated.
+   *
+   * Configuration rather than code because enabling a provider is an account
+   * and billing decision, not an engineering one. Apple is omitted by default:
+   * Sign in with Apple requires paid Apple Developer Program membership, and a
+   * button that always fails is worse than no button. Add "apple" here once
+   * that membership exists -- no code change, no redeploy of logic.
+   */
+  NEXT_PUBLIC_OAUTH_PROVIDERS: z
+    .string()
+    // Defaults to NONE, not to google. An absent variable -- a deploy where
+    // someone forgot to set it -- must not silently surface a provider button
+    // that has no credentials behind it. Opting in is explicit.
+    .default("")
+    .transform((v) =>
+      v
+        .split(",")
+        .map((p) => p.trim().toLowerCase())
+        .filter((p): p is "google" | "apple" => p === "google" || p === "apple"),
+    ),
 });
 
 export type ClientEnv = z.infer<typeof publicSchema>;
@@ -35,6 +57,7 @@ function readPublicEnv(): Record<string, string | undefined> {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    NEXT_PUBLIC_OAUTH_PROVIDERS: process.env.NEXT_PUBLIC_OAUTH_PROVIDERS,
   };
 }
 

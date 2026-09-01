@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { Logo } from "@/components/brand/logo";
 import { LoginForm } from "@/features/auth/components/login-form";
-import { OAuthButtons, AuthDivider } from "@/features/auth/components/oauth-buttons";
+import { OAuthButtons } from "@/features/auth/components/oauth-buttons";
 import { PasskeySignIn } from "@/features/auth/components/passkey-sign-in";
 
 export const metadata: Metadata = {
@@ -28,8 +28,7 @@ export default function LoginPage() {
         </p>
 
         <PasskeySignIn next="/home" className="mb-2.5" />
-        <OAuthButtons next="/home" />
-        <AuthDivider label="or sign in with email" />
+        <OAuthButtons next="/home" dividerLabel="or sign in with email" />
         <LoginForm />
 
         <p className="mt-6 text-center text-sm text-muted-foreground">

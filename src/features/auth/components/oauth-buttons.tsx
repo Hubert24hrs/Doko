@@ -4,6 +4,7 @@ import * as React from "react";
 import { Loader2 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
+import { getClientEnv } from "@/lib/env";
 import { cn } from "@/lib/utils/cn";
 
 type Provider = "google" | "apple";
@@ -72,14 +73,29 @@ const PROVIDERS: {
 
 export function OAuthButtons({
   next = "/home",
+  dividerLabel,
   className,
 }: {
   /** Where to land after the provider returns. Validated server-side too. */
   next?: string;
+  /**
+   * Rendered below the buttons when at least one provider is enabled. Owned by
+   * this component so the rule can never be left stranded above an empty
+   * space when every provider is switched off.
+   */
+  dividerLabel?: string;
   className?: string;
 }) {
   const [pending, setPending] = React.useState<Provider | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Only offer providers that are actually configured. A button that always
+  // fails is worse than no button, and which providers exist is an account
+  // and billing decision rather than an engineering one.
+  const enabled = getClientEnv().NEXT_PUBLIC_OAUTH_PROVIDERS;
+  const providers = PROVIDERS.filter((p) => enabled.includes(p.id));
+
+  if (providers.length === 0) return null;
 
   async function signIn(provider: Provider) {
     setError(null);
@@ -115,6 +131,7 @@ export function OAuthButtons({
   }
 
   return (
+    <>
     <div className={cn("flex flex-col gap-2.5", className)}>
       {error ? (
         <p
@@ -125,7 +142,7 @@ export function OAuthButtons({
         </p>
       ) : null}
 
-      {PROVIDERS.map(({ id, label, mark, className: variant }) => (
+      {providers.map(({ id, label, mark, className: variant }) => (
         <button
           key={id}
           type="button"
@@ -148,6 +165,8 @@ export function OAuthButtons({
         </button>
       ))}
     </div>
+    {dividerLabel ? <AuthDivider label={dividerLabel} /> : null}
+    </>
   );
 }
 

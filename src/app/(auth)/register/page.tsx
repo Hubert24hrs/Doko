@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { Logo } from "@/components/brand/logo";
 import { RegisterForm } from "@/features/auth/components/register-form";
-import { OAuthButtons, AuthDivider } from "@/features/auth/components/oauth-buttons";
+import { OAuthButtons } from "@/features/auth/components/oauth-buttons";
 import { getVillageOptions } from "@/features/geo/queries";
 
 export const metadata: Metadata = {
@@ -33,8 +33,7 @@ export default async function RegisterPage() {
         </p>
 
 
-        <OAuthButtons next="/welcome" />
-        <AuthDivider label="or sign up with email" />
+        <OAuthButtons next="/welcome" dividerLabel="or sign up with email" />
         <RegisterForm villages={villages} />
 
         <p className="mt-6 text-center text-sm text-muted-foreground">

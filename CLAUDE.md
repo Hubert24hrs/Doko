@@ -213,6 +213,7 @@ editable data rather than a hard-coded list.
 | `NEXT_PUBLIC_SUPABASE_URL` | public | yes | project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | public | yes | RLS-constrained key |
 | `NEXT_PUBLIC_SITE_URL` | public | yes | auth redirects, canonical URLs |
+| `NEXT_PUBLIC_OAUTH_PROVIDERS` | public | no | comma-separated: `google`, `apple`. **Empty by default** -- a provider with no credentials behind it must never render a button |
 | `SUPABASE_SERVICE_ROLE_KEY` | **secret** | no | privileged tasks only; bypasses RLS |
 
 Template: `.env.example`. Real values go in `.env.local` (git-ignored).

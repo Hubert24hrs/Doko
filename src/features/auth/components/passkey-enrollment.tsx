@@ -4,6 +4,7 @@ import * as React from "react";
 import { Fingerprint, CheckCircle2 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
+import { registerPlatformPasskey } from "../passkey-ceremony";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -52,10 +53,10 @@ export function PasskeyEnrollment() {
     setPending(true);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.registerPasskey();
+      const { error } = await registerPlatformPasskey(supabase);
 
       if (error) {
-        console.error("[auth.passkey] enrolment failed", error.message);
+        console.error("[auth.passkey] enrolment failed", error);
         setError("Could not add a passkey on this device. Please try again.");
         setPending(false);
         return;
@@ -121,8 +122,9 @@ export function PasskeyEnrollment() {
 
       <p className="text-xs text-muted-foreground">
         Your fingerprint never leaves this device and is never sent to Ezike
-        Oba. It unlocks a key stored in the device itself. Passkeys are per
-        device, so add one on each phone or computer you use.
+        Oba — it unlocks a key the device holds. Depending on your browser the
+        passkey may sync to your Google or Apple account and work on your other
+        devices; otherwise add one on each device you use.
       </p>
     </div>
   );

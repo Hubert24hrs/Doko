@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Fingerprint, Loader2 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
+import { signInWithPlatformPasskey } from "../passkey-ceremony";
 import { cn } from "@/lib/utils/cn";
 
 /**
@@ -69,10 +70,10 @@ export function PasskeySignIn({
     setPending(true);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPasskey();
+      const { error } = await signInWithPlatformPasskey(supabase);
 
       if (error) {
-        console.error("[auth.passkey] sign-in failed", error.message);
+        console.error("[auth.passkey] sign-in failed", error);
         setError(
           "No passkey was found for this device. Sign in another way, then add one from settings.",
         );

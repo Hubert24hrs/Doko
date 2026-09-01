@@ -113,6 +113,31 @@ begin
   execute 'set local request.jwt.claims to ''{"role":"anon"}''';
 end $$;
 
+-- Postgres refuses a data-modifying CTE anywhere but the top level of a
+-- statement ("WITH clause containing a data-modifying statement must be at the
+-- top level"), so the write cannot be wrapped in a subquery to count its
+-- effect. These run it at the top level inside a function and report the row
+-- count instead. SECURITY INVOKER (the default) matters: each executes as the
+-- impersonated caller, so RLS still applies. With RLS on and no UPDATE or
+-- DELETE policy the correct answer is zero rows -- silently, with no error.
+create or replace function pg_temp.rows_updated_in_audit()
+returns integer language plpgsql as $$
+declare n integer;
+begin
+  update public.audit_logs set action = 'tampered';
+  get diagnostics n = row_count;
+  return n;
+end $$;
+
+create or replace function pg_temp.rows_deleted_from_audit()
+returns integer language plpgsql as $$
+declare n integer;
+begin
+  delete from public.audit_logs;
+  get diagnostics n = row_count;
+  return n;
+end $$;
+
 -- ===========================================================================
 -- audit_logs
 -- ===========================================================================
@@ -135,16 +160,12 @@ reset role;
 -- Nobody may rewrite history -- not even a super_admin.
 select pg_temp.become('55555555-5555-5555-5555-555555555555'::uuid);
 select is(
-  (with attempted as (
-     update public.audit_logs set action = 'tampered' returning 1
-   ) select count(*)::int from attempted),
+  pg_temp.rows_updated_in_audit(),
   0,
   'not even a super_admin can UPDATE an audit row'
 );
 select is(
-  (with attempted as (
-     delete from public.audit_logs returning 1
-   ) select count(*)::int from attempted),
+  pg_temp.rows_deleted_from_audit(),
   0,
   'not even a super_admin can DELETE an audit row'
 );

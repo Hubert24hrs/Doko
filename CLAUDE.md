@@ -68,9 +68,14 @@ be without a live Supabase project.**
 
 ### Not yet done
 
-* **Biometric sign-in (passkeys) is built but unexercised.** The enrolment and
-  sign-in paths have never been run by a real device. Passkeys are in Supabase
-  beta and must be enabled in the dashboard.
+* **Biometric sign-in (passkeys) is built but PARKED, not working.** Enrolment
+  succeeds; sign-in has not been confirmed. auth-js ships security-key
+  defaults (`hints: ['security-key']`, `cross-platform`,
+  `residentKey: 'discouraged'`), so the first attempt produced a USB-key
+  prompt and a non-discoverable credential. `passkey-ceremony.ts` drives the
+  ceremony by hand to ask for the platform authenticator instead, but that fix
+  has not been verified on a real device. Do not describe biometrics as
+  working. See docs/SECURITY.md.
 * **Identity providers are switched off.** Google needs credentials; Apple
   needs paid Developer Program membership. Both are one env var away.
 * Phases 2-6 of the platform (feed, groups, messaging, events, jobs,

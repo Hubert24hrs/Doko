@@ -40,6 +40,8 @@ export type GeoStatus = "active" | "historical" | "archived";
 
 export type ProfileVisibility = "public" | "community" | "private";
 
+export type PostVisibility = "public" | "community";
+
 export type GeoEntityRow = {
   id: string;
   parent_id: string | null;
@@ -126,6 +128,20 @@ export type AuditLogRow = {
   created_at: string;
 }
 
+export type PostRow = {
+  id: string;
+  author_id: string;
+  body: string;
+  /** NULL means the whole LGA rather than a specific community. */
+  geo_id: string | null;
+  visibility: PostVisibility;
+  created_at: string;
+  updated_at: string;
+  /** Set only when the author edits the body, never by a trigger touch. */
+  edited_at: string | null;
+  deleted_at: string | null;
+}
+
 export type GeoTreeNodeRow = {
   id: string;
   kind: GeoKind;
@@ -185,6 +201,21 @@ export interface Database {
         Update: Partial<UserRoleRow>;
         Relationships: [];
       };
+      posts: {
+        Row: PostRow;
+        Insert: Insertable<
+          PostRow,
+          | "id"
+          | "geo_id"
+          | "visibility"
+          | "created_at"
+          | "updated_at"
+          | "edited_at"
+          | "deleted_at"
+        >;
+        Update: Partial<PostRow>;
+        Relationships: [];
+      };
       audit_logs: {
         Row: AuditLogRow;
         /**
@@ -232,6 +263,11 @@ export interface Database {
         Args: { target_profile_id: string };
         Returns: boolean;
       };
+      is_active_member: { Args: { check_user_id?: string }; Returns: boolean };
+      member_of_geo: {
+        Args: { target_geo_id: string | null; check_user_id?: string };
+        Returns: boolean;
+      };
       log_admin_action: {
         Args: {
           p_action: string;
@@ -258,6 +294,7 @@ export interface Database {
       geo_kind: GeoKind;
       geo_status: GeoStatus;
       profile_visibility: ProfileVisibility;
+      post_visibility: PostVisibility;
     };
     CompositeTypes: Record<never, never>;
   };

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Compass, MapPin, ShieldCheck } from "lucide-react";
+import { Compass, MapPin, ShieldCheck, MessageSquareText } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge, VerifiedBadge } from "@/components/ui/badge";
@@ -58,18 +58,25 @@ export default async function HomePage() {
           ) : null}
         </div>
 
-        {/*
-          The social feed arrives in Phase 2. Rather than showing a fake feed,
-          this points members at what genuinely works today.
-        */}
-        <Card className="mb-6 border-dashed">
+        <Card className="mb-6">
           <CardHeader>
-            <CardTitle as="h2">Your feed is being built</CardTitle>
+            <div className="mb-1 text-primary">
+              <MessageSquareText className="size-5" aria-hidden="true" />
+            </div>
+            <CardTitle as="h2">The community feed</CardTitle>
             <CardDescription>
-              Posts, comments and community groups arrive in the next phase.
-              Meanwhile, the community directory below is live.
+              Share what is happening where you are, and read what neighbours
+              across Igbo-Eze North are posting.
             </CardDescription>
           </CardHeader>
+          <CardContent>
+            <Link
+              href="/feed"
+              className="inline-flex h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+            >
+              Open the feed
+            </Link>
+          </CardContent>
         </Card>
 
         <div className="grid gap-4 sm:grid-cols-2">

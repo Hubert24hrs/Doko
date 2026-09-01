@@ -72,6 +72,15 @@ be without a live Supabase project.**
 * **Deployed to production and verified on the live URL**: public routes serve,
   protected routes redirect, real community data renders, canonical URLs and
   the sitemap carry the production host, and no secret appears in the HTML.
+* **Audited 2026-09-01**, 15/15 live routes healthy. Three real defects found
+  and fixed, all recorded in docs/SECURITY.md:
+  1. Post and reply editing was unreachable -- policies, guard triggers and the
+     "edited" label all existed with no way in.
+  2. Five write actions reported success for writes RLS had silently refused.
+     **RLS refuses by filtering, not by raising**: every write must `.select()`
+     and check the affected rows.
+  3. `?next=` was computed by the proxy and discarded by every consumer, so
+     sign-in always landed on /home.
 * 56 unit tests passing; typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to

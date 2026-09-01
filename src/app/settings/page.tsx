@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand/logo";
 import { requireUser } from "@/features/auth/session";
 import { getVillageOptions } from "@/features/geo/queries";
 import { ProfileForm } from "@/features/profile/components/profile-form";
+import { PasskeyEnrollment } from "@/features/auth/components/passkey-enrollment";
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -58,6 +59,24 @@ export default async function SettingsPage() {
             )}
           </CardContent>
         </Card>
+
+        <section aria-labelledby="security-heading" className="mt-8">
+          <h2
+            id="security-heading"
+            className="text-lg font-semibold tracking-tight text-foreground"
+          >
+            Sign-in and security
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Add a faster way to sign in on this device.
+          </p>
+
+          <Card className="mt-4">
+            <CardContent className="pt-6">
+              <PasskeyEnrollment />
+            </CardContent>
+          </Card>
+        </section>
       </main>
     </>
   );

@@ -12,5 +12,13 @@ export function createClient() {
   return createBrowserClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      auth: {
+        // Passkeys (WebAuthn) are behind an opt-in flag in auth-js; calling a
+        // passkey method without it throws at call time. Browser-only: the
+        // ceremony needs navigator.credentials, which no server has.
+        experimental: { passkey: true },
+      },
+    },
   );
 }

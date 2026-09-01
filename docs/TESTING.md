@@ -65,8 +65,17 @@ both with:
 supabase test db
 ```
 
-**All 76 assertions pass** against the live project as of 2026-09-01:
-38 structural, 29 RLS behaviour, 9 seed integrity.
+**All 112 assertions pass** against the live project as of 2026-09-01:
+38 structural, 29 RLS behaviour, 9 seed integrity, 22 post visibility,
+18 comments and reactions.
+
+A third lesson, added after the feed shipped broken: **verify the thing, not a
+proxy for it.** posts.author_id referenced auth.users while the feed embedded
+profiles, so PostgREST could not resolve `author:author_id(...)` and the whole
+feed query failed. It was reported as working because rows existed in the
+database when queried WITHOUT the embed. 05_comments now asserts that both
+author foreign keys target profiles, which is the property the embed actually
+depends on.
 
 Two lessons the first live runs taught, both now structural rather than
 remembered:

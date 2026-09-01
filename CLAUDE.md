@@ -61,9 +61,12 @@ be without a live Supabase project.**
   survives the closing rollback.
 * Auth verified end to end through the running app: sign-up, the profile
   trigger, sign-in, `/settings`, and `/admin` correctly refusing a citizen.
-* **Phase 2 slice 1 (posts) is live and working**: composing, the feed, and
-  soft removal, verified against the hosted project with real posts. Community-
-  scoped visibility is covered by 22 pgTAP assertions.
+* **Phase 2 slices 1 and 2 are live and working**: posts, the feed, comments,
+  four reactions, trigger-maintained engagement counts, and a public
+  `/posts/[id]` page. Verified against the hosted project with real data,
+  including the author embed and the generated SEO metadata for public posts.
+* **112 database assertions passing**: 38 schema, 29 RLS, 9 seed, 22 posts,
+  18 comments/reactions.
 * 56 unit tests passing; typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to

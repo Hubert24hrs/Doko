@@ -74,12 +74,20 @@ values
   ('44444444-4444-4444-4444-444444444444'::uuid,  '00000000-0000-0000-0000-000000000000', 'authenticated',
    'authenticated', 'admin@example.com', '{"username":"the_admin","full_name":"The Admin"}'),
   ('55555555-5555-5555-5555-555555555555'::uuid,  '00000000-0000-0000-0000-000000000000', 'authenticated',
-   'authenticated', 'super@example.com', '{"username":"the_super","full_name":"The Super"}');
+   'authenticated', 'super@example.com', '{"username":"the_super","full_name":"The Super"}'),
+  -- A dedicated target for the "super_admin can mint an admin" assertion.
+  -- Promoting an existing fixture would silently give that identity staff
+  -- privileges for every later assertion -- which is exactly what went wrong
+  -- when the outsider was reused here: profiles_select_staff then let them see
+  -- every profile, and the community-visibility assertion failed for a reason
+  -- that had nothing to do with community visibility.
+  ('66666666-6666-6666-6666-666666666666'::uuid,  '00000000-0000-0000-0000-000000000000', 'authenticated',
+   'authenticated', 'promotable@example.com', '{"username":"promotable","full_name":"Promotable"}');
 
 -- The trigger should have created five profiles.
 insert into public._tap_out(line) select is(
   (select count(*)::int from public.profiles),
-  5,
+  6,
   'handle_new_user created a profile for every new auth user'
 );
 
@@ -116,6 +124,13 @@ update public.profiles
 update public.profiles set visibility = 'public'    where id = '11111111-1111-1111-1111-111111111111'::uuid;
 update public.profiles set visibility = 'community' where id = '22222222-2222-2222-2222-222222222222'::uuid;
 update public.profiles set visibility = 'private'   where id = '33333333-3333-3333-3333-333333333333'::uuid;
+-- Set the remaining fixtures explicitly rather than inheriting the 'public'
+-- column default: leaving them implicit made the anonymous-visitor assertion
+-- count the two staff profiles as well, failing for an incidental reason.
+update public.profiles set visibility = 'private'
+ where id in ('44444444-4444-4444-4444-444444444444'::uuid,
+              '55555555-5555-5555-5555-555555555555'::uuid,
+              '66666666-6666-6666-6666-666666666666'::uuid);
 
 -- Seed one audit row through the only supported path.
 set local role authenticated;
@@ -247,7 +262,7 @@ reset role;
 select pg_temp.become('55555555-5555-5555-5555-555555555555'::uuid);
 insert into public._tap_out(line) select lives_ok(
   $$insert into public.user_roles (user_id, role)
-    values ('33333333-3333-3333-3333-333333333333', 'admin')$$,
+    values ('66666666-6666-6666-6666-666666666666', 'admin')$$,
   'a super_admin can mint an admin'
 );
 reset role;

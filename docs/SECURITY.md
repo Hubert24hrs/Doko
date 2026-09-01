@@ -251,3 +251,65 @@ This cost a confusing test failure: a suspended-member fixture that was never
 actually suspended, surfacing as "a suspended member CANNOT post" failing, with
 nothing wrong in the posts policies at all. The behaviour is correct and worth
 keeping; it just needs to be known.
+
+---
+
+## RLS refuses by filtering, not by raising
+
+The single most important thing to know when writing a Server Action against
+these tables.
+
+When a policy forbids an UPDATE or DELETE, PostgREST does **not** return an
+error. The row is simply not visible to the statement, zero rows change, and
+`error` is `null`. This code therefore reports success for a write that did
+nothing at all:
+
+```ts
+const { error } = await supabase
+  .from("posts").update({ body }).eq("id", postId);
+if (error) return { ok: false, ... };
+return { ok: true, message: "Post updated." };   // ← a lie when RLS refused
+```
+
+Editing another member's post would have shown "Post updated." while the post
+stayed exactly as it was. Nothing in the logs, nothing in the UI.
+
+**Every write action must `.select()` and check what came back:**
+
+```ts
+const { data, error } = await supabase
+  .from("posts").update({ body }).eq("id", postId).select("id");
+
+if (error) return { ok: false, ... };
+if (!data || data.length === 0) {
+  return { ok: false, formError: "That post could not be edited…" };
+}
+```
+
+This is not a substitute for RLS — RLS is what actually refused the write, and
+it worked. It is about not lying to the member afterwards.
+
+Applied to `updatePostAction`, `deletePostAction`, `updateCommentAction`,
+`deleteCommentAction` and `updateProfileAction`. Any new write action must do
+the same.
+
+## Rate limits on every write
+
+Reads are cheap and RLS-bounded; writes are not. Every write action is capped
+per member per hour:
+
+| Action | Cap |
+|---|---|
+| Register | 5 (per IP) |
+| Sign in | 10 per 15 min (per IP) |
+| Create post | 20 |
+| Edit / remove post | 60 each |
+| Create reply | 60 |
+| Edit / remove reply | 60 each |
+| Set reaction | 240 |
+
+Reactions get the highest cap because real members genuinely react a lot, and
+the lowest cost per call — but they were the one action originally shipped with
+no limit at all, which made them the cheapest thing on the platform to abuse:
+one click, two round trips and two revalidations, repeatable as fast as a
+script can send them.

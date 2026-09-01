@@ -104,7 +104,7 @@ export async function updatePostAction(
   _prev: PostActionState,
   formData: FormData,
 ): Promise<PostActionState> {
-  await requireUser("/feed");
+  const user = await requireUser("/feed");
 
   const parsed = updatePostSchema.safeParse({
     postId: formData.get("postId"),
@@ -115,15 +115,39 @@ export async function updatePostAction(
     return { ok: false, fieldErrors: toFieldErrors(parsed.error.issues) };
   }
 
+  const limit = await checkRateLimit({
+    key: `post-edit:${user.id}`,
+    limit: 60,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!limit.allowed) {
+    return {
+      ok: false,
+      formError: `Too many edits in a short time. Try again in ${limit.retryAfterMinutes} minutes.`,
+    };
+  }
+
   const supabase = await createClient();
-  const { error } = await supabase
+  // `.select()` is what turns a silent no-op into an honest failure. RLS does
+  // not raise when it refuses a write: the row is simply not visible to the
+  // UPDATE, zero rows change, and `error` is null. Without checking what came
+  // back, editing somebody else's post would report "Post updated."
+  const { data, error } = await supabase
     .from("posts")
     .update({ body: parsed.data.body })
-    .eq("id", parsed.data.postId);
+    .eq("id", parsed.data.postId)
+    .select("id");
 
   if (error) {
     console.error("[posts.update] failed", error.message);
     return { ok: false, formError: "Your edit could not be saved." };
+  }
+
+  if (!data || data.length === 0) {
+    return {
+      ok: false,
+      formError: "That post could not be edited. It may have been removed, or it may not be yours.",
+    };
   }
 
   revalidatePath("/feed");
@@ -139,25 +163,45 @@ export async function deletePostAction(
   _prev: PostActionState,
   formData: FormData,
 ): Promise<PostActionState> {
-  await requireUser("/feed");
+  const user = await requireUser("/feed");
 
   const parsed = deletePostSchema.safeParse({ postId: formData.get("postId") });
   if (!parsed.success) {
     return { ok: false, formError: "That post could not be found." };
   }
 
+  const limit = await checkRateLimit({
+    key: `post-remove:${user.id}`,
+    limit: 60,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!limit.allowed) {
+    return {
+      ok: false,
+      formError: `Too many removals in a short time. Try again in ${limit.retryAfterMinutes} minutes.`,
+    };
+  }
+
   const supabase = await createClient();
   // Soft delete. There is no DELETE policy on posts for anyone, so removal is
   // always a timestamp: moderation stays auditable and a member's history is
   // never silently rewritten.
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("posts")
     .update({ deleted_at: new Date().toISOString() })
-    .eq("id", parsed.data.postId);
+    .eq("id", parsed.data.postId)
+    .select("id");
 
   if (error) {
     console.error("[posts.delete] failed", error.message);
     return { ok: false, formError: "The post could not be removed." };
+  }
+
+  if (!data || data.length === 0) {
+    return {
+      ok: false,
+      formError: "That post could not be removed. It may already be gone.",
+    };
   }
 
   revalidatePath("/feed");

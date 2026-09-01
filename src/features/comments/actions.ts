@@ -97,7 +97,7 @@ export async function updateCommentAction(
   _prev: CommentActionState,
   formData: FormData,
 ): Promise<CommentActionState> {
-  await requireUser("/feed");
+  const user = await requireUser("/feed");
 
   const parsed = updateCommentSchema.safeParse({
     commentId: formData.get("commentId"),
@@ -109,15 +109,38 @@ export async function updateCommentAction(
     return { ok: false, fieldErrors: toFieldErrors(parsed.error.issues) };
   }
 
+  const limit = await checkRateLimit({
+    key: `comment-edit:${user.id}`,
+    limit: 60,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!limit.allowed) {
+    return {
+      ok: false,
+      formError: `Too many edits in a short time. Try again in ${limit.retryAfterMinutes} minutes.`,
+    };
+  }
+
   const supabase = await createClient();
-  const { error } = await supabase
+  // See the note in posts/actions.ts: RLS refuses by filtering, not by
+  // raising, so a write the caller may not make returns no error and changes
+  // nothing. `.select()` is what tells the difference.
+  const { data, error } = await supabase
     .from("comments")
     .update({ body: parsed.data.body })
-    .eq("id", parsed.data.commentId);
+    .eq("id", parsed.data.commentId)
+    .select("id");
 
   if (error) {
     console.error("[comments.update] failed", error.message);
     return { ok: false, formError: "Your edit could not be saved." };
+  }
+
+  if (!data || data.length === 0) {
+    return {
+      ok: false,
+      formError: "That reply could not be edited. It may have been removed, or it may not be yours.",
+    };
   }
 
   revalidatePath(`/posts/${parsed.data.postId}`);
@@ -129,7 +152,7 @@ export async function deleteCommentAction(
   _prev: CommentActionState,
   formData: FormData,
 ): Promise<CommentActionState> {
-  await requireUser("/feed");
+  const user = await requireUser("/feed");
 
   const parsed = deleteCommentSchema.safeParse({
     commentId: formData.get("commentId"),
@@ -138,15 +161,35 @@ export async function deleteCommentAction(
     return { ok: false, formError: "That reply could not be found." };
   }
 
+  const limit = await checkRateLimit({
+    key: `comment-remove:${user.id}`,
+    limit: 60,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!limit.allowed) {
+    return {
+      ok: false,
+      formError: `Too many removals in a short time. Try again in ${limit.retryAfterMinutes} minutes.`,
+    };
+  }
+
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("comments")
     .update({ deleted_at: new Date().toISOString() })
-    .eq("id", parsed.data.commentId);
+    .eq("id", parsed.data.commentId)
+    .select("id");
 
   if (error) {
     console.error("[comments.delete] failed", error.message);
     return { ok: false, formError: "The reply could not be removed." };
+  }
+
+  if (!data || data.length === 0) {
+    return {
+      ok: false,
+      formError: "That reply could not be removed. It may already be gone.",
+    };
   }
 
   const postId = formData.get("postId");
@@ -176,6 +219,21 @@ export async function setReactionAction(
   });
   if (!parsed.success) {
     return { ok: false, formError: "That reaction is not available." };
+  }
+
+  // The most abusable action on the platform: one click, two round trips and
+  // two revalidations, repeatable as fast as a script can send them. The cap
+  // is generous enough that no real member will meet it.
+  const limit = await checkRateLimit({
+    key: `reaction:${user.id}`,
+    limit: 240,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!limit.allowed) {
+    return {
+      ok: false,
+      formError: `Too many reactions in a short time. Try again in ${limit.retryAfterMinutes} minutes.`,
+    };
   }
 
   const supabase = await createClient();

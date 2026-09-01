@@ -84,7 +84,10 @@ export async function updateProfileAction(
     }
   }
 
-  const { error } = await supabase
+  // `.select()` for the same reason as posts and comments: RLS refuses by
+  // filtering rather than raising, so a write that changes nothing returns no
+  // error. Here zero rows would mean the profile row is missing entirely.
+  const { data, error } = await supabase
     .from("profiles")
     .update({
       full_name: input.fullName,
@@ -97,7 +100,8 @@ export async function updateProfileAction(
       town_id: townId,
       visibility: input.visibility,
     })
-    .eq("id", user.id);
+    .eq("id", user.id)
+    .select("id");
 
   if (error) {
     console.error("[profile.update] save failed", error.message);
@@ -105,6 +109,14 @@ export async function updateProfileAction(
       return { ok: false, fieldErrors: { username: "That username is taken" } };
     }
     return { ok: false, formError: "Could not save your profile. Please try again." };
+  }
+
+  if (!data || data.length === 0) {
+    return {
+      ok: false,
+      formError:
+        "Your profile could not be found. Please contact an administrator.",
+    };
   }
 
   revalidatePath("/settings");

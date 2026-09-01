@@ -91,9 +91,22 @@ values
   ('88888888-8888-8888-8888-888888888888'::uuid,  '00000000-0000-0000-0000-000000000000', 'authenticated',
    'authenticated', 'ada.nwosu@icloud.com', '{}');
 
--- The trigger should have created five profiles.
+-- Scoped to this suite's own fixtures, never to the whole table. The database
+-- now holds real members, and a test that counts every row would start failing
+-- the moment anyone signs up -- reporting a defect in the trigger when the
+-- only thing that changed was the platform gaining a user.
 insert into public._tap_out(line) select is(
-  (select count(*)::int from public.profiles),
+  (select count(*)::int from public.profiles where
+    id in (
+      '11111111-1111-1111-1111-111111111111'::uuid,
+      '22222222-2222-2222-2222-222222222222'::uuid,
+      '33333333-3333-3333-3333-333333333333'::uuid,
+      '44444444-4444-4444-4444-444444444444'::uuid,
+      '55555555-5555-5555-5555-555555555555'::uuid,
+      '66666666-6666-6666-6666-666666666666'::uuid,
+      '77777777-7777-7777-7777-777777777777'::uuid,
+      '88888888-8888-8888-8888-888888888888'::uuid
+    )),
   8,
   'handle_new_user created a profile for every new auth user'
 );
@@ -201,6 +214,8 @@ insert into public._tap_out(line) select is(
   0,
   'a citizen cannot read audit_logs'
 );
+-- Safe as an absolute count: the citizen must see ZERO rows regardless of how
+-- many real audit entries exist, so real data cannot make this pass falsely.
 reset role;
 
 select pg_temp.become('44444444-4444-4444-4444-444444444444'::uuid);
@@ -333,9 +348,19 @@ reset role;
 -- Anonymous visitors see only public, non-suspended profiles.
 select pg_temp.become_anon();
 insert into public._tap_out(line) select is(
-  (select count(*)::int from public.profiles),
+  (select count(*)::int from public.profiles where
+    id in (
+      '11111111-1111-1111-1111-111111111111'::uuid,
+      '22222222-2222-2222-2222-222222222222'::uuid,
+      '33333333-3333-3333-3333-333333333333'::uuid,
+      '44444444-4444-4444-4444-444444444444'::uuid,
+      '55555555-5555-5555-5555-555555555555'::uuid,
+      '66666666-6666-6666-6666-666666666666'::uuid,
+      '77777777-7777-7777-7777-777777777777'::uuid,
+      '88888888-8888-8888-8888-888888888888'::uuid
+    )),
   1,
-  'an anonymous visitor sees only the public profile'
+  'an anonymous visitor sees only the public fixture profile'
 );
 reset role;
 

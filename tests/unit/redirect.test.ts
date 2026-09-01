@@ -54,3 +54,39 @@ describe("safeRelativePath", () => {
     expect(safeRelativePath("https://evil.example", "/login")).toBe("/login");
   });
 });
+
+describe("safeRelativePath as the post-sign-in destination", () => {
+  // The proxy writes ?next=<path> when it interrupts a request, and the login
+  // page, the login form and the auth callback all feed it back through here.
+  // These cover the shapes an attacker would actually try in that parameter.
+  it("keeps a legitimate interrupted destination", () => {
+    expect(safeRelativePath("/settings")).toBe("/settings");
+    expect(safeRelativePath("/admin/communities")).toBe("/admin/communities");
+    expect(safeRelativePath("/posts/0f8fad5b-d9cb-469f-a165-70867728950e")).toBe(
+      "/posts/0f8fad5b-d9cb-469f-a165-70867728950e",
+    );
+  });
+
+  it("falls back to /home when nothing was requested", () => {
+    expect(safeRelativePath(undefined)).toBe("/home");
+    expect(safeRelativePath(null)).toBe("/home");
+    expect(safeRelativePath("")).toBe("/home");
+  });
+
+  it("refuses to bounce a member off-site after they sign in", () => {
+    for (const hostile of [
+      "https://evil.example/steal",
+      "//evil.example",
+      "http://evil.example",
+      "\\evil.example",
+      // A leading "/\" — some browsers normalise the backslash to a forward
+      // slash, turning this into a protocol-relative URL that escapes the
+      // origin. Written with a doubled backslash so the JS string really does
+      // contain one.
+      "/\\evil.example",
+      "/path\\with\\backslashes",
+    ]) {
+      expect(safeRelativePath(hostile), hostile).toBe("/home");
+    }
+  });
+});

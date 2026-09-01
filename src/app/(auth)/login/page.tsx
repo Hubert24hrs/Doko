@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
 import { LoginForm } from "@/features/auth/components/login-form";
 import { OAuthButtons } from "@/features/auth/components/oauth-buttons";
+import { safeRelativePath } from "@/lib/security/redirect";
 import { PasskeySignIn } from "@/features/auth/components/passkey-sign-in";
 
 export const metadata: Metadata = {
@@ -12,7 +13,17 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  // The proxy puts the interrupted destination here. Validated once on the
+  // way in so every sign-in path below gets a value already known to be a
+  // same-origin path.
+  const { next: rawNext } = await searchParams;
+  const next = safeRelativePath(rawNext, "/home");
+
   return (
     <main id="main" className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
@@ -27,9 +38,9 @@ export default function LoginPage() {
           Sign in to continue to your community.
         </p>
 
-        <PasskeySignIn next="/home" className="mb-2.5" />
-        <OAuthButtons next="/home" dividerLabel="or sign in with email" />
-        <LoginForm />
+        <PasskeySignIn next={next} className="mb-2.5" />
+        <OAuthButtons next={next} dividerLabel="or sign in with email" />
+        <LoginForm next={next} />
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           New to Ezike Oba?{" "}

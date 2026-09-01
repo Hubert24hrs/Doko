@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getClientEnv } from "@/lib/env";
 import { checkRateLimit } from "@/lib/security/rate-limit";
+import { safeRelativePath } from "@/lib/security/redirect";
 
 import { loginSchema, registerSchema } from "./schemas";
 
@@ -152,6 +153,11 @@ export async function loginAction(
     password: formData.get("password"),
   });
 
+  // Where the proxy wanted to send them before it interrupted. It is a form
+  // field and therefore attacker-controllable, so it goes through the same
+  // open-redirect guard the auth callback uses.
+  const next = safeRelativePath(formData.get("next")?.toString(), "/home");
+
   if (!parsed.success) {
     return { ok: false, fieldErrors: toFieldErrors(parsed.error.issues) };
   }
@@ -180,7 +186,7 @@ export async function loginAction(
     return { ok: false, formError: GENERIC_CREDENTIALS_ERROR };
   }
 
-  redirect("/home");
+  redirect(next);
 }
 
 export async function signOutAction(): Promise<void> {

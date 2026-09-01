@@ -141,16 +141,31 @@ update public.profiles
  where id in ('11111111-1111-1111-1111-111111111111'::uuid, '22222222-2222-2222-2222-222222222222'::uuid);
 
 -- Visibility fixtures.
-update public.profiles set visibility = 'public'    where id = '11111111-1111-1111-1111-111111111111'::uuid;
-update public.profiles set visibility = 'community' where id = '22222222-2222-2222-2222-222222222222'::uuid;
-update public.profiles set visibility = 'private'   where id = '33333333-3333-3333-3333-333333333333'::uuid;
--- Set the remaining fixtures explicitly rather than inheriting the 'public'
--- column default: leaving them implicit made the anonymous-visitor assertion
--- count the two staff profiles as well, failing for an incidental reason.
+--
+-- Deny by default: EVERY fixture is set private first, then the two that need
+-- to be visible are opened up explicitly. profiles.visibility defaults to
+-- 'public', so a fixture added later without a visibility line would silently
+-- join the anonymous-visitor count and break assertion 20 for a reason that
+-- has nothing to do with the rule being tested. That has now happened twice --
+-- once with the staff fixtures, once with the provider fixtures -- so the
+-- ordering here is doing the remembering instead of me.
 update public.profiles set visibility = 'private'
- where id in ('44444444-4444-4444-4444-444444444444'::uuid,
-              '55555555-5555-5555-5555-555555555555'::uuid,
-              '66666666-6666-6666-6666-666666666666'::uuid);
+ where id in (
+   '11111111-1111-1111-1111-111111111111'::uuid,
+   '22222222-2222-2222-2222-222222222222'::uuid,
+   '33333333-3333-3333-3333-333333333333'::uuid,
+   '44444444-4444-4444-4444-444444444444'::uuid,
+   '55555555-5555-5555-5555-555555555555'::uuid,
+   '66666666-6666-6666-6666-666666666666'::uuid,
+   '77777777-7777-7777-7777-777777777777'::uuid,
+   '88888888-8888-8888-8888-888888888888'::uuid
+ );
+
+-- Only these two are visible, and each is the subject of an assertion.
+update public.profiles set visibility = 'public'
+ where id = '11111111-1111-1111-1111-111111111111'::uuid;
+update public.profiles set visibility = 'community'
+ where id = '22222222-2222-2222-2222-222222222222'::uuid;
 
 -- Seed one audit row through the only supported path.
 set local role authenticated;

@@ -4,6 +4,8 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Trash2 } from "lucide-react";
 
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 import { VerifiedBadge } from "@/components/ui/badge";
 import { Field, FieldLabel, FieldTextarea } from "@/components/ui/field";
@@ -206,9 +208,18 @@ export function CommentList({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                  <span className="text-sm font-medium text-foreground">
-                    {comment.author?.full_name ?? "Former member"}
-                  </span>
+                  {comment.author ? (
+                    <Link
+                      href={`/members/${comment.author.username}`}
+                      className="text-sm font-medium text-foreground hover:underline"
+                    >
+                      {comment.author.full_name}
+                    </Link>
+                  ) : (
+                    <span className="text-sm font-medium text-foreground">
+                      Former member
+                    </span>
+                  )}
                   {comment.author?.is_verified ? <VerifiedBadge /> : null}
                   <time
                     dateTime={comment.created_at}

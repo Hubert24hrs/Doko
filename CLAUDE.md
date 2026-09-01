@@ -70,7 +70,9 @@ be without a live Supabase project.**
 * **131 database assertions passing**: 38 schema, 29 RLS, 9 seed, 22 posts,
   18 comments/reactions, 19 media.
 * **Phase 2 slice 3 (images on posts)**: up to four per post, private bucket,
-  signed URLs, visible exactly when the post is.
+  signed URLs, visible exactly when the post is. Verified end to end on the
+  live site -- upload, storage policies, signed-URL rendering and the two-step
+  composer flow all exercised with a real photograph.
 * **Deployed to production and verified on the live URL**: public routes serve,
   protected routes redirect, real community data renders, canonical URLs and
   the sitemap carry the production host, and no secret appears in the HTML.
@@ -121,8 +123,9 @@ Recommended order, and why:
 
 1. **Enable Google sign-in.** Closes the registration gap above. The code is
    built; it needs credentials and one env var. Free, roughly 20 minutes.
-2. **Following.** Turns the feed from "everything" into "yours", and unlocks
-   the followers-only visibility deliberately left out of `post_visibility`.
+2. **Following.** Member profiles now exist at `/members/[username]`, so a
+   Follow button has somewhere to live. Unlocks the followers-only visibility
+   deliberately left out of `post_visibility`.
 3. **Groups**, then Phase 3 messaging.
 
 Operational notes that will otherwise be rediscovered painfully:
@@ -177,6 +180,7 @@ src/
     welcome/                post-registration greeting
     feed/                   the community feed
     posts/[id]/             public post page, indexable
+    members/[username]/     public member profile, indexable
     robots.ts sitemap.ts    SEO surface
     not-found.tsx error.tsx global-error.tsx
     globals.css             ALL design tokens live here
@@ -188,7 +192,7 @@ src/
     admin/queries.ts
     auth/{actions,schemas,session}.ts, components/
     geo/{queries,snapshot}.ts
-    profile/{actions,schemas}.ts, components/
+    profile/{actions,queries,schemas}.ts, components/
     posts/{actions,queries,schemas}.ts, components/
     comments/{actions,queries,schemas}.ts, components/
   lib/
@@ -470,3 +474,5 @@ flows, and every page's real data path.
 | Post saved before images upload | if an upload fails the member keeps their words; the other order loses the post because a photo would not transfer |
 | Plain `<img>`, not `next/image`, for post media | the optimiser caches under a key that outlives the signed URL and would serve a broken image |
 | Alt text asked for always, required never | refusing the upload costs the community the photograph rather than gaining it a description |
+| Post image containers carry the recorded aspect ratio | an `<img>` sized only by `w-auto` has no dimensions until it loads, so its box collapses -- and `loading="lazy"` then never fires, because a zero-height element never enters the viewport. It could not load because it had no size, and had no size because it had not loaded |
+| A profile that is not visible 404s, like a post | indistinguishable from one that does not exist, so probing usernames reveals nothing |

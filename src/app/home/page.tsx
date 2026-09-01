@@ -54,7 +54,9 @@ export default async function HomePage() {
           </h1>
           {profile?.is_verified ? <VerifiedBadge showLabel /> : null}
           {profile?.username ? (
-            <Badge variant="neutral">@{profile.username}</Badge>
+            <Link href={`/members/${profile.username}`} className="rounded-full">
+              <Badge variant="neutral">@{profile.username}</Badge>
+            </Link>
           ) : null}
         </div>
 

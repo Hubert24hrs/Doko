@@ -8,9 +8,10 @@ import type { MetadataRoute } from "next";
  * that, and a crawler has no session anyway) but because those URLs are
  * useless in a search result and would only produce sign-in redirects.
  *
- * /posts/ is deliberately allowed: a public post is a public page with real
- * metadata. RLS still hides community-scoped posts from an anonymous crawler,
- * and their pages carry `robots: noindex` regardless.
+ * /posts/ and /members/ are deliberately allowed: a public post and a public
+ * profile are public pages with real metadata. RLS still hides community-only
+ * and private ones from an anonymous crawler, and those pages carry
+ * `robots: noindex` regardless.
  */
 export default function robots(): MetadataRoute.Robots {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -19,7 +20,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/communities", "/posts/"],
+        allow: ["/", "/communities", "/posts/", "/members/"],
         disallow: [
           "/admin",
           "/admin/",

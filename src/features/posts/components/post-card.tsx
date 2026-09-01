@@ -66,14 +66,24 @@ export function PostCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="font-medium text-foreground">
-                {author?.full_name ?? "Former member"}
-              </span>
+              {author ? (
+                <Link
+                  href={`/members/${author.username}`}
+                  className="font-medium text-foreground hover:underline"
+                >
+                  {author.full_name}
+                </Link>
+              ) : (
+                <span className="font-medium text-foreground">Former member</span>
+              )}
               {author?.is_verified ? <VerifiedBadge /> : null}
               {author ? (
-                <span className="text-sm text-muted-foreground">
+                <Link
+                  href={`/members/${author.username}`}
+                  className="text-sm text-muted-foreground hover:underline"
+                >
                   @{author.username}
-                </span>
+                </Link>
               ) : null}
             </div>
 

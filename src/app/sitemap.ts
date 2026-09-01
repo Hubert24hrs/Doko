@@ -55,6 +55,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       return staticEntries;
     }
 
+    // Profiles too. Same anonymous client, so RLS returns only the ones a
+    // signed-out crawler could actually read.
+    const { data: profiles, error: profileError } = await supabase
+      .from("profiles")
+      .select("username, updated_at")
+      .is("deleted_at", null)
+      .eq("is_suspended", false)
+      .order("updated_at", { ascending: false })
+      .limit(MAX_POSTS);
+
+    if (profileError) {
+      console.error("[sitemap] profile query failed", profileError.message);
+    }
+
     return [
       ...staticEntries,
       ...(data ?? []).map((post) => ({
@@ -62,6 +76,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: new Date(post.updated_at ?? post.created_at),
         changeFrequency: "weekly" as const,
         priority: 0.5,
+      })),
+      ...(profiles ?? []).map((p) => ({
+        url: `${siteUrl}/members/${p.username}`,
+        lastModified: new Date(p.updated_at),
+        changeFrequency: "monthly" as const,
+        priority: 0.4,
       })),
     ];
   } catch (cause) {

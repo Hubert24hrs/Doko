@@ -81,12 +81,12 @@ database.
 | `07_follows.test.sql` | 16 | one-directional follows, counts, self-follow refused |
 | `08_followers_posts.test.sql` | 13 | the followers-only tier, inherited by replies and images |
 | `09_groups.test.sql` | 27 | membership as the access rule; the private-group leak below |
-| `10_messages.test.sql` | 37 | **not yet run** -- see below |
+| `10_messages.test.sql` | 38 | **not yet run** -- see below |
 
 With a linked local database they would run as `supabase test db`; here each
 file is pasted into the SQL Editor instead.
 
-The 37 assertions in `10_messages` are WRITTEN AND NOT YET RUN. Until they
+The 38 assertions in `10_messages` are WRITTEN AND NOT YET RUN. Until they
 have passed against the hosted project, direct messages must not be described
 as working, and `/messages` will in fact fail at runtime because migration 015
 has not been applied.

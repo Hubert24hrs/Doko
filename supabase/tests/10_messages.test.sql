@@ -19,7 +19,7 @@
 begin;
 
 set local search_path = public, extensions, pg_temp;
-select plan(37);
+select plan(38);
 
 create table public._tap_out (
   at   timestamptz not null default clock_timestamp(),
@@ -193,6 +193,26 @@ insert into public._tap_out(line) select is(
   2, 'and both people are in it'
 );
 
+-- The conversation id, parked where RLS does not reach.
+--
+-- The outsider assertions below have to NAME the conversation, and an outsider
+-- cannot SELECT it -- that is the whole point of them. Written as
+-- INSERT ... SELECT ... FROM public.conversations, the select returned zero
+-- rows for her, the insert inserted nothing, no exception was raised, and the
+-- assertion failed having never reached the write policy at all. A test that
+-- passes by doing nothing is worse than one that fails.
+create table public._tap_fixture (
+  name  text primary key,
+  value uuid,
+  ts    timestamptz
+);
+grant select on public._tap_fixture to public;
+alter table public._tap_fixture disable row level security;
+
+insert into public._tap_fixture (name, value)
+select 'conversation', id from public.conversations
+ where created_by = 'f1110000-1111-1111-1111-111111111111'::uuid;
+
 -- ===========================================================================
 -- Who can see a conversation
 -- ===========================================================================
@@ -264,8 +284,8 @@ reset role;
 select pg_temp.become('f3330000-3333-3333-3333-333333333333'::uuid);
 insert into public._tap_out(line) select throws_ok(
   $$insert into public.messages (conversation_id, author_id, body)
-    select c.id, 'f3330000-3333-3333-3333-333333333333', 'Butting in'
-      from public.conversations c limit 1$$,
+    select value, 'f3330000-3333-3333-3333-333333333333', 'Butting in'
+      from public._tap_fixture where name = 'conversation'$$,
   '42501', null,
   'an outsider cannot write into a conversation'
 );
@@ -352,11 +372,33 @@ insert into public._tap_out(line) select is(
 reset role;
 
 -- A member moves their OWN read marker and nobody else's. RLS refuses an
--- UPDATE by filtering, so the wrong row is not an error -- it is silence,
--- which is why this counts rows instead of expecting a throw.
+-- UPDATE by FILTERING, not by raising, so the refusal is silence -- which is
+-- why this compares the value before and after instead of expecting a throw.
+--
+-- It has to compare ALICE'S timestamp, too. Checking Bob's unread count after
+-- Bob tried to move Alice's marker would have been a test of nothing: his
+-- count is 1 whether the update was filtered or not.
+insert into public._tap_fixture (name, ts)
+select 'alice_read', last_read_at from public.conversation_members
+ where user_id = 'f1110000-1111-1111-1111-111111111111'::uuid;
+
 select pg_temp.become('f2220000-2222-2222-2222-222222222222'::uuid);
 update public.conversation_members set last_read_at = now()
  where user_id = 'f1110000-1111-1111-1111-111111111111'::uuid;
+reset role;
+
+insert into public._tap_out(line) select is(
+  (select last_read_at from public.conversation_members
+    where user_id = 'f1110000-1111-1111-1111-111111111111'::uuid),
+  (select ts from public._tap_fixture where name = 'alice_read'),
+  'one member cannot mark another member''s conversation as read'
+);
+
+-- And the positive half, without which the assertion above would also pass if
+-- the read marker could not be moved by anybody at all.
+select pg_temp.become('f2220000-2222-2222-2222-222222222222'::uuid);
+update public.conversation_members set last_read_at = now()
+ where user_id = 'f2220000-2222-2222-2222-222222222222'::uuid;
 reset role;
 
 insert into public._tap_out(line) select is(
@@ -367,7 +409,7 @@ insert into public._tap_out(line) select is(
       and msg.created_at > m.last_read_at
       and msg.author_id <> m.user_id
     where m.user_id = 'f2220000-2222-2222-2222-222222222222'::uuid),
-  1, 'one member cannot mark another member''s conversation as read'
+  0, 'but CAN mark their own, which clears their unread count'
 );
 
 -- ===========================================================================

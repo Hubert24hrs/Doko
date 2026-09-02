@@ -198,7 +198,7 @@ and group visibility, and the storage policies. Those are proven, not asserted.
 What is still unproven, and must not be described as working:
 
 1. **Direct messaging.** Migration 015 has not been applied and `10_messages`
-   (37 assertions) has not been run. Until both have happened, every claim in
+   (38 assertions) has not been run. Until both have happened, every claim in
    "Staff cannot read private messages" above is design intent rather than
    observed behaviour.
 2. **Realtime delivery.** The subscription and the publication line exist;

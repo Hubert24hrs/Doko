@@ -125,7 +125,7 @@ is listed under "Not yet done" and is honest about being open.
   Acceptable while the audience is known personally; NOT acceptable once the
   URL is shared. Resolve before public launch -- see docs/DEPLOYMENT.md section 6.
 * **Phase 3 slice 1 (direct messages) is BUILT and NOT YET APPLIED.**
-  Migration 015 and the 37-assertion `10_messages` suite are written and the
+  Migration 015 and the 38-assertion `10_messages` suite are written and the
   app compiles against them, but the migration has not been run on the hosted
   project. Until it has, `/messages` will fail at runtime: it queries tables
   that do not exist yet. Do not describe messaging as working.
@@ -155,7 +155,7 @@ Recommended order, and why:
    control -- which is fine for an audience known personally and not fine
    once the URL is shared.
 2. **Apply migration 015 and run `10_messages`.** Direct messages are built
-   and cannot be believed until those 37 assertions pass. Then exercise the
+   and cannot be believed until those 38 assertions pass. Then exercise the
    thread on the live site in two browsers, which is the only way to find out
    whether realtime is actually delivering.
 3. **Phase 3, rest of messaging:** group conversations (they lean on

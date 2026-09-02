@@ -68,9 +68,9 @@ is listed under "Not yet done" and is honest about being open.
   four reactions, trigger-maintained engagement counts, and a public
   `/posts/[id]` page. Verified against the hosted project with real data,
   including the author embed and the generated SEO metadata for public posts.
-* **191 database assertions passing** against the live project: 38 schema,
+* **229 database assertions passing** against the live project: 38 schema,
   29 RLS, 9 seed, 22 posts, 18 comments/reactions, 19 media, 16 follows,
-  13 followers-only posts, 27 groups.
+  13 followers-only posts, 27 groups, 38 messages.
 * **Followers-only posts verified**, including that replies and images inherit
   the tier without those tables having been modified.
 * **Phase 2 slice 7 (groups) verified against the live database.** 27
@@ -83,6 +83,20 @@ is listed under "Not yet done" and is honest about being open.
   have been world-readable while the group itself looked locked.
 * **Phase 2 is complete**: posts, images, comments, reactions, member
   profiles, following, followers-only visibility, and groups.
+* **Phase 3 slice 1 (direct messages) verified against the live database.**
+  Migration 015 is applied and 38 assertions pass. They cover the canonical
+  pair key (both sides open the SAME conversation), that conversations and
+  memberships have no INSERT policy for anyone, that a private or suspended
+  profile cannot be messaged, that withdrawal blanks the body in the database,
+  and -- the one that matters most -- that **a moderator and an admin each read
+  exactly nothing**. `messages` is the only table here with no staff read
+  policy, and that assertion is what keeps it that way.
+  Three assertions in that suite had to be fixed first, all the same shape: an
+  INSERT ... SELECT the outsider could not read fed on zero rows and threw
+  nothing; a read-marker test measured the wrong person's count; and `now()`
+  being the transaction timestamp made two rows compare EQUAL so an unread
+  count was silently zero. Each passed or failed without reaching the thing it
+  named.
 * **Phase 2 slices 4 and 5 verified on the live site**: member profiles at
   `/members/[username]`, and following -- Follow button, counts, and the
   Everyone / Following feed views, including the empty-following case showing
@@ -124,11 +138,6 @@ is listed under "Not yet done" and is honest about being open.
   is enabled, so a member can register with an address they do not control.
   Acceptable while the audience is known personally; NOT acceptable once the
   URL is shared. Resolve before public launch -- see docs/DEPLOYMENT.md section 6.
-* **Phase 3 slice 1 (direct messages) is BUILT and NOT YET APPLIED.**
-  Migration 015 and the 38-assertion `10_messages` suite are written and the
-  app compiles against them, but the migration has not been run on the hosted
-  project. Until it has, `/messages` will fail at runtime: it queries tables
-  that do not exist yet. Do not describe messaging as working.
 * **Realtime delivery is unverified.** The subscription is written and the
   publication line is in migration 015, but nothing has been observed arriving
   live in a second browser. The thread renders correctly either way -- the
@@ -154,10 +163,9 @@ Recommended order, and why:
    Until this is done, a member can register with an address they do not
    control -- which is fine for an audience known personally and not fine
    once the URL is shared.
-2. **Apply migration 015 and run `10_messages`.** Direct messages are built
-   and cannot be believed until those 38 assertions pass. Then exercise the
-   thread on the live site in two browsers, which is the only way to find out
-   whether realtime is actually delivering.
+2. **Exercise a thread on the live site in two browsers.** The database is
+   proven; realtime delivery is not, and watching a message arrive without a
+   refresh is the only way to find out whether it does.
 3. **Phase 3, rest of messaging:** group conversations (they lean on
    `group_members`, so membership is already solved) and presence.
 4. Phase 4: events, jobs, marketplace, directory, community issues, map.

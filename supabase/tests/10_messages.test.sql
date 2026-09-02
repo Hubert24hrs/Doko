@@ -259,6 +259,22 @@ insert into public._tap_out(line) select throws_ok(
 );
 reset role;
 
+-- Back-date both read markers before a word is sent.
+--
+-- now() is the TRANSACTION timestamp and does not move for the length of this
+-- script. conversation_members.last_read_at defaults to now() and
+-- messages.created_at defaults to now(), so inside one transaction they are
+-- identical and "created_at > last_read_at" is false: the recipient showed
+-- zero unread, and the sender's assertion passed because the two timestamps
+-- were EQUAL rather than because the trigger had advanced anything.
+--
+-- In production these are separate transactions seconds apart, so the schema
+-- is fine. The test has to create the gap the clock would otherwise provide.
+update public.conversation_members m
+   set last_read_at = now() - interval '1 hour'
+  from public._tap_fixture f
+ where f.name = 'conversation' and m.conversation_id = f.value;
+
 -- ===========================================================================
 -- Messages
 -- ===========================================================================
@@ -337,6 +353,10 @@ insert into public._tap_out(line) select ok(
 -- Sending is reading: otherwise everyone would carry an unread count that
 -- included their own messages, which reads as a bug even though the
 -- arithmetic is right.
+--
+-- With both markers back-dated an hour, this now tests the trigger rather
+-- than a coincidence of equal timestamps -- the sender's marker has to be
+-- dragged forward to her own message for this to be zero.
 insert into public._tap_out(line) select is(
   (select count(*)::int
      from public.conversation_members m

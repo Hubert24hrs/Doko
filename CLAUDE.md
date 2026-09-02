@@ -103,7 +103,7 @@ is listed under "Not yet done" and is honest about being open.
      and check the affected rows.
   3. `?next=` was computed by the proxy and discarded by every consumer, so
      sign-in always landed on /home.
-* 127 unit tests passing; typecheck clean; lint clean; production build clean
+* 143 unit tests passing; typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
   `/login?next=...`, and no secrets appear in the HTML
@@ -124,7 +124,18 @@ is listed under "Not yet done" and is honest about being open.
   is enabled, so a member can register with an address they do not control.
   Acceptable while the audience is known personally; NOT acceptable once the
   URL is shared. Resolve before public launch -- see docs/DEPLOYMENT.md section 6.
-* Phase 3 messaging; Phase 4 events, jobs, marketplace, directory, issues, map;
+* **Phase 3 slice 1 (direct messages) is BUILT and NOT YET APPLIED.**
+  Migration 015 and the 37-assertion `10_messages` suite are written and the
+  app compiles against them, but the migration has not been run on the hosted
+  project. Until it has, `/messages` will fail at runtime: it queries tables
+  that do not exist yet. Do not describe messaging as working.
+* **Realtime delivery is unverified.** The subscription is written and the
+  publication line is in migration 015, but nothing has been observed arriving
+  live in a second browser. The thread renders correctly either way -- the
+  composer says "Live updates unavailable" when the channel is not subscribed
+  -- so this degrades rather than breaks.
+* Phase 3 group conversations and presence; Phase 4 events, jobs, marketplace,
+  directory, issues, map;
   Phase 5 verification, moderation queue, advertising, payments; Phase 6
   hardening
 * The entire AI intelligence layer (Oba AI, RAG, semantic search, moderation,
@@ -143,9 +154,13 @@ Recommended order, and why:
    Until this is done, a member can register with an address they do not
    control -- which is fine for an audience known personally and not fine
    once the URL is shared.
-2. **Phase 3: messaging.** One-to-one and group chat, realtime, presence.
-   Groups already give a membership table for group conversations to lean on.
-3. Phase 4: events, jobs, marketplace, directory, community issues, map.
+2. **Apply migration 015 and run `10_messages`.** Direct messages are built
+   and cannot be believed until those 37 assertions pass. Then exercise the
+   thread on the live site in two browsers, which is the only way to find out
+   whether realtime is actually delivering.
+3. **Phase 3, rest of messaging:** group conversations (they lean on
+   `group_members`, so membership is already solved) and presence.
+4. Phase 4: events, jobs, marketplace, directory, community issues, map.
 
 Operational notes that will otherwise be rediscovered painfully:
 
@@ -200,6 +215,8 @@ src/
     feed/                   the community feed
     posts/[id]/             public post page, indexable
     members/[username]/     public member profile, indexable
+    groups/                 groups, and one group
+    messages/               inbox and one conversation
     robots.ts sitemap.ts    SEO surface
     not-found.tsx error.tsx global-error.tsx
     globals.css             ALL design tokens live here
@@ -214,6 +231,9 @@ src/
     profile/{actions,queries,schemas}.ts, components/
     posts/{actions,queries,schemas}.ts, components/
     comments/{actions,queries,schemas}.ts, components/
+    follows/{actions,queries}.ts, components/
+    groups/{actions,queries,schemas,post-actions,post-queries}.ts, components/
+    messages/{actions,queries,schemas}.ts, components/
   lib/
     env.ts                  public env (browser-safe)
     env.server.ts           secrets, `server-only` guarded
@@ -225,7 +245,7 @@ src/
 supabase/
   migrations/               numbered, idempotent
   seed.sql                  real Igbo-Eze North data
-supabase/tests/             pgTAP suites 01-05, portable SQL
+supabase/tests/             pgTAP suites 01-10, portable SQL
 tests/unit/                 vitest suites
 docs/                       ARCHITECTURE, DEVELOPMENT, TESTING, SECURITY, DEPLOYMENT
 ```
@@ -273,6 +293,9 @@ events and issues will reference it.
 | `follows` | one-directional, no approval; the pair is the primary key |
 | `groups` | public or private; optional geographic anchor |
 | `group_members` | membership IS the access rule; owner/moderator/member |
+| `conversations` | a private conversation; `dm_key` is the canonical pair |
+| `conversation_members` | who is in one, and their `last_read_at` |
+| `messages` | what was said; **no staff read policy, deliberately** |
 
 **`posts.author_id` and `comments.author_id` reference `public.profiles`, not
 `auth.users`.** The identity is the same, since `profiles.id` IS the auth user
@@ -290,7 +313,10 @@ aggregates. `recount_post_engagement()` repairs drift.
 `has_role`, `is_staff`, `is_admin`, `is_super_admin`, `administers_geo`,
 `shares_community_with`, `geo_ancestors`, `geo_descendants`,
 `log_admin_action`, `consume_rate_limit`, `slugify`,
-`is_active_member`, `member_of_geo`, `recount_post_engagement`.
+`is_active_member`, `member_of_geo`, `recount_post_engagement`,
+`is_group_member`, `leads_group`, `can_see_group`, `in_conversation`,
+`can_message`, `open_direct_conversation`, `my_conversation_summaries`,
+`my_unread_message_count`.
 
 All RBAC helpers are `SECURITY DEFINER` with `set search_path = public,
 pg_temp`.
@@ -510,3 +536,16 @@ If a local database is ever wanted, install Docker Desktop, then
 | A group must always keep one owner | the guard trigger refuses the last owner leaving OR self-demoting; otherwise nobody could edit, admit or close the group |
 | The creator is made owner by trigger, not by the application | a group can then never exist without someone responsible for it, however it was created |
 | Private groups cannot be joined at all | that is what makes them private; an invitation flow would add rows through a definer function rather than a third visibility value |
+| A conversation is keyed by the ORDERED pair | two people messaging at the same moment would otherwise create two conversations and each would hold half the history, with no error anywhere. Without least/greatest, (a,b) and (b,a) are different keys and the uniqueness is decorative |
+| Conversations are opened by a definer function, never by an INSERT | creating one means inserting a membership row for somebody else, which no policy can safely allow -- group_members refuses exactly that. So `conversations` has no INSERT policy for anyone |
+| Opening is idempotent | pressing Message on somebody you have written to before belongs in the existing conversation, not a new one; the pair key makes a second one impossible anyway |
+| Staff have NO read policy on messages | the single place this schema departs from "staff moderate everything". A post is public speech; a private message is not. A report flow should surface ONE reported message through a definer function that records who looked, not grant blanket access to everyone's correspondence. `10_messages` asserts a moderator and an admin both see nothing |
+| Who may be messaged is the profile-visibility rule, reused | a private profile cannot be messaged cold. Writing a second rule here would be a second copy to keep in step, and the copy outside the source of truth is the one that drifts |
+| `can_message` takes no `check_user_id` | it delegates to `shares_community_with`, which reads `auth.uid()` as the viewer. A `can_message(target, someone_else)` would answer for the CALLER while appearing to answer for someone else -- a wrong answer that looks right |
+| Read state is `last_read_at` on the membership row | one row per person per conversation answers "how many unread" as well as one row per person per message, and does not grow with the conversation |
+| Sending a message marks it read for its own author | otherwise everybody carries an unread count that includes their own messages, which reads as a bug even though the arithmetic is right |
+| Withdrawal blanks the body IN THE DATABASE | a stale client, a cached payload or a realtime event must not still be carrying the words of a message somebody withdrew. Hiding it in the UI would leave the text in flight |
+| A withdrawn message keeps its row | a hole in a thread is more confusing than a tombstone, and every reply above it stops making sense |
+| A realtime event is a SIGNAL, not data | the payload is discarded and the server component re-runs, so what renders has passed through RLS on the server exactly as a fresh page load would. It costs a round trip per message and buys the guarantee that no broadcast can put on screen something the reader was not entitled to see |
+| The inbox is one RPC, not a query per conversation | the unread count, the last-message preview and the other person are all per-conversation, and an inbox is exactly the screen where an N+1 shows |
+| A conversation the caller is not in 404s | as for posts and profiles: a 403 would confirm that a conversation between two other people exists |

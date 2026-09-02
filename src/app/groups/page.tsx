@@ -10,6 +10,7 @@ import { requireUser } from "@/features/auth/session";
 import { listGroups, listMyGroups } from "@/features/groups/queries";
 import { GROUP_KIND_LABEL } from "@/features/groups/schemas";
 import type { GroupSummary } from "@/features/groups/queries";
+import { MessagesNavLink } from "@/features/messages/components/messages-nav-link";
 
 export const metadata: Metadata = {
   title: "Groups",
@@ -83,6 +84,7 @@ export default async function GroupsPage() {
             <Logo />
           </Link>
           <div className="flex items-center gap-1">
+            <MessagesNavLink />
             <Link
               href="/feed"
               className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken"

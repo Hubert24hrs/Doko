@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Compass, MapPin, ShieldCheck, MessageSquareText, UsersRound } from "lucide-react";
+import {
+  Compass,
+  MapPin,
+  MessagesSquare,
+  ShieldCheck,
+  MessageSquareText,
+  UsersRound,
+} from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge, VerifiedBadge } from "@/components/ui/badge";
@@ -9,6 +16,7 @@ import { Logo } from "@/components/brand/logo";
 import { requireUser, isStaff } from "@/features/auth/session";
 import { signOutAction } from "@/features/auth/actions";
 import { AuthNotice } from "@/components/ui/auth-notice";
+import { getUnreadCount } from "@/features/messages/queries";
 
 export const metadata: Metadata = {
   title: "Home",
@@ -24,6 +32,7 @@ export default async function HomePage({
 }) {
   const user = await requireUser("/home");
   const { error } = await searchParams;
+  const unread = await getUnreadCount();
   const profile = user.profile;
   const displayName = profile?.full_name ?? "there";
 
@@ -90,6 +99,35 @@ export default async function HomePage({
         </Card>
 
         <div className="grid gap-4 sm:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <div className="mb-1 text-primary">
+                <MessagesSquare className="size-5" aria-hidden="true" />
+              </div>
+              <CardTitle as="h2">Messages</CardTitle>
+              <CardDescription>
+                {/* Null means the count could not be read. Saying "no unread
+                    messages" on a failed query would be a lie the member has
+                    no way to detect. */}
+                {unread === null
+                  ? "Private conversations with other members."
+                  : unread > 0
+                    ? `You have ${unread.toLocaleString("en-NG")} unread ${
+                        unread === 1 ? "message" : "messages"
+                      }.`
+                    : "Private conversations. Only the people in them can read them."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link
+                href="/messages"
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                Open your messages
+              </Link>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <div className="mb-1 text-primary">

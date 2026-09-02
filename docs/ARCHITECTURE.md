@@ -267,9 +267,85 @@ must never be able to put words in a member's mouth.
 
 ### One constraint worth remembering
 
-`posts.author_id` and `comments.author_id` reference `public.profiles`, not
-`auth.users`. The identity is identical — `profiles.id` IS the auth user id —
+`posts.author_id`, `comments.author_id` and `messages.author_id` reference
+`public.profiles`, not `auth.users`. The identity is identical — `profiles.id` IS the auth user id —
 but **PostgREST can only embed across a foreign key whose target is in the
 exposed schema**. Pointing them at `auth.users` makes `author:author_id(...)`
 fail with PGRST200, which takes down the entire feed query rather than merely
 omitting a name. This shipped broken once. `05_comments` now asserts it.
+
+## Messaging (Phase 3)
+
+### One conversation per pair, or none
+
+A direct conversation is identified by `dm_key`, the two member ids ordered and
+joined: `least(a,b) || ':' || greatest(a,b)`. The ordering is the whole point.
+Without it, `(a,b)` and `(b,a)` are different strings, two people who message
+each other at the same moment get a conversation each, and they hold half the
+history apiece with no error raised anywhere.
+
+Conversations are created by `open_direct_conversation()` and by nothing else.
+`conversations` has **no INSERT policy for any role**, because creating one
+means inserting a membership row for the other person -- and no policy can
+safely allow one member to add another. `group_members` refuses exactly that,
+for exactly the same reason. The function is a SECURITY DEFINER, is idempotent
+("open", not "create"), and resolves the simultaneous-press race with
+`ON CONFLICT` so the loser joins the winner's conversation rather than seeing
+an error.
+
+Who may be messaged is **the same rule that decides whether the profile is
+visible at all**: public profiles are open, `community` profiles only to people
+who share a community, `private` to nobody. That reuse gives the
+anti-harassment property -- a private profile cannot be messaged cold -- without
+a second copy of the rule to keep in step.
+
+### Staff cannot read messages
+
+This is the one place the schema departs from "staff moderate everything".
+`messages` has no staff SELECT policy, and `10_messages` asserts that a
+moderator and an admin both read exactly nothing.
+
+A post is public speech and moderating it is legitimate. Private correspondence
+between two people is not, and a moderation queue is not a reason to hand every
+moderator everyone's messages. When reporting arrives, the right shape is a
+definer function that surfaces **one reported message** and records who looked
+at it -- not a blanket read policy.
+
+### Withdrawal takes the words with it
+
+A withdrawn message keeps its row and loses its body, and the blanking happens
+in a **database trigger** rather than in the UI. That matters more here than it
+does for a post: a message may already be in flight to a subscribed client, sat
+in a cached payload, or on its way through a realtime broadcast. Hiding it in
+the renderer would leave the text in every one of those places.
+
+The row itself stays, as a post's does. A hole in a thread is more confusing
+than a tombstone, and every reply above it stops making sense.
+
+### A realtime event is a signal, not data
+
+The thread subscribes to Postgres Changes on `messages` for its conversation
+and, on any event, **discards the payload** and re-runs the server component.
+
+Postgres Changes are RLS-filtered, so in principle the payload could be
+rendered directly. Treating it as a signal instead means what finally reaches
+the screen has passed through RLS on the server exactly as a fresh page load
+would. It costs one round trip per incoming message and buys the guarantee that
+no broadcast can ever put on screen something the reader was not entitled to
+see. In a two-person conversation that trade is obviously worth making.
+
+When the channel is not subscribed the composer says so, and the thread still
+works on refresh -- realtime degrades rather than breaks.
+
+### The inbox is one round trip
+
+`my_conversation_summaries()` returns the unread count, the last-message
+preview and the other participant for every conversation at once. All three are
+per-conversation, so computing them in the application is three queries per row
+on the single screen where that is most visible.
+
+Unread is derived from `conversation_members.last_read_at` rather than from a
+per-message receipts table: one row per person per conversation answers the
+question just as well and does not grow with the conversation. Sending a
+message advances the sender's own marker, or everyone would carry an unread
+count that included their own messages.

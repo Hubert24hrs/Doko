@@ -21,6 +21,8 @@ import { PostCard } from "@/features/posts/components/post-card";
 import { SocialLinks } from "@/features/profile/components/social-links";
 import { FollowButton } from "@/features/follows/components/follow-button";
 import { viewerFollows } from "@/features/follows/queries";
+import { canMessage } from "@/features/messages/queries";
+import { MessageButton } from "@/features/messages/components/message-button";
 
 export const dynamic = "force-dynamic";
 
@@ -80,9 +82,13 @@ export default async function MemberPage({
   const isOwnProfile = viewer?.id === profile.id;
   const staff = viewer ? isStaff(viewer) : false;
 
-  const [posts, following] = await Promise.all([
+  const [posts, following, messageable] = await Promise.all([
     getPostsByAuthor(profile.id),
     viewerFollows(profile.id),
+    // Asked of the database rather than inferred from `visibility` here: the
+    // rule also covers suspension and deletion, and a second copy of it in
+    // this component is a second thing to keep in step.
+    viewer && !isOwnProfile ? canMessage(profile.id) : Promise.resolve(false),
   ]);
   const imagesByPost = await getPostImages(posts.posts.map((p) => p.id));
 
@@ -131,11 +137,16 @@ export default async function MemberPage({
                   Edit profile
                 </Link>
               ) : viewer ? (
-                <FollowButton
-                  profileId={profile.id}
-                  username={profile.username}
-                  following={following}
-                />
+                <div className="flex items-start gap-2">
+                  {messageable ? (
+                    <MessageButton otherUserId={profile.id} />
+                  ) : null}
+                  <FollowButton
+                    profileId={profile.id}
+                    username={profile.username}
+                    following={following}
+                  />
+                </div>
               ) : (
                 <Link
                   href={`/login?next=${encodeURIComponent(`/members/${profile.username}`)}`}

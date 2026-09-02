@@ -13,6 +13,7 @@ import { getPostImages } from "@/features/posts/media-queries";
 import { getFollowedIds } from "@/features/follows/queries";
 import { PostComposer, VisibilityHint } from "@/features/posts/components/post-composer";
 import { PostCard } from "@/features/posts/components/post-card";
+import { MessagesNavLink } from "@/features/messages/components/messages-nav-link";
 
 export const metadata: Metadata = {
   title: "Feed",
@@ -54,6 +55,7 @@ export default async function FeedPage({
             <Logo />
           </Link>
           <div className="flex items-center gap-1">
+            <MessagesNavLink />
             <Link
               href="/groups"
               className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken"

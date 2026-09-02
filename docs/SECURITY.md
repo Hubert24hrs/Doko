@@ -69,6 +69,35 @@ including admins. Rows arrive only via `log_admin_action()`, which is
 `SECURITY DEFINER`, resolves the actor from `auth.uid()` and refuses
 unauthenticated calls. Nobody edits history.
 
+### Staff cannot read private messages
+
+`messages` is the one table in this schema with **no staff SELECT policy**.
+Moderators and admins can read posts, comments, media and groups; they read
+exactly nothing in anybody's correspondence, and `10_messages` asserts it for
+both roles so that the day somebody adds a policy "for moderation" the suite
+fails rather than the guarantee quietly disappearing.
+
+A post is public speech, and moderating it is legitimate. Private
+correspondence between two people is not, and a moderation queue is not a
+reason to hand every moderator everybody's messages. When reporting is built,
+the right shape is a `SECURITY DEFINER` function that surfaces **one reported
+message** and records who looked at it -- an access that leaves a trail, not a
+blanket read policy.
+
+Three supporting properties, all asserted:
+
+* `conversations` and `conversation_members` have **no INSERT policy for
+  anyone**. Opening a conversation inserts a membership row for the other
+  person, which no policy can safely permit, so it happens only inside
+  `open_direct_conversation()`.
+* Who may be messaged is the **profile-visibility rule reused**, not restated:
+  a `private` profile cannot be messaged cold, and one error covers "no such
+  person", "they are private" and "they are suspended" alike so the button
+  cannot be used to tell them apart.
+* Withdrawing a message **blanks the body in the database**, not in the UI. The
+  text may already be in a cached payload or a realtime broadcast; hiding it in
+  the renderer would leave it in both.
+
 ---
 
 ## Authentication
@@ -161,20 +190,27 @@ caller's permissions -- vector metadata is not an access control.
 
 ## Not yet verified
 
-RLS policies have **never been executed against a database** (no Docker, no
-`psql`, no linked project). They are written carefully and two recursion/order
-bugs were caught by inspection, but they are unproven.
+Most of what this document claims has been **executed against the hosted
+project**: 191 pgTAP assertions cover the escalation boundary, the append-only
+audit trail, every profile visibility tier, the rate limiter's threshold, post
+and group visibility, and the storage policies. Those are proven, not asserted.
 
-Before production, run against a real project:
+What is still unproven, and must not be described as working:
 
-1. a non-staff user cannot read `audit_logs`
-2. a user cannot grant themselves a role
-3. a user cannot set `is_verified` on their own profile
-4. a `private` profile is invisible to others but visible to its owner
-5. a `community` profile is visible only to members of the same community
-6. an anonymous visitor sees only `public`, non-suspended profiles
-7. a `community_admin` can edit only their own subtree
-8. `consume_rate_limit` actually blocks at the configured threshold
+1. **Direct messaging.** Migration 015 has not been applied and `10_messages`
+   (37 assertions) has not been run. Until both have happened, every claim in
+   "Staff cannot read private messages" above is design intent rather than
+   observed behaviour.
+2. **Realtime delivery.** The subscription and the publication line exist;
+   nothing has been watched arriving live in a second browser. It degrades
+   rather than breaks -- the composer says so when the channel is not
+   subscribed.
+3. **`community_admin` subtree scoping.** A community admin should be able to
+   edit only their own part of the geographic tree. Written, never asserted.
+4. **Migration idempotency.** The files are written to be re-runnable and have
+   been re-run by hand, but nothing tests it.
+5. **Passkey sign-in.** Enrolment works; the sign-in ceremony has never been
+   completed on a real device.
 
 Tracked in [`TESTING.md`](./TESTING.md).
 
@@ -307,6 +343,13 @@ per member per hour:
 | Create reply | 60 |
 | Edit / remove reply | 60 each |
 | Set reaction | 240 |
+| Open a conversation | 30 |
+| Send a message | 200 |
+
+Messages get a high cap because a real conversation is fast and the cost of
+refusing a legitimate one is high; opening a conversation gets a low one,
+because that is the action that reaches a stranger and so is the one worth
+throttling.
 
 Reactions get the highest cap because real members genuinely react a lot, and
 the lowest cost per call — but they were the one action originally shipped with

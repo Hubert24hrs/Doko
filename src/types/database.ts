@@ -230,6 +230,52 @@ export type FollowRow = {
   created_at: string;
 }
 
+export type ConversationRow = {
+  id: string;
+  /**
+   * Canonical pair key for a direct conversation, as
+   * `least(a,b) || ':' || greatest(a,b)`. NULL is reserved for a conversation
+   * that is not a pair.
+   */
+  dm_key: string | null;
+  created_by: string | null;
+  last_message_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ConversationMemberRow = {
+  conversation_id: string;
+  user_id: string;
+  last_read_at: string;
+  joined_at: string;
+}
+
+/** One row of my_conversation_summaries(); not a table. */
+export type ConversationSummaryRow = {
+  conversation_id: string;
+  last_message_at: string | null;
+  last_read_at: string;
+  unread_count: number;
+  /** NULL once a conversation can be something other than a pair. */
+  other_user_id: string | null;
+  preview: string | null;
+  preview_author_id: string | null;
+  preview_withdrawn: boolean | null;
+}
+
+export type MessageRow = {
+  id: string;
+  conversation_id: string;
+  author_id: string;
+  /** Blanked by trigger when the message is withdrawn. */
+  body: string;
+  created_at: string;
+  updated_at: string;
+  edited_at: string | null;
+  deleted_at: string | null;
+}
+
 export type GeoTreeNodeRow = {
   id: string;
   kind: GeoKind;
@@ -337,6 +383,33 @@ export interface Database {
         Update: Partial<FollowRow>;
         Relationships: [];
       };
+      conversations: {
+        Row: ConversationRow;
+        /**
+         * No INSERT/UPDATE policy exists for any role: rows arrive only
+         * through open_direct_conversation(). As with audit_logs, these stay
+         * object types — `never` here would degrade every table and RPC in
+         * the client to `never`.
+         */
+        Insert: Partial<ConversationRow>;
+        Update: Partial<ConversationRow>;
+        Relationships: [];
+      };
+      conversation_members: {
+        Row: ConversationMemberRow;
+        Insert: Partial<ConversationMemberRow>;
+        Update: Partial<ConversationMemberRow>;
+        Relationships: [];
+      };
+      messages: {
+        Row: MessageRow;
+        Insert: Insertable<
+          MessageRow,
+          "id" | "created_at" | "updated_at" | "edited_at" | "deleted_at"
+        >;
+        Update: Partial<MessageRow>;
+        Relationships: [];
+      };
       post_media: {
         Row: PostMediaRow;
         Insert: Insertable<
@@ -424,6 +497,27 @@ export interface Database {
       follows_profile: {
         Args: { target_profile_id: string; check_user_id?: string };
         Returns: boolean;
+      };
+      in_conversation: {
+        Args: { target_conversation_id: string; check_user_id?: string };
+        Returns: boolean;
+      };
+      /**
+       * Deliberately has no check_user_id: it delegates to
+       * shares_community_with(), which reads auth.uid() as the viewer.
+       */
+      can_message: { Args: { target_user_id: string }; Returns: boolean };
+      open_direct_conversation: {
+        Args: { other_user_id: string };
+        Returns: string;
+      };
+      my_conversation_summaries: {
+        Args: Record<never, never>;
+        Returns: ConversationSummaryRow[];
+      };
+      my_unread_message_count: {
+        Args: Record<never, never>;
+        Returns: number;
       };
       storage_path_post_id: { Args: { object_name: string }; Returns: string | null };
       member_of_geo: {

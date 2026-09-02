@@ -10,7 +10,7 @@ npm run verify        # typecheck + lint + test
 
 ## Current state -- honest
 
-**127 unit tests, 9 files, all passing.** Typecheck clean, lint clean,
+**143 unit tests, 10 files, all passing.** Typecheck clean, lint clean,
 production build clean.
 
 **191 database assertions pass against the live hosted project**, across nine
@@ -33,6 +33,7 @@ run; nothing here is aspirational.
 | Profile schema | `tests/unit/profile-schemas.test.ts` | 12 | blank optionals -> null, optional village, phone normalisation, http(s)-only website, bio length, visibility enum, privileged fields stripped |
 | Redirect guard | `tests/unit/redirect.test.ts` | 12 | open-redirect defence incl. protocol-relative, backslash, control chars |
 | Geo tree | `tests/unit/geo-tree.test.ts` | 7 | hierarchy nesting, siblings, orphan promotion, immutability |
+| Message schemas | `tests/unit/message-schemas.test.ts` | 16 | body bounds measured after trimming, newlines preserved, an edit may not empty a message because withdrawing is a different act |
 | Env schema | `tests/unit/env.test.ts` | 6 | required variables, URL validation, site-URL default, multi-error reporting |
 
 ## Configuration
@@ -80,11 +81,25 @@ database.
 | `07_follows.test.sql` | 16 | one-directional follows, counts, self-follow refused |
 | `08_followers_posts.test.sql` | 13 | the followers-only tier, inherited by replies and images |
 | `09_groups.test.sql` | 27 | membership as the access rule; the private-group leak below |
+| `10_messages.test.sql` | 37 | **not yet run** -- see below |
 
 With a linked local database they would run as `supabase test db`; here each
 file is pasted into the SQL Editor instead.
 
-The assertion that most earned its place is in `09_groups`: a post inside a
+The 37 assertions in `10_messages` are WRITTEN AND NOT YET RUN. Until they
+have passed against the hosted project, direct messages must not be described
+as working, and `/messages` will in fact fail at runtime because migration 015
+has not been applied.
+
+Two of them are the reason the suite exists. The first is that **a moderator
+and an admin can both read exactly nothing**: `messages` is the one table in
+this schema with no staff read policy, and a test is the only thing that will
+notice the day somebody adds one "for moderation". The second is the canonical
+pair key -- Bob opening a conversation with Alice must land in *Alice's*
+conversation, because without the least/greatest ordering the two of them get
+one conversation each and half the history apiece, with no error anywhere.
+
+The assertion that most earned its place so far is in `09_groups`: a post inside a
 **private** group, left at the column default `visibility = 'public'`, must be
 invisible to an anonymous reader. Permissive policies are OR'd, so before
 migration 014 narrowed the four existing post policies to `group_id is null`,

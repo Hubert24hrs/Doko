@@ -129,6 +129,25 @@ export type ListingCondition = "new" | "like_new" | "good" | "fair" | "for_parts
 
 export type ListingStatus = "available" | "reserved" | "sold";
 
+export type IssueCategory =
+  | "road"
+  | "water"
+  | "electricity"
+  | "security"
+  | "waste"
+  | "health"
+  | "education"
+  | "environment"
+  | "other";
+
+/** Not a boolean: 'nobody has looked' and 'somebody is on it' differ. */
+export type IssueStatus =
+  | "reported"
+  | "acknowledged"
+  | "in_progress"
+  | "resolved"
+  | "declined";
+
 export type GeoEntityRow = {
   id: string;
   parent_id: string | null;
@@ -493,6 +512,49 @@ export type ListingMediaRow = {
   created_at: string;
 }
 
+export type CommunityIssueRow = {
+  id: string;
+  title: string;
+  description: string;
+  category: IssueCategory;
+  /** NOT NULL, unlike every other geo_id here: an issue that is nowhere cannot be fixed. */
+  geo_id: string;
+  location_text: string | null;
+  /** Optional map pin. Both coordinates or neither -- a CHECK enforces the pair. */
+  latitude: number | null;
+  longitude: number | null;
+  reporter_id: string;
+  status: IssueStatus;
+  status_note: string | null;
+  status_changed_by: string | null;
+  status_changed_at: string | null;
+  resolved_at: string | null;
+  confirm_count: number;
+  created_at: string;
+  updated_at: string;
+  edited_at: string | null;
+  deleted_at: string | null;
+}
+
+export type IssueConfirmationRow = {
+  issue_id: string;
+  user_id: string;
+  created_at: string;
+}
+
+export type IssueMediaRow = {
+  id: string;
+  issue_id: string;
+  storage_path: string;
+  mime_type: string;
+  byte_size: number;
+  width: number | null;
+  height: number | null;
+  alt_text: string | null;
+  sort_order: number;
+  created_at: string;
+}
+
 export type GeoTreeNodeRow = {
   id: string;
   kind: GeoKind;
@@ -732,6 +794,44 @@ export interface Database {
         Update: Partial<ListingMediaRow>;
         Relationships: [];
       };
+      community_issues: {
+        Row: CommunityIssueRow;
+        Insert: Insertable<
+          CommunityIssueRow,
+          | 'id'
+          | 'category'
+          | 'location_text'
+          | 'latitude'
+          | 'longitude'
+          | 'status'
+          | 'status_note'
+          | 'status_changed_by'
+          | 'status_changed_at'
+          | 'resolved_at'
+          | 'confirm_count'
+          | 'created_at'
+          | 'updated_at'
+          | 'edited_at'
+          | 'deleted_at'
+        >;
+        Update: Partial<CommunityIssueRow>;
+        Relationships: [];
+      };
+      issue_confirmations: {
+        Row: IssueConfirmationRow;
+        Insert: Insertable<IssueConfirmationRow, 'created_at'>;
+        Update: Partial<IssueConfirmationRow>;
+        Relationships: [];
+      };
+      issue_media: {
+        Row: IssueMediaRow;
+        Insert: Insertable<
+          IssueMediaRow,
+          'id' | 'width' | 'height' | 'alt_text' | 'sort_order' | 'created_at'
+        >;
+        Update: Partial<IssueMediaRow>;
+        Relationships: [];
+      };
       conversations: {
         Row: ConversationRow;
         /**
@@ -880,6 +980,18 @@ export interface Database {
         Args: { object_name: string };
         Returns: string | null;
       };
+      administers_issue: {
+        Args: { target_issue_id: string; check_user_id?: string };
+        Returns: boolean;
+      };
+      reported_issue: {
+        Args: { target_issue_id: string; check_user_id?: string };
+        Returns: boolean;
+      };
+      storage_path_issue_id: {
+        Args: { object_name: string };
+        Returns: string | null;
+      };
       open_direct_conversation: {
         Args: { other_user_id: string };
         Returns: string;
@@ -942,6 +1054,8 @@ export interface Database {
       listing_category: ListingCategory;
       listing_condition: ListingCondition;
       listing_status: ListingStatus;
+      issue_category: IssueCategory;
+      issue_status: IssueStatus;
     };
     CompositeTypes: Record<never, never>;
   };

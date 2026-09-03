@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   MessageSquareText,
   UsersRound,
+  AlertTriangle,
 } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -148,7 +149,27 @@ export default async function HomePage({
             </CardContent>
           </Card>
 
-          <Card>
+                    <Card>
+            <CardHeader>
+              <div className="mb-1 text-primary">
+                <AlertTriangle className="size-5" aria-hidden="true" />
+              </div>
+              <CardTitle as="h2">Community Issues &amp; Map</CardTitle>
+              <CardDescription>
+                Report broken boreholes, roads, or transformers, and track infrastructure on the map.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link
+                href="/issues"
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                View community issues
+              </Link>
+            </CardContent>
+          </Card>
+
+<Card>
             <CardHeader>
               <div className="mb-1 text-primary">
                 <UsersRound className="size-5" aria-hidden="true" />

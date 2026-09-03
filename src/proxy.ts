@@ -20,7 +20,7 @@ const PROTECTED_PREFIXES = [
   "/jobs/new",
   "/marketplace/new",
   "/groups",
-  "/issues",
+  "/issues/new",
   "/notifications",
   "/bookmarks",
   "/settings",

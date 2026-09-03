@@ -28,6 +28,12 @@ export default async function LandingPage() {
           </Link>
           <div className="flex items-center gap-2">
             <Link
+              href="/issues"
+              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken sm:inline-flex"
+            >
+              Issues
+            </Link>
+            <Link
               href="/communities"
               className="hidden rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken sm:inline-flex"
             >

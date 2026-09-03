@@ -81,6 +81,12 @@ export default async function FeedPage({
               Groups
             </Link>
             <Link
+              href="/issues"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken"
+            >
+              Issues
+            </Link>
+            <Link
               href="/communities"
               className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken"
             >

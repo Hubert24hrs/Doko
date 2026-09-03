@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -26,15 +26,7 @@ export interface PresenceState {
 }
 
 /**
- * Who else is in this conversation right now, and who is typing.
- *
- * On its OWN channel, separate from the one carrying message events. The two
- * have different failure modes: presence rides a private channel whose
- * authorization can refuse, and message delivery must not go down with it. If
- * this channel never joins, `connected` stays false, the bar renders nothing,
- * and the thread behaves exactly as it did before presence existed.
- *
- * Nothing here is persisted. "Online" is worthless a minute later, and storing
+ * Who else is in this conversation right now, and who is typing..."Online" is worthless a minute later, and storing
  * it would mean a write per member per heartbeat to keep a fact nobody reads
  * twice -- so it lives in Realtime, where it disappears with the connection.
  */
@@ -160,3 +152,4 @@ export function typingLabel(typing: PresentMember[]): string | null {
   }
   return `${typing.length} people are typing…`;
 }
+

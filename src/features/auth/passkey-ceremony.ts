@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { createClient } from "@/lib/supabase/client";
 
@@ -164,28 +164,56 @@ export async function registerPlatformPasskey(
 /* Authentication                                                              */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Signs in using a platform passkey (fingerprint / Face ID / Windows Hello).
+ *
+ * Uses `mediation: 'conditional'` when the browser supports it (Chrome 108+,
+ * Safari 16+, Edge 108+). Conditional mediation shows passkeys inline in the
+ * autofill dropdown on the username/email field without a modal -- the user
+ * just taps their name and the biometric prompt appears. Falls back to
+ * `mediation: 'required'` (explicit modal) when the API is unavailable.
+ *
+ * Pass `signal` to cancel an in-flight conditional request before starting
+ * another one, or before the page navigates away. Without it the browser may
+ * queue the second request and show two overlapping prompts.
+ */
 export async function signInWithPlatformPasskey(
   supabase: AnyClient,
+  options?: { signal?: AbortSignal; mediation?: CredentialMediationRequirement },
 ): Promise<{ error: string | null }> {
   const started = await supabase.auth.passkey.startAuthentication();
   if (started.error || !started.data) {
     return { error: started.error?.message ?? "Could not start sign-in." };
   }
 
-  const { challenge_id: challengeId, options } = started.data as unknown as {
+  const { challenge_id: challengeId, options: serverOptions } = started.data as unknown as {
     challenge_id: string;
     options: Record<string, unknown>;
   };
 
-  const allow = (options.allowCredentials ?? []) as {
+  const allow = (serverOptions.allowCredentials ?? []) as {
     id: string;
     type?: string;
     transports?: AuthenticatorTransport[];
   }[];
 
+  // Conditional mediation: show passkeys inline in the browser's autofill UI.
+  // Only available when the browser exposes the static method.
+  const supportsConditional =
+    typeof window !== "undefined" &&
+    typeof (
+      PublicKeyCredential as unknown as {
+        isConditionalMediationAvailable?: () => Promise<boolean>;
+      }
+    ).isConditionalMediationAvailable === "function";
+
+  const resolvedMediation: CredentialMediationRequirement =
+    options?.mediation ??
+    (supportsConditional ? "conditional" : "required");
+
   const publicKey: PublicKeyCredentialRequestOptions = {
-    ...(options as unknown as PublicKeyCredentialRequestOptions),
-    challenge: b64urlToBuffer(options.challenge as string),
+    ...(serverOptions as unknown as PublicKeyCredentialRequestOptions),
+    challenge: b64urlToBuffer(serverOptions.challenge as string),
     allowCredentials: allow.map((c) => ({
       ...c,
       id: b64urlToBuffer(c.id),
@@ -196,9 +224,14 @@ export async function signInWithPlatformPasskey(
 
   (publicKey as unknown as { hints?: string[] }).hints = ["client-device"];
 
-  const credential = (await navigator.credentials.get({
-    publicKey,
-  })) as PublicKeyCredential | null;
+  const getOptions: CredentialRequestOptions = { publicKey };
+  if (options?.signal) getOptions.signal = options.signal;
+  // mediation is on the outer options object, not inside publicKey
+  (getOptions as Record<string, unknown>).mediation = resolvedMediation;
+
+  const credential = (await navigator.credentials.get(
+    getOptions,
+  )) as PublicKeyCredential | null;
 
   if (!credential) return { error: "No passkey was offered." };
 
@@ -208,4 +241,32 @@ export async function signInWithPlatformPasskey(
   });
 
   return { error: verified.error?.message ?? null };
+}
+
+/**
+ * True if the browser can show passkeys in the autofill dropdown without a
+ * modal, i.e. `mediation: 'conditional'` is supported.
+ *
+ * Used by PasskeySignIn to decide whether to start the conditional ceremony
+ * immediately on mount (so the autofill prompt is ready before the user clicks)
+ * or wait for an explicit button click.
+ */
+export async function isConditionalMediationAvailable(): Promise<boolean> {
+  if (
+    typeof window === "undefined" ||
+    typeof window.PublicKeyCredential === "undefined"
+  ) {
+    return false;
+  }
+  const check = (
+    PublicKeyCredential as unknown as {
+      isConditionalMediationAvailable?: () => Promise<boolean>;
+    }
+  ).isConditionalMediationAvailable;
+  if (typeof check !== "function") return false;
+  try {
+    return await check();
+  } catch {
+    return false;
+  }
 }

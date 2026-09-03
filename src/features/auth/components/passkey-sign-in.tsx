@@ -1,11 +1,14 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Fingerprint, Loader2 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
-import { signInWithPlatformPasskey } from "../passkey-ceremony";
+import {
+  signInWithPlatformPasskey,
+  isConditionalMediationAvailable,
+} from "../passkey-ceremony";
 import { cn } from "@/lib/utils/cn";
 
 /**
@@ -19,6 +22,12 @@ import { cn } from "@/lib/utils/cn";
  * The button renders only when the device actually has a platform
  * authenticator, so a desktop without biometrics never sees an option it
  * cannot honour.
+ *
+ * When conditional mediation is available (Chrome 108+, Safari 16+, Edge 108+)
+ * the ceremony is started immediately on mount so passkeys appear in the
+ * browser's autofill dropdown. The button click becomes the visual fallback for
+ * browsers that do not support it. An AbortController cancels any in-flight
+ * conditional request before starting a new explicit one.
  */
 export function PasskeySignIn({
   next = "/home",
@@ -32,13 +41,15 @@ export function PasskeySignIn({
   const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  // Kept in a ref so the cleanup function can cancel a conditional ceremony
+  // that is waiting in the background.
+  const abortRef = React.useRef<AbortController | null>(null);
+
   React.useEffect(() => {
     let cancelled = false;
 
-    async function detect() {
-      // Two separate checks: WebAuthn at all, then specifically a *platform*
-      // authenticator (Touch ID, Windows Hello, Android biometrics) rather
-      // than a roaming USB key, since the label promises biometrics.
+    async function setup() {
+      // Step 1: does the device have a biometric authenticator at all?
       if (
         typeof window === "undefined" ||
         typeof window.PublicKeyCredential === "undefined" ||
@@ -48,34 +59,75 @@ export function PasskeySignIn({
         return;
       }
 
+      let hasPlatform = false;
       try {
-        const ok =
+        hasPlatform =
           await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-        if (!cancelled) setAvailable(ok);
       } catch {
-        // Some browsers reject this in insecure contexts. Treat as absent.
+        return; // Insecure context or a browser that refuses the query.
+      }
+
+      if (!hasPlatform || cancelled) return;
+      setAvailable(true);
+
+      // Step 2: if the browser supports conditional mediation, kick off the
+      // ceremony immediately so passkeys surface in the autofill dropdown.
+      const conditional = await isConditionalMediationAvailable();
+      if (!conditional || cancelled) return;
+
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      try {
+        const supabase = createClient();
+        const { error } = await signInWithPlatformPasskey(supabase, {
+          signal: controller.signal,
+          mediation: "conditional",
+        });
+
+        if (cancelled) return;
+
+        if (!error) {
+          router.push(next);
+          router.refresh();
+        }
+        // Conditional failures are silent — the user just did not pick a
+        // passkey from autofill, which is a normal non-action.
+      } catch (cause) {
+        // AbortError means the page unmounted or the button was clicked —
+        // expected, not worth logging.
+        if ((cause as { name?: string })?.name === "AbortError") return;
+        console.error("[auth.passkey] conditional ceremony error", cause);
       }
     }
 
-    void detect();
+    void setup();
     return () => {
       cancelled = true;
+      abortRef.current?.abort();
     };
-  }, []);
+  }, [next, router]);
 
   if (!available) return null;
 
   async function signIn() {
     setError(null);
     setPending(true);
+
+    // Cancel any background conditional ceremony before starting an explicit one.
+    abortRef.current?.abort();
+    abortRef.current = null;
+
     try {
       const supabase = createClient();
-      const { error } = await signInWithPlatformPasskey(supabase);
+      const { error } = await signInWithPlatformPasskey(supabase, {
+        mediation: "required",
+      });
 
       if (error) {
         console.error("[auth.passkey] sign-in failed", error);
         setError(
-          "No passkey was found for this device. Sign in another way, then add one from settings.",
+          "No passkey was found for this device. Sign in another way, then add one from Settings.",
         );
         setPending(false);
         return;

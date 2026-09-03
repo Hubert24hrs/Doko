@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -183,8 +183,18 @@ export function MessageThread({
           void markConversationReadAction(conversationId);
         },
       )
-      .subscribe((status) => {
-        setLive(status === "SUBSCRIBED");
+      .subscribe((status, err) => {
+        const joined = status === "SUBSCRIBED";
+        setLive(joined);
+        if (process.env.NODE_ENV === "development") {
+          if (joined) {
+            console.info("[realtime] message channel SUBSCRIBED — live delivery active", conversationId);
+          } else if (status === "CHANNEL_ERROR") {
+            console.warn("[realtime] message channel error", { err, conversationId });
+          } else if (status === "TIMED_OUT") {
+            console.warn("[realtime] message channel timed out", { conversationId });
+          }
+        }
       });
 
     return () => {
@@ -405,3 +415,4 @@ export function MessageThread({
     </div>
   );
 }
+

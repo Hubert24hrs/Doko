@@ -209,7 +209,7 @@ caller's permissions -- vector metadata is not an access control.
 ## Not yet verified
 
 Most of what this document claims has been **executed against the hosted
-project**: 258 pgTAP assertions cover the escalation boundary, the append-only
+project**: 272 pgTAP assertions cover the escalation boundary, the append-only
 audit trail, every profile visibility tier, the rate limiter's threshold, post
 and group visibility, the storage policies, and the messaging rules above --
 including that a moderator and an admin each read nothing. Those are proven,

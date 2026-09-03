@@ -68,9 +68,10 @@ is listed under "Not yet done" and is honest about being open.
   four reactions, trigger-maintained engagement counts, and a public
   `/posts/[id]` page. Verified against the hosted project with real data,
   including the author embed and the generated SEO metadata for public posts.
-* **258 database assertions passing** against the live project: 38 schema,
+* **272 database assertions passing** against the live project: 38 schema,
   29 RLS, 9 seed, 22 posts, 18 comments/reactions, 19 media, 16 follows,
-  13 followers-only posts, 27 groups, 38 messages, 29 group conversations.
+  13 followers-only posts, 27 groups, 38 messages, 29 group conversations,
+  14 presence.
 * **Followers-only posts verified**, including that replies and images inherit
   the tier without those tables having been modified.
 * **Phase 2 slice 7 (groups) verified against the live database.** 27
@@ -107,6 +108,15 @@ is listed under "Not yet done" and is honest about being open.
   Almost no policy was written for this: every message policy asks
   `in_conversation()`, so teaching that one function about groups gave
   reading, writing and withdrawing their group rules for free.
+* **Phase 3 slice 3 (presence) verified against the live database.** Migration
+  017 is applied and 14 assertions pass. Presence stores nothing -- it lives in
+  Realtime, on its own private channel, authorised by the same
+  `in_conversation()` that guards the messages. The assertions are all about
+  the topic parser, because the privacy of presence rests on a regular
+  expression: it must return NULL and never raise for a topic that is not a
+  conversation topic, since an error inside a policy is not a refusal.
+* **Phase 3 is complete**: direct messages, group conversations, presence and
+  typing. Realtime DELIVERY remains the one unverified thing.
 * **Phase 2 slices 4 and 5 verified on the live site**: member profiles at
   `/members/[username]`, and following -- Follow button, counts, and the
   Everyone / Following feed views, including the empty-following case showing
@@ -153,11 +163,6 @@ is listed under "Not yet done" and is honest about being open.
   live in a second browser. The thread renders correctly either way -- the
   composer says "Live updates unavailable" when the channel is not subscribed
   -- so this degrades rather than breaks.
-* **Phase 3 slice 3 (presence) is BUILT and NOT YET APPLIED.** Migration 017
-  and the 14-assertion `12_presence` suite are written. Presence stores
-  nothing, so the app degrades cleanly without the migration -- the private
-  channel simply refuses to join and the thread shows no presence at all --
-  but the channel is unauthorised until it is applied.
 * Phase 4 events, jobs, marketplace,
   directory, issues, map;
   Phase 5 verification, moderation queue, advertising, payments; Phase 6
@@ -181,9 +186,7 @@ Recommended order, and why:
 2. **Exercise a thread on the live site in two browsers.** The database is
    proven; realtime delivery is not, and watching a message arrive without a
    refresh is the only way to find out whether it does.
-3. **Apply migration 017 and run `12_presence`.** Presence is built; without
-   the migration its channel is not authorised.
-4. Phase 4: events, jobs, marketplace, directory, community issues, map.
+3. Phase 4: events, jobs, marketplace, directory, community issues, map.
 
 Operational notes that will otherwise be rediscovered painfully:
 

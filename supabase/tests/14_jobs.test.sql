@@ -21,7 +21,7 @@
 begin;
 
 set local search_path = public, extensions, pg_temp;
-select plan(34);
+select plan(35);
 
 create table public._tap_out (
   at   timestamptz not null default clock_timestamp(),
@@ -183,16 +183,31 @@ insert into public._tap_out(line) select is(
   'while a signed-in member CAN read them'
 );
 
--- Only the employer may change them.
+-- Only the employer may change them. This is refused by the POLICY, not by
+-- the primary key: job_contacts_write_own asks employs_for_job(), so an
+-- outsider never reaches the unique constraint at all. Written the other way
+-- round -- expecting 23505 here -- the assertion claimed to test a duplicate
+-- and in fact tested authorisation, while failing at both.
 insert into public._tap_out(line) select throws_ok(
   $$insert into public.job_contacts (job_id, contact_phone)
     select value, '0000 000 0000' from public._tap_fixture where name = 'job'$$,
-  '23505', null,
-  'and cannot add a second set of details'
+  '42501', null,
+  'a member who is not the employer cannot attach contact details'
 );
 
 update public.job_contacts set contact_phone = '0999 999 9999'
  where job_id = 'cf000000-0000-0000-0000-000000000001'::uuid;
+reset role;
+
+-- And the duplicate, tested where it can actually happen: as the employer,
+-- who passes the policy and then meets the primary key.
+select pg_temp.become('c1110000-1111-1111-1111-111111111111'::uuid);
+insert into public._tap_out(line) select throws_ok(
+  $$insert into public.job_contacts (job_id, contact_phone)
+    select value, '0000 000 0000' from public._tap_fixture where name = 'job'$$,
+  '23505', null,
+  'and even the employer cannot attach a second set'
+);
 reset role;
 
 insert into public._tap_out(line) select is(

@@ -68,10 +68,10 @@ is listed under "Not yet done" and is honest about being open.
   four reactions, trigger-maintained engagement counts, and a public
   `/posts/[id]` page. Verified against the hosted project with real data,
   including the author embed and the generated SEO metadata for public posts.
-* **307 database assertions passing** against the live project: 38 schema,
+* **342 database assertions passing** against the live project: 38 schema,
   29 RLS, 9 seed, 22 posts, 18 comments/reactions, 19 media, 16 follows,
   13 followers-only posts, 27 groups, 38 messages, 29 group conversations,
-  14 presence, 35 events.
+  14 presence, 35 events, 35 jobs.
 * **Followers-only posts verified**, including that replies and images inherit
   the tier without those tables having been modified.
 * **Phase 2 slice 7 (groups) verified against the live database.** 27
@@ -129,6 +129,18 @@ is listed under "Not yet done" and is honest about being open.
   told organisers that a community event with no community chosen would be
   seen by "nobody but you" -- when `member_of_geo(null)` is TRUE and it in
   fact reaches the whole LGA.
+* **Phase 4 slice 2 (jobs) verified against the live database.** Migration 019
+  is applied and 35 assertions pass. They cover the split between a public,
+  indexable listing and contact details with **no anon policy at all** -- a
+  signed-out reader sees the job, cannot read the phone number, and cannot
+  reach it by joining from the row they CAN read -- and that an application is
+  readable only by its applicant and the job's employer, not even by staff.
+  One assertion had the wrong error code before it was fixed: a non-employer's
+  insert into `job_contacts` was expected to fail on the primary key (23505)
+  when it in fact fails on the policy (42501) first, since `job_contacts_write_own`
+  checks `employs_for_job()` before the row ever reaches the unique constraint.
+  Split into the authorisation case and the duplicate case, tested where each
+  can actually happen.
 * **Phase 2 slices 4 and 5 verified on the live site**: member profiles at
   `/members/[username]`, and following -- Follow button, counts, and the
   Everyone / Following feed views, including the empty-following case showing
@@ -175,9 +187,6 @@ is listed under "Not yet done" and is honest about being open.
   live in a second browser. The thread renders correctly either way -- the
   composer says "Live updates unavailable" when the channel is not subscribed
   -- so this degrades rather than breaks.
-* **Phase 4 slice 2 (jobs) is BUILT and NOT YET APPLIED.** Migration 019 and
-  the 34-assertion `14_jobs` suite are written. `/jobs` will fail at runtime
-  until the migration is run.
 * Phase 4 marketplace,
   directory, issues, map;
   Phase 5 verification, moderation queue, advertising, payments; Phase 6
@@ -201,9 +210,7 @@ Recommended order, and why:
 2. **Exercise a thread on the live site in two browsers.** The database is
    proven; realtime delivery is not, and watching a message arrive without a
    refresh is the only way to find out whether it does.
-3. **Apply migration 019 and run `14_jobs`.** Jobs are built and
-   unbelievable until those 34 assertions pass.
-4. Phase 4, rest: marketplace, directory, community issues, map.
+3. Phase 4, rest: marketplace, directory, community issues, map.
 
 Operational notes that will otherwise be rediscovered painfully:
 

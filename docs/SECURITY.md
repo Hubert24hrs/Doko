@@ -242,25 +242,24 @@ caller's permissions -- vector metadata is not an access control.
 ## Not yet verified
 
 Most of what this document claims has been **executed against the hosted
-project**: 307 pgTAP assertions cover the escalation boundary, the append-only
+project**: 342 pgTAP assertions cover the escalation boundary, the append-only
 audit trail, every profile visibility tier, the rate limiter's threshold, post
-and group visibility, the storage policies, and the messaging rules above --
-including that a moderator and an admin each read nothing. Those are proven,
+and group visibility, the storage policies, the messaging rules above --
+including that a moderator and an admin each read nothing -- and the jobs
+split between a public listing and private contact details. Those are proven,
 not asserted.
 
 What is still unproven, and must not be described as working:
 
-1. **Jobs.** Migration 019 has not been applied and `14_jobs`
-   (34 assertions) has not been run.
-2. **Realtime delivery.** The subscription and the publication line exist;
+1. **Realtime delivery.** The subscription and the publication line exist;
    nothing has been watched arriving live in a second browser. It degrades
    rather than breaks -- the composer says so when the channel is not
    subscribed.
-3. **`community_admin` subtree scoping.** A community admin should be able to
+2. **`community_admin` subtree scoping.** A community admin should be able to
    edit only their own part of the geographic tree. Written, never asserted.
-4. **Migration idempotency.** The files are written to be re-runnable and have
+3. **Migration idempotency.** The files are written to be re-runnable and have
    been re-run by hand, but nothing tests it.
-5. **Passkey sign-in.** Enrolment works; the sign-in ceremony has never been
+4. **Passkey sign-in.** Enrolment works; the sign-in ceremony has never been
    completed on a real device.
 
 Tracked in [`TESTING.md`](./TESTING.md).

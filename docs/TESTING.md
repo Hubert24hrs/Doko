@@ -13,8 +13,8 @@ npm run verify        # typecheck + lint + test
 **200 unit tests, 14 files, all passing.** Typecheck clean, lint clean,
 production build clean.
 
-**307 database assertions pass against the live hosted project**, across
-thirteen pgTAP suites. They are run by pasting each file into the Supabase SQL Editor,
+**342 database assertions pass against the live hosted project**, across
+fourteen pgTAP suites. They are run by pasting each file into the Supabase SQL Editor,
 not by `supabase test db` -- there is no Docker here. See "Database tests"
 below.
 
@@ -68,8 +68,8 @@ database.
 
 ### Database tests -- RUN AND PASSING against the hosted project
 
-**All 307 assertions pass** against the live project, 01-09 as of 2026-09-01
-and the messaging, presence and events suites as of 2026-09-02:
+**All 342 assertions pass** against the live project, 01-09 as of 2026-09-01
+and the messaging, presence, events and jobs suites as of 2026-09-02/03:
 
 | Suite | Assertions | Covers |
 |---|---|---|
@@ -86,7 +86,7 @@ and the messaging, presence and events suites as of 2026-09-02:
 | `11_group_conversations.test.sql` | 29 | **leaving a group ends access despite the surviving read marker** |
 | `12_presence.test.sql` | 14 | the presence topic parser refuses ten malformed topics **without raising** |
 | `13_events.test.sql` | 35 | the filled WAT end date; a moderator may cancel but **not move** an event |
-| `14_jobs.test.sql` | 34 | **not yet run** -- a signed-out reader sees the job and not the phone number; nobody but the applicant and the employer reads an application |
+| `14_jobs.test.sql` | 35 | a signed-out reader sees the job and not the phone number; nobody but the applicant and the employer reads an application |
 
 With a linked local database they would run as `supabase test db`; here each
 file is pasted into the SQL Editor instead.

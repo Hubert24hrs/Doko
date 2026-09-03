@@ -98,6 +98,24 @@ Three supporting properties, all asserted:
   text may already be in a cached payload or a realtime broadcast; hiding it in
   the renderer would leave it in both.
 
+### A read marker is not an access grant
+
+A group conversation's membership is the **group's** membership and nothing
+else. `conversation_members` rows exist only to remember where somebody had
+read up to; they are created when a member first opens a thread, and nothing
+removes them when that member later leaves the group.
+
+So `in_conversation()` must not be written as *"a membership row exists OR you
+are in the group"*. That reading leaks: anybody who had ever opened a group's
+chat could go on reading it after leaving. For a group conversation the
+function consults `group_members` alone, and
+`11_group_conversations.test.sql` deliberately leaves a stale marker behind
+before asserting that the departed member can no longer see the conversation,
+read its messages, write into it, or find it in their inbox.
+
+Reading a public group does not entitle you to its conversation, for the same
+reason it does not entitle you to post in it.
+
 ---
 
 ## Authentication
@@ -199,15 +217,17 @@ not asserted.
 
 What is still unproven, and must not be described as working:
 
-1. **Realtime delivery.** The subscription and the publication line exist;
+1. **Group conversations.** Migration 016 has not been applied and
+   `11_group_conversations` (29 assertions) has not been run.
+2. **Realtime delivery.** The subscription and the publication line exist;
    nothing has been watched arriving live in a second browser. It degrades
    rather than breaks -- the composer says so when the channel is not
    subscribed.
-2. **`community_admin` subtree scoping.** A community admin should be able to
+3. **`community_admin` subtree scoping.** A community admin should be able to
    edit only their own part of the geographic tree. Written, never asserted.
-3. **Migration idempotency.** The files are written to be re-runnable and have
+4. **Migration idempotency.** The files are written to be re-runnable and have
    been re-run by hand, but nothing tests it.
-4. **Passkey sign-in.** Enrolment works; the sign-in ceremony has never been
+5. **Passkey sign-in.** Enrolment works; the sign-in ceremony has never been
    completed on a real device.
 
 Tracked in [`TESTING.md`](./TESTING.md).

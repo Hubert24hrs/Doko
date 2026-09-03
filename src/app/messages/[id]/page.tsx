@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, UsersRound } from "lucide-react";
 
 import { VerifiedBadge } from "@/components/ui/badge";
 import { requireUser } from "@/features/auth/session";
@@ -38,6 +38,7 @@ export default async function ConversationPage({
 
   const page = await getThreadPage(id, before);
   const other = conversation.other;
+  const group = conversation.group;
 
   return (
     <>
@@ -53,12 +54,27 @@ export default async function ConversationPage({
 
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
+              {group ? (
+                <UsersRound
+                  className="size-4 shrink-0 text-muted-foreground"
+                  aria-hidden="true"
+                />
+              ) : null}
               <h1 className="truncate font-semibold text-foreground">
-                {other?.full_name ?? "Unknown member"}
+                {group
+                  ? group.name
+                  : other?.full_name ?? "Unknown member"}
               </h1>
-              {other?.is_verified ? <VerifiedBadge /> : null}
+              {!group && other?.is_verified ? <VerifiedBadge /> : null}
             </div>
-            {other ? (
+            {group ? (
+              <Link
+                href={`/groups/${group.slug}`}
+                className="text-xs text-muted-foreground hover:underline"
+              >
+                Back to the group
+              </Link>
+            ) : other ? (
               <Link
                 href={`/members/${other.username}`}
                 className="text-xs text-muted-foreground hover:underline"
@@ -80,6 +96,7 @@ export default async function ConversationPage({
           viewerId={user.id}
           olderCursor={page.olderCursor}
           available={page.available}
+          isGroup={group !== null}
         />
       </main>
     </>

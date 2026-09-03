@@ -117,7 +117,7 @@ is listed under "Not yet done" and is honest about being open.
      and check the affected rows.
   3. `?next=` was computed by the proxy and discarded by every consumer, so
      sign-in always landed on /home.
-* 143 unit tests passing; typecheck clean; lint clean; production build clean
+* 146 unit tests passing; typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
   `/login?next=...`, and no secrets appear in the HTML
@@ -143,7 +143,12 @@ is listed under "Not yet done" and is honest about being open.
   live in a second browser. The thread renders correctly either way -- the
   composer says "Live updates unavailable" when the channel is not subscribed
   -- so this degrades rather than breaks.
-* Phase 3 group conversations and presence; Phase 4 events, jobs, marketplace,
+* **Phase 3 slice 2 (group conversations) is BUILT and NOT YET APPLIED.**
+  Migration 016 and the 29-assertion `11_group_conversations` suite are
+  written and the app compiles against them. Apply it BEFORE deploying the
+  code: `my_conversation_summaries()` gains two columns, and against the old
+  function the inbox would label every direct conversation as a group.
+* Presence (who is online, who is typing); Phase 4 events, jobs, marketplace,
   directory, issues, map;
   Phase 5 verification, moderation queue, advertising, payments; Phase 6
   hardening
@@ -166,9 +171,10 @@ Recommended order, and why:
 2. **Exercise a thread on the live site in two browsers.** The database is
    proven; realtime delivery is not, and watching a message arrive without a
    refresh is the only way to find out whether it does.
-3. **Phase 3, rest of messaging:** group conversations (they lean on
-   `group_members`, so membership is already solved) and presence.
-4. Phase 4: events, jobs, marketplace, directory, community issues, map.
+3. **Apply migration 016 and run `11_group_conversations`.** Group chat is
+   built, and unbelievable until those 29 assertions pass.
+4. **Presence:** who is online, and who is typing.
+5. Phase 4: events, jobs, marketplace, directory, community issues, map.
 
 Operational notes that will otherwise be rediscovered painfully:
 
@@ -253,7 +259,7 @@ src/
 supabase/
   migrations/               numbered, idempotent
   seed.sql                  real Igbo-Eze North data
-supabase/tests/             pgTAP suites 01-10, portable SQL
+supabase/tests/             pgTAP suites 01-11, portable SQL
 tests/unit/                 vitest suites
 docs/                       ARCHITECTURE, DEVELOPMENT, TESTING, SECURITY, DEPLOYMENT
 ```
@@ -301,7 +307,7 @@ events and issues will reference it.
 | `follows` | one-directional, no approval; the pair is the primary key |
 | `groups` | public or private; optional geographic anchor |
 | `group_members` | membership IS the access rule; owner/moderator/member |
-| `conversations` | a private conversation; `dm_key` is the canonical pair |
+| `conversations` | a conversation; `dm_key` is a pair, `group_id` a group |
 | `conversation_members` | who is in one, and their `last_read_at` |
 | `messages` | what was said; **no staff read policy, deliberately** |
 
@@ -323,8 +329,8 @@ aggregates. `recount_post_engagement()` repairs drift.
 `log_admin_action`, `consume_rate_limit`, `slugify`,
 `is_active_member`, `member_of_geo`, `recount_post_engagement`,
 `is_group_member`, `leads_group`, `can_see_group`, `in_conversation`,
-`can_message`, `open_direct_conversation`, `my_conversation_summaries`,
-`my_unread_message_count`.
+`can_message`, `open_direct_conversation`, `open_group_conversation`,
+`my_conversation_summaries`, `my_unread_message_count`.
 
 All RBAC helpers are `SECURITY DEFINER` with `set search_path = public,
 pg_temp`.
@@ -557,3 +563,8 @@ If a local database is ever wanted, install Docker Desktop, then
 | A realtime event is a SIGNAL, not data | the payload is discarded and the server component re-runs, so what renders has passed through RLS on the server exactly as a fresh page load would. It costs a round trip per message and buys the guarantee that no broadcast can put on screen something the reader was not entitled to see |
 | The inbox is one RPC, not a query per conversation | the unread count, the last-message preview and the other person are all per-conversation, and an inbox is exactly the screen where an N+1 shows |
 | A conversation the caller is not in 404s | as for posts and profiles: a 403 would confirm that a conversation between two other people exists |
+| A group conversation consults `group_members` ONLY | `conversation_members` rows are READ MARKERS and nothing deletes them when somebody leaves a group. "A marker exists OR you are in the group" would mean anyone who once opened a group chat could read it forever after leaving. A read marker is not an access grant |
+| A group chat is not fanned out to its members | opening it inserts no membership rows at all; markers are created on demand by the people who actually read. A group of five hundred must not materialise five hundred rows nobody has looked at |
+| The unread baseline for a group is `greatest(marker, joined_at)` | joining should not greet you with everything said before you arrived, and REJOINING should not resurrect what was said while you were away. Without the `greatest`, a stale marker from a previous membership does exactly that |
+| `conversations` carries a pair-or-group CHECK | a row with both a `dm_key` and a `group_id` would satisfy two different access rules at once, which is the sort of thing that gets discovered late |
+| Teaching `in_conversation()` about groups was the whole slice | every message policy asks it, so reading, writing and withdrawing picked up their group rules without one of them being edited -- the same inheritance that gave comments and reactions the followers-only tier for free |

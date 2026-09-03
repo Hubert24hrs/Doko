@@ -238,6 +238,8 @@ export type ConversationRow = {
    * that is not a pair.
    */
   dm_key: string | null;
+  /** Set for a group conversation. Exactly one of dm_key / group_id is set. */
+  group_id: string | null;
   created_by: string | null;
   last_message_at: string | null;
   created_at: string;
@@ -257,8 +259,10 @@ export type ConversationSummaryRow = {
   last_message_at: string | null;
   last_read_at: string;
   unread_count: number;
-  /** NULL once a conversation can be something other than a pair. */
+  /** Null for a group conversation: there is no single other person. */
   other_user_id: string | null;
+  group_id: string | null;
+  group_name: string | null;
   preview: string | null;
   preview_author_id: string | null;
   preview_withdrawn: boolean | null;
@@ -509,6 +513,10 @@ export interface Database {
       can_message: { Args: { target_user_id: string }; Returns: boolean };
       open_direct_conversation: {
         Args: { other_user_id: string };
+        Returns: string;
+      };
+      open_group_conversation: {
+        Args: { target_group_id: string };
         Returns: string;
       };
       my_conversation_summaries: {

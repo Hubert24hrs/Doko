@@ -35,3 +35,7 @@ export const editMessageSchema = messageIdSchema.extend({
       `A message can be at most ${MESSAGE_MAX_LENGTH.toLocaleString("en-NG")} characters`,
     ),
 });
+
+export const openGroupConversationSchema = z.object({
+  groupId: z.uuid(),
+});

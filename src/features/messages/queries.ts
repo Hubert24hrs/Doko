@@ -19,8 +19,15 @@ export interface ConversationSummary {
   id: string;
   lastMessageAt: string | null;
   unreadCount: number;
-  /** Null when the other member's profile could not be read. */
+  /**
+   * The other person, for a direct conversation. Null for a group
+   * conversation -- and null too when their profile could not be read, which
+   * is why `groupId` rather than this is what distinguishes the two.
+   */
   other: Correspondent | null;
+  /** Set for a group conversation; this is what tells the two kinds apart. */
+  groupId: string | null;
+  groupName: string | null;
   preview: string | null;
   previewIsMine: boolean;
   previewWithdrawn: boolean;
@@ -101,6 +108,8 @@ export async function getInbox(): Promise<InboxResult> {
         lastMessageAt: row.last_message_at,
         unreadCount: row.unread_count ?? 0,
         other: row.other_user_id ? people.get(row.other_user_id) ?? null : null,
+        groupId: row.group_id,
+        groupName: row.group_name,
         preview: row.preview,
         previewIsMine: Boolean(user && row.preview_author_id === user.id),
         previewWithdrawn: Boolean(row.preview_withdrawn),
@@ -114,7 +123,10 @@ export async function getInbox(): Promise<InboxResult> {
 
 export interface ConversationDetail {
   id: string;
+  /** Set for a direct conversation. */
   other: Correspondent | null;
+  /** Set for a group conversation. */
+  group: { id: string; name: string; slug: string } | null;
 }
 
 /**
@@ -139,7 +151,7 @@ export async function getConversation(
     // conversations, so an empty result IS the authorisation answer.
     const { data: conversation, error } = await supabase
       .from("conversations")
-      .select("id")
+      .select("id, group_id, dm_key, group:group_id ( id, name, slug )")
       .eq("id", conversationId)
       .maybeSingle();
 
@@ -148,6 +160,18 @@ export async function getConversation(
       return null;
     }
     if (!conversation) return null;
+
+    type EmbeddedConversation = {
+      id: string;
+      group_id: string | null;
+      dm_key: string | null;
+      group: { id: string; name: string; slug: string } | null;
+    };
+    const row = conversation as unknown as EmbeddedConversation;
+
+    if (row.group_id) {
+      return { id: row.id, other: null, group: row.group };
+    }
 
     const { data: others } = await supabase
       .from("conversation_members")
@@ -159,7 +183,7 @@ export async function getConversation(
     type Embedded = { user_id: string; profile: Correspondent | null };
     const other = ((others ?? []) as unknown as Embedded[])[0]?.profile ?? null;
 
-    return { id: conversation.id, other };
+    return { id: row.id, other, group: null };
   } catch (cause) {
     console.error("[messages.getConversation] unavailable", cause);
     return null;

@@ -81,12 +81,19 @@ export function MessageThread({
   viewerId,
   olderCursor,
   available,
+  isGroup = false,
 }: {
   conversationId: string;
   messages: ThreadMessage[];
   viewerId: string;
   olderCursor: string | null;
   available: boolean;
+  /**
+   * A group conversation names its speakers. In a pair there are only two
+   * people and a name above every bubble is noise; in a group, a message
+   * without one is unreadable.
+   */
+  isGroup?: boolean;
 }) {
   const router = useRouter();
   const [sendState, setSendState] = useState<MessageState>(INITIAL);
@@ -195,7 +202,11 @@ export function MessageThread({
           <EmptyState
             icon={<Send className="size-6" />}
             title="No messages yet"
-            description="Say hello. Only the two of you can read this."
+            description={
+              isGroup
+                ? "Say hello. Only members of this group can read this."
+                : "Say hello. Only the two of you can read this."
+            }
           />
         ) : (
           <>
@@ -231,6 +242,11 @@ export function MessageThread({
                       mine ? "items-end" : "items-start",
                     )}
                   >
+                    {isGroup && !mine ? (
+                      <span className="px-1 pb-0.5 text-xs font-medium text-muted-foreground">
+                        {message.author?.full_name ?? "Unknown member"}
+                      </span>
+                    ) : null}
                     <div
                       className={cn(
                         "max-w-[85%] rounded-2xl px-4 py-2 text-sm sm:max-w-[75%]",

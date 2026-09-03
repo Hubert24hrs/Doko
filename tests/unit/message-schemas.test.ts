@@ -5,6 +5,7 @@ import {
   editMessageSchema,
   messageIdSchema,
   openConversationSchema,
+  openGroupConversationSchema,
   sendMessageSchema,
 } from "@/features/messages/schemas";
 
@@ -156,5 +157,30 @@ describe("messageIdSchema", () => {
       body: "sneaked in",
     });
     expect("body" in parsed).toBe(false);
+  });
+});
+
+describe("openGroupConversationSchema", () => {
+  it("accepts a group id", () => {
+    expect(
+      openGroupConversationSchema.safeParse({ groupId: CONVERSATION_ID }).success,
+    ).toBe(true);
+  });
+
+  it("rejects anything that is not one", () => {
+    for (const groupId of ["", "chat-group", "0"]) {
+      expect(openGroupConversationSchema.safeParse({ groupId }).success).toBe(
+        false,
+      );
+    }
+  });
+
+  it("takes a group id, never a slug", () => {
+    // The RPC checks membership against groups.id. Accepting a slug here would
+    // mean resolving it somewhere, and the place it got resolved would be a
+    // second thing that decided which group you meant.
+    expect(
+      openGroupConversationSchema.safeParse({ groupId: "chat-group" }).success,
+    ).toBe(false);
   });
 });

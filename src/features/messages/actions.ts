@@ -11,6 +11,7 @@ import {
   editMessageSchema,
   messageIdSchema,
   openConversationSchema,
+  openGroupConversationSchema,
   sendMessageSchema,
 } from "./schemas";
 
@@ -145,10 +146,14 @@ export async function sendMessageAction(
 /**
  * Move the caller's read marker to now.
  *
- * Called when a thread is opened. It is an UPDATE, and RLS refuses an UPDATE
- * by FILTERING rather than by raising -- so the affected rows are counted. A
- * silent zero here would leave the unread badge permanently lit with no error
- * anywhere to explain it.
+ * An UPSERT, not an update: in a group conversation the marker does not exist
+ * until the member first reads. Group chats are not fanned out to every member
+ * when they are created, precisely so that a group of five hundred does not
+ * materialise five hundred rows nobody has looked at.
+ *
+ * The affected rows are counted because RLS refuses by FILTERING rather than
+ * by raising. A silent zero would leave the unread badge permanently lit with
+ * no error anywhere to explain it.
  */
 export async function markConversationReadAction(
   conversationId: string,
@@ -158,9 +163,14 @@ export async function markConversationReadAction(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("conversation_members")
-    .update({ last_read_at: new Date().toISOString() })
-    .eq("conversation_id", conversationId)
-    .eq("user_id", user.id)
+    .upsert(
+      {
+        conversation_id: conversationId,
+        user_id: user.id,
+        last_read_at: new Date().toISOString(),
+      },
+      { onConflict: "conversation_id,user_id" },
+    )
     .select("conversation_id");
 
   if (error) {
@@ -254,4 +264,54 @@ export async function withdrawMessageAction(
   revalidatePath(`/messages/${parsed.data.conversationId}`);
   revalidatePath("/messages");
   return { ok: true, sentAt: new Date().toISOString() };
+}
+
+/**
+ * Open (or return to) a group's conversation.
+ *
+ * Idempotent like the direct one: a group has one chat, and pressing the
+ * button asks to be in it rather than to make another. Membership is checked
+ * in the database -- reading a public group does not entitle you to its
+ * conversation, for the same reason it does not entitle you to post in it.
+ */
+export async function openGroupConversationAction(
+  _prev: MessageState,
+  formData: FormData,
+): Promise<MessageState> {
+  const user = await requireUser("/groups");
+
+  const parsed = openGroupConversationSchema.safeParse({
+    groupId: formData.get("groupId"),
+  });
+  if (!parsed.success) {
+    return { ok: false, formError: "That group could not be found." };
+  }
+
+  const limit = await checkRateLimit({
+    key: `conversation-open:${user.id}`,
+    limit: 30,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!limit.allowed) {
+    return {
+      ok: false,
+      formError: `You have opened several conversations in a short time. Try again in ${limit.retryAfterMinutes} minutes.`,
+    };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("open_group_conversation", {
+    target_group_id: parsed.data.groupId,
+  });
+
+  if (error || !data) {
+    console.error("[messages.openGroup] failed", error?.message);
+    return {
+      ok: false,
+      formError: "You need to join this group before opening its conversation.",
+    };
+  }
+
+  revalidatePath("/messages");
+  redirect(`/messages/${data}`);
 }

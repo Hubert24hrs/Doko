@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MessagesSquare } from "lucide-react";
+import { MessagesSquare, UsersRound } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { VerifiedBadge } from "@/components/ui/badge";
@@ -43,6 +43,13 @@ function whenLabel(iso: string | null): string {
 function ConversationRow({ conversation }: { conversation: ConversationSummary }) {
   const other = conversation.other;
   const unread = conversation.unreadCount > 0;
+  // groupId, not the absence of `other`: a direct conversation whose
+  // correspondent could not be read also has no `other`, and labelling that
+  // as a group would be wrong in a way nobody would notice.
+  const isGroup = conversation.groupId !== null;
+  const title = isGroup
+    ? conversation.groupName ?? "Group conversation"
+    : other?.full_name ?? "Unknown member";
 
   const preview = conversation.previewWithdrawn
     ? "Message withdrawn"
@@ -59,6 +66,12 @@ function ConversationRow({ conversation }: { conversation: ConversationSummary }
         >
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
+              {isGroup ? (
+                <UsersRound
+                  className="size-4 shrink-0 text-muted-foreground"
+                  aria-hidden="true"
+                />
+              ) : null}
               <span
                 className={
                   unread
@@ -66,10 +79,10 @@ function ConversationRow({ conversation }: { conversation: ConversationSummary }
                     : "font-medium text-foreground"
                 }
               >
-                {other?.full_name ?? "Unknown member"}
+                {title}
               </span>
-              {other?.is_verified ? <VerifiedBadge /> : null}
-              {other ? (
+              {!isGroup && other?.is_verified ? <VerifiedBadge /> : null}
+              {!isGroup && other ? (
                 <span className="text-xs text-muted-foreground">
                   @{other.username}
                 </span>

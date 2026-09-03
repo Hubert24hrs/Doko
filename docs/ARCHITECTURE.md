@@ -337,6 +337,46 @@ see. In a two-person conversation that trade is obviously worth making.
 When the channel is not subscribed the composer says so, and the thread still
 works on refresh -- realtime degrades rather than breaks.
 
+### A group conversation is the group's membership
+
+A conversation carries either a `dm_key` (a pair) or a `group_id` (a group),
+never both -- the same `group_id is null` split that already separates a group
+post from a feed post, and a CHECK constraint keeps it honest.
+
+Almost nothing had to be written for this. Every message policy asks
+`in_conversation()`, so teaching that one function about groups gave reading,
+writing and withdrawing their group rules without a single policy being edited
+-- the same inheritance that let comments, reactions and media pick up the
+followers-only tier for free.
+
+**The one thing that had to be got right: a read marker is not an access
+grant.** `conversation_members` rows exist to remember where somebody had read
+up to. They are created when a member first opens a thread, and nothing deletes
+them when that member later leaves the group. So the obvious implementation --
+
+> you are in the conversation if a membership row exists **or** you are in the
+> group
+
+-- is wrong in the direction that leaks: anybody who had ever opened a group's
+chat could go on reading it forever after leaving. A group conversation
+therefore consults `group_members` **only**, and `11_group_conversations`
+leaves a marker behind on purpose before asserting that the departed member
+sees nothing.
+
+Two consequences worth keeping:
+
+* **No fan-out.** Opening a group chat inserts no membership rows at all. A
+  group of five hundred must not materialise five hundred read markers nobody
+  has looked at, so markers are created on demand by the people who read.
+* **The unread baseline is `greatest(marker, joined_at)`.** Joining a group
+  should not greet you with four thousand messages from before you arrived, and
+  rejoining should not resurrect what was said while you were away. Take the
+  `greatest` out and a stale marker from a previous membership does exactly
+  that.
+
+Reading a public group still does not entitle you to its conversation, for the
+same reason it does not entitle you to post in it.
+
 ### The inbox is one round trip
 
 `my_conversation_summaries()` returns the unread count, the last-message

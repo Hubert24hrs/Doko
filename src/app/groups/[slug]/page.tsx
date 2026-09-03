@@ -11,6 +11,7 @@ import { requireUser, isStaff } from "@/features/auth/session";
 import { getGroupBySlug } from "@/features/groups/queries";
 import { GROUP_KIND_LABEL } from "@/features/groups/schemas";
 import { MembershipButton } from "@/features/groups/components/membership-button";
+import { GroupChatButton } from "@/features/messages/components/group-chat-button";
 import { GroupComposer } from "@/features/groups/components/group-composer";
 import { getGroupPosts, groupHasOtherOwner } from "@/features/groups/post-queries";
 import { getPostImages } from "@/features/posts/media-queries";
@@ -118,12 +119,18 @@ export default async function GroupPage({
                 </div>
               </div>
 
-              <MembershipButton
-                groupId={group.id}
-                slug={group.slug}
-                role={group.viewerRole}
-                isSoleOwner={group.viewerRole === "owner" && !hasOtherOwner}
-              />
+              <div className="flex items-start gap-2">
+                {/* Members only. The database checks membership again when the
+                    button is pressed -- reading a public group does not
+                    entitle you to its conversation. */}
+                {isMember ? <GroupChatButton groupId={group.id} /> : null}
+                <MembershipButton
+                  groupId={group.id}
+                  slug={group.slug}
+                  role={group.viewerRole}
+                  isSoleOwner={group.viewerRole === "owner" && !hasOtherOwner}
+                />
+              </div>
             </div>
 
             {group.description ? (

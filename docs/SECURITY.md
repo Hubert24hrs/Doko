@@ -98,6 +98,39 @@ Three supporting properties, all asserted:
   text may already be in a cached payload or a realtime broadcast; hiding it in
   the renderer would leave it in both.
 
+### A public page that is not a phone directory
+
+A job listing has to be public and indexable, because that is how somebody
+finds work. The employer's phone number must not be, or the board becomes a
+harvesting ground within a week.
+
+RLS grants **rows, not columns**, so this could not be solved on one table:
+keeping the number on `jobs` meant choosing between a members-only job board
+and publishing every employer's number to every crawler. The contact details
+therefore live in `job_contacts`, which has **no `anon` policy at all** --
+that absence is the feature -- and whose read policy additionally asks
+`is_active_member()`, so a suspended account cannot harvest them either.
+
+`14_jobs.test.sql` asserts all three halves: a signed-out reader sees the job,
+cannot read the contacts, and cannot reach them by joining from the row they
+CAN read.
+
+### Applications are private, including from staff
+
+`job_applications` is the second table after `messages` to depart from "staff
+moderate everything". Only the applicant and the employer may read one.
+
+Job fraud is real and worth moderating. But what needs moderating is the
+**posting** -- which staff can read in full, edit-guarded so they may remove it
+without rewriting it -- not what applicants wrote about themselves in order to
+get work.
+
+Neither side may edit the other's half of an application: a guard trigger
+restores `message` for anybody who is not the applicant, and refuses a status
+change for anybody who is, except to `withdrawn`. So an employer cannot rewrite
+what somebody said about themselves, and an applicant cannot shortlist
+themselves.
+
 ### A read marker is not an access grant
 
 A group conversation's membership is the **group's** membership and nothing
@@ -217,15 +250,17 @@ not asserted.
 
 What is still unproven, and must not be described as working:
 
-1. **Realtime delivery.** The subscription and the publication line exist;
+1. **Jobs.** Migration 019 has not been applied and `14_jobs`
+   (34 assertions) has not been run.
+2. **Realtime delivery.** The subscription and the publication line exist;
    nothing has been watched arriving live in a second browser. It degrades
    rather than breaks -- the composer says so when the channel is not
    subscribed.
-2. **`community_admin` subtree scoping.** A community admin should be able to
+3. **`community_admin` subtree scoping.** A community admin should be able to
    edit only their own part of the geographic tree. Written, never asserted.
-3. **Migration idempotency.** The files are written to be re-runnable and have
+4. **Migration idempotency.** The files are written to be re-runnable and have
    been re-run by hand, but nothing tests it.
-4. **Passkey sign-in.** Enrolment works; the sign-in ceremony has never been
+5. **Passkey sign-in.** Enrolment works; the sign-in ceremony has never been
    completed on a real device.
 
 Tracked in [`TESTING.md`](./TESTING.md).
@@ -361,6 +396,10 @@ per member per hour:
 | Set reaction | 240 |
 | Open a conversation | 30 |
 | Send a message | 200 |
+| Create an event | 20 (per day) |
+| Reply to an event | 200 |
+| Post a job | 20 (per day) |
+| Apply for a job | 50 (per day) |
 
 Messages get a high cap because a real conversation is fast and the cost of
 refusing a legitimate one is high; opening a conversation gets a low one,

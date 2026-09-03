@@ -149,7 +149,7 @@ is listed under "Not yet done" and is honest about being open.
      and check the affected rows.
   3. `?next=` was computed by the proxy and discarded by every consumer, so
      sign-in always landed on /home.
-* 178 unit tests passing; typecheck clean; lint clean; production build clean
+* 200 unit tests passing; typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
   `/login?next=...`, and no secrets appear in the HTML
@@ -175,7 +175,10 @@ is listed under "Not yet done" and is honest about being open.
   live in a second browser. The thread renders correctly either way -- the
   composer says "Live updates unavailable" when the channel is not subscribed
   -- so this degrades rather than breaks.
-* Phase 4 jobs, marketplace,
+* **Phase 4 slice 2 (jobs) is BUILT and NOT YET APPLIED.** Migration 019 and
+  the 34-assertion `14_jobs` suite are written. `/jobs` will fail at runtime
+  until the migration is run.
+* Phase 4 marketplace,
   directory, issues, map;
   Phase 5 verification, moderation queue, advertising, payments; Phase 6
   hardening
@@ -198,7 +201,9 @@ Recommended order, and why:
 2. **Exercise a thread on the live site in two browsers.** The database is
    proven; realtime delivery is not, and watching a message arrive without a
    refresh is the only way to find out whether it does.
-3. Phase 4, rest: jobs, marketplace, directory, community issues, map.
+3. **Apply migration 019 and run `14_jobs`.** Jobs are built and
+   unbelievable until those 34 assertions pass.
+4. Phase 4, rest: marketplace, directory, community issues, map.
 
 Operational notes that will otherwise be rediscovered painfully:
 
@@ -256,6 +261,7 @@ src/
     groups/                 groups, and one group
     messages/               inbox and one conversation
     events/                 listing, one event, and the composer
+    jobs/                   listing, one job, applications, and the composer
     robots.ts sitemap.ts    SEO surface
     not-found.tsx error.tsx global-error.tsx
     globals.css             ALL design tokens live here
@@ -274,6 +280,7 @@ src/
     groups/{actions,queries,schemas,post-actions,post-queries}.ts, components/
     messages/{actions,queries,schemas}.ts, components/
     events/{actions,queries,schemas,format}.ts, components/
+    jobs/{actions,queries,schemas,format}.ts, components/
   lib/
     env.ts                  public env (browser-safe)
     env.server.ts           secrets, `server-only` guarded
@@ -285,7 +292,7 @@ src/
 supabase/
   migrations/               numbered, idempotent
   seed.sql                  real Igbo-Eze North data
-supabase/tests/             pgTAP suites 01-13, portable SQL
+supabase/tests/             pgTAP suites 01-14, portable SQL
 tests/unit/                 vitest suites
 docs/                       ARCHITECTURE, DEVELOPMENT, TESTING, SECURITY, DEPLOYMENT
 ```
@@ -338,6 +345,9 @@ events and issues will reference it.
 | `messages` | what was said; **no staff read policy, deliberately** |
 | `events` | festivals, funerals, meetings; `ends_at` is filled, never null |
 | `event_attendees` | going / interested / not going, one row per person |
+| `jobs` | vacancies; the public, indexable half |
+| `job_contacts` | the phone number; **no anon policy, deliberately** |
+| `job_applications` | private to the applicant and the employer |
 
 **`posts.author_id` and `comments.author_id` reference `public.profiles`, not
 `auth.users`.** The identity is the same, since `profiles.id` IS the auth user
@@ -360,7 +370,7 @@ aggregates. `recount_post_engagement()` repairs drift.
 `can_message`, `open_direct_conversation`, `open_group_conversation`,
 `my_conversation_summaries`, `my_unread_message_count`,
 `conversation_from_presence_topic`, `can_see_event`,
-`recount_event_attendance`.
+`recount_event_attendance`, `can_see_job`, `employs_for_job`.
 
 All RBAC helpers are `SECURITY DEFINER` with `set search_path = public,
 pg_temp`.
@@ -593,6 +603,14 @@ If a local database is ever wanted, install Docker Desktop, then
 | A realtime event is a SIGNAL, not data | the payload is discarded and the server component re-runs, so what renders has passed through RLS on the server exactly as a fresh page load would. It costs a round trip per message and buys the guarantee that no broadcast can put on screen something the reader was not entitled to see |
 | The inbox is one RPC, not a query per conversation | the unread count, the last-message preview and the other person are all per-conversation, and an inbox is exactly the screen where an N+1 shows |
 | A conversation the caller is not in 404s | as for posts and profiles: a 403 would confirm that a conversation between two other people exists |
+| A job's contact details live in their OWN table | RLS grants rows, not columns. Keeping the phone number on `jobs` meant choosing between a members-only job board -- which defeats the point -- and publishing employers' numbers to every crawler. Split, the listing is indexable and the number behind it is not |
+| `job_contacts` has NO anon policy at all | that absence IS the feature. `14_jobs` asserts a signed-out reader sees the job, cannot read the contacts, and cannot reach them by joining from the row they CAN read |
+| An application is private to its applicant and the employer | no staff policy, the second table after `messages` to depart from "staff moderate everything". Job fraud is real and worth moderating -- but what needs moderating is the POSTING, which staff read in full, not what applicants wrote about themselves to get work |
+| A pay figure cannot be stored without a period | "50,000" could be a day or a month, and the difference is somebody's livelihood. A CHECK refuses the ambiguous row rather than letting it be published |
+| Pay is whole naira in a `bigint` | nobody advertises a salary in kobo, and an integer avoids every rounding argument a float would invite |
+| A filled job stays listed, marked filled | somebody who applied deserves to see what happened, and in a community where they will meet the employer at the market, a vacancy that silently vanished is worse than a refusal |
+| The job is saved before its contact row | if the second write fails the employer keeps the advert and can add the details again; the other order loses everything they wrote because a phone number did not save. Same reasoning as saving a post before its images |
+| Neither side of an application may edit the other's half | the guard restores `message` for anybody who is not the applicant and refuses a status change for anybody who is -- except 'withdrawn'. An employer cannot rewrite what somebody said about themselves, and an applicant cannot shortlist themselves |
 | An event is filtered on `ends_at` and ordered by `starts_at` | an event that began an hour ago and runs all day is STILL HAPPENING. Filtering on the start drops a funeral from the listing at the hour people are most likely to look it up |
 | `events.ends_at` is filled by trigger, never left null | with a missing end set to midnight of the event's own WAT day, "still upcoming" is one indexed comparison instead of a rule restated in every query that asks -- and the copies would drift |
 | Every event time is rendered in `Africa/Lagos`, explicitly | otherwise the same event reads 4pm in Enugu and 3pm in London, and it is the reader in London who turns up at the wrong time. Nigeria is UTC+1 with NO daylight saving, so a fixed zone is exact rather than approximate |

@@ -76,6 +76,37 @@ export type EventVisibility = "public" | "community";
 
 export type RsvpStatus = "going" | "interested" | "not_going";
 
+export type JobKind =
+  | "full_time"
+  | "part_time"
+  | "contract"
+  | "apprenticeship"
+  | "casual"
+  | "volunteer"
+  | "internship";
+
+export type JobCategory =
+  | "teaching"
+  | "healthcare"
+  | "trade"
+  | "agriculture"
+  | "transport"
+  | "retail"
+  | "security"
+  | "domestic"
+  | "admin"
+  | "technology"
+  | "construction"
+  | "other";
+
+export type PayPeriod = "hour" | "day" | "week" | "month" | "year" | "once";
+
+export type ApplicationStatus =
+  | "sent"
+  | "shortlisted"
+  | "rejected"
+  | "withdrawn";
+
 export type GeoEntityRow = {
   id: string;
   parent_id: string | null;
@@ -334,6 +365,60 @@ export type EventAttendeeRow = {
   updated_at: string;
 }
 
+export type JobRow = {
+  id: string;
+  title: string;
+  description: string;
+  kind: JobKind;
+  category: JobCategory;
+  employer_id: string;
+  organization_name: string | null;
+  geo_id: string | null;
+  location_text: string | null;
+  is_remote: boolean;
+  /** Whole naira. Nobody advertises a salary in kobo. */
+  pay_min: number | null;
+  pay_max: number | null;
+  /** Required whenever a figure is given: a wage without a period is a number. */
+  pay_period: PayPeriod | null;
+  pay_is_negotiable: boolean;
+  closes_at: string | null;
+  filled_at: string | null;
+  group_id: string | null;
+  visibility: EventVisibility;
+  application_count: number;
+  created_at: string;
+  updated_at: string;
+  edited_at: string | null;
+  deleted_at: string | null;
+}
+
+/**
+ * Kept out of `jobs` so the listing can be public while these are not: RLS
+ * grants rows, not columns, and a public page carrying phone numbers becomes a
+ * harvesting ground.
+ */
+export type JobContactRow = {
+  job_id: string;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  external_url: string | null;
+  instructions: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type JobApplicationRow = {
+  id: string;
+  job_id: string;
+  applicant_id: string;
+  message: string | null;
+  status: ApplicationStatus;
+  created_at: string;
+  updated_at: string;
+}
+
 export type GeoTreeNodeRow = {
   id: string;
   kind: GeoKind;
@@ -475,6 +560,58 @@ export interface Database {
         Update: Partial<EventAttendeeRow>;
         Relationships: [];
       };
+      jobs: {
+        Row: JobRow;
+        Insert: Insertable<
+          JobRow,
+          | "id"
+          | "kind"
+          | "category"
+          | "organization_name"
+          | "geo_id"
+          | "location_text"
+          | "is_remote"
+          | "pay_min"
+          | "pay_max"
+          | "pay_period"
+          | "pay_is_negotiable"
+          | "closes_at"
+          | "filled_at"
+          | "group_id"
+          | "visibility"
+          | "application_count"
+          | "created_at"
+          | "updated_at"
+          | "edited_at"
+          | "deleted_at"
+        >;
+        Update: Partial<JobRow>;
+        Relationships: [];
+      };
+      job_contacts: {
+        Row: JobContactRow;
+        Insert: Insertable<
+          JobContactRow,
+          | "contact_name"
+          | "contact_phone"
+          | "contact_email"
+          | "external_url"
+          | "instructions"
+          | "created_at"
+          | "updated_at"
+        >;
+        Update: Partial<JobContactRow>;
+        Relationships: [];
+      };
+      job_applications: {
+        Row: JobApplicationRow;
+        Insert: Insertable<
+          JobApplicationRow,
+          "id" | "message" | "status" | "created_at" | "updated_at"
+        >;
+        Update: Partial<JobApplicationRow>;
+        Relationships: [];
+      };
       conversations: {
         Row: ConversationRow;
         /**
@@ -603,6 +740,14 @@ export interface Database {
         Args: { target_event_id: string; check_user_id?: string };
         Returns: boolean;
       };
+      can_see_job: {
+        Args: { target_job_id: string; check_user_id?: string };
+        Returns: boolean;
+      };
+      employs_for_job: {
+        Args: { target_job_id: string; check_user_id?: string };
+        Returns: boolean;
+      };
       open_direct_conversation: {
         Args: { other_user_id: string };
         Returns: string;
@@ -658,6 +803,10 @@ export interface Database {
       event_kind: EventKind;
       event_visibility: EventVisibility;
       rsvp_status: RsvpStatus;
+      job_kind: JobKind;
+      job_category: JobCategory;
+      pay_period: PayPeriod;
+      application_status: ApplicationStatus;
     };
     CompositeTypes: Record<never, never>;
   };

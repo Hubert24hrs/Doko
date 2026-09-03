@@ -131,6 +131,32 @@ change for anybody who is, except to `withdrawn`. So an employer cannot rewrite
 what somebody said about themselves, and an applicant cannot shortlist
 themselves.
 
+### Contact details are optional here, unlike a job's
+
+`listing_contacts` uses the same split as `job_contacts` -- no `anon` policy
+at all, `is_active_member()` required on top of ordinary visibility -- but
+with one difference. A job posting with no way to reach the employer is
+refused by the schema, because there was nothing else a candidate could do.
+A marketplace listing has a second route that did not exist when jobs was
+built: **messaging**. A seller who would rather not publish a phone number
+can rely on "Message the seller" instead, so `createListingAction` writes to
+`listing_contacts` only when the seller actually gave something, and a
+listing with no contact row at all is a normal, fully functional listing.
+
+`15_marketplace.test.sql` asserts the split holds regardless: a signed-out
+reader sees the listing but never the contact row, cannot reach it by joining
+from the listing they can read, and a member who is not the seller cannot
+write to it at all.
+
+### The same leak, closed correctly the first time
+
+`listings_select_public` is narrowed to `group_id is null` in the migration
+that CREATES the table, rather than needing a second migration to fix it the
+way posts did. A listing inside a private group carries `visibility='public'`
+by column default; without the narrowing, permissive policies being OR'd
+together would have made it readable by the whole internet while the group
+looked locked. `15_marketplace` asserts exactly that row.
+
 ### A read marker is not an access grant
 
 A group conversation's membership is the **group's** membership and nothing
@@ -251,15 +277,17 @@ not asserted.
 
 What is still unproven, and must not be described as working:
 
-1. **Realtime delivery.** The subscription and the publication line exist;
+1. **The marketplace.** Migration 020 has not been applied and
+   `15_marketplace` (32 assertions) has not been run.
+2. **Realtime delivery.** The subscription and the publication line exist;
    nothing has been watched arriving live in a second browser. It degrades
    rather than breaks -- the composer says so when the channel is not
    subscribed.
-2. **`community_admin` subtree scoping.** A community admin should be able to
+3. **`community_admin` subtree scoping.** A community admin should be able to
    edit only their own part of the geographic tree. Written, never asserted.
-3. **Migration idempotency.** The files are written to be re-runnable and have
+4. **Migration idempotency.** The files are written to be re-runnable and have
    been re-run by hand, but nothing tests it.
-4. **Passkey sign-in.** Enrolment works; the sign-in ceremony has never been
+5. **Passkey sign-in.** Enrolment works; the sign-in ceremony has never been
    completed on a real device.
 
 Tracked in [`TESTING.md`](./TESTING.md).

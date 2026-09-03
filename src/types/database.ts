@@ -107,6 +107,28 @@ export type ApplicationStatus =
   | "rejected"
   | "withdrawn";
 
+export type ListingCategory =
+  | "electronics"
+  | "furniture"
+  | "clothing_fashion"
+  | "vehicles"
+  | "phones_computers"
+  | "appliances"
+  | "tools_equipment"
+  | "books_stationery"
+  | "baby_kids"
+  | "sports_hobbies"
+  | "agriculture"
+  | "building_materials"
+  | "food_produce"
+  | "services"
+  | "other";
+
+/** Nullable on the row: a service or fresh produce genuinely has none. */
+export type ListingCondition = "new" | "like_new" | "good" | "fair" | "for_parts";
+
+export type ListingStatus = "available" | "reserved" | "sold";
+
 export type GeoEntityRow = {
   id: string;
   parent_id: string | null;
@@ -419,6 +441,58 @@ export type JobApplicationRow = {
   updated_at: string;
 }
 
+export type MarketplaceListingRow = {
+  id: string;
+  title: string;
+  description: string;
+  category: ListingCategory;
+  /** Null: a service or fresh produce has no condition to state. */
+  condition: ListingCondition | null;
+  /** Whole naira. Null means "ask" -- a price nobody has set, not zero. */
+  price: number | null;
+  price_is_negotiable: boolean;
+  can_deliver: boolean;
+  seller_id: string;
+  geo_id: string | null;
+  location_text: string | null;
+  group_id: string | null;
+  visibility: EventVisibility;
+  status: ListingStatus;
+  created_at: string;
+  updated_at: string;
+  edited_at: string | null;
+  deleted_at: string | null;
+}
+
+/**
+ * Optional, unlike JobContactRow: a seller may rely entirely on in-app
+ * messaging and leave this table empty.
+ */
+export type ListingContactRow = {
+  listing_id: string;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  external_url: string | null;
+  instructions: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ListingMediaRow = {
+  id: string;
+  listing_id: string;
+  /** '<listing_id>/<uuid>.<ext>' -- the first segment is read by storage policies. */
+  storage_path: string;
+  mime_type: string;
+  byte_size: number;
+  width: number | null;
+  height: number | null;
+  alt_text: string | null;
+  sort_order: number;
+  created_at: string;
+}
+
 export type GeoTreeNodeRow = {
   id: string;
   kind: GeoKind;
@@ -612,6 +686,52 @@ export interface Database {
         Update: Partial<JobApplicationRow>;
         Relationships: [];
       };
+      marketplace_listings: {
+        Row: MarketplaceListingRow;
+        Insert: Insertable<
+          MarketplaceListingRow,
+          | "id"
+          | "condition"
+          | "price"
+          | "price_is_negotiable"
+          | "can_deliver"
+          | "geo_id"
+          | "location_text"
+          | "group_id"
+          | "visibility"
+          | "status"
+          | "created_at"
+          | "updated_at"
+          | "edited_at"
+          | "deleted_at"
+        >;
+        Update: Partial<MarketplaceListingRow>;
+        Relationships: [];
+      };
+      listing_contacts: {
+        Row: ListingContactRow;
+        Insert: Insertable<
+          ListingContactRow,
+          | "contact_name"
+          | "contact_phone"
+          | "contact_email"
+          | "external_url"
+          | "instructions"
+          | "created_at"
+          | "updated_at"
+        >;
+        Update: Partial<ListingContactRow>;
+        Relationships: [];
+      };
+      listing_media: {
+        Row: ListingMediaRow;
+        Insert: Insertable<
+          ListingMediaRow,
+          "id" | "width" | "height" | "alt_text" | "sort_order" | "created_at"
+        >;
+        Update: Partial<ListingMediaRow>;
+        Relationships: [];
+      };
       conversations: {
         Row: ConversationRow;
         /**
@@ -748,6 +868,18 @@ export interface Database {
         Args: { target_job_id: string; check_user_id?: string };
         Returns: boolean;
       };
+      can_see_listing: {
+        Args: { target_listing_id: string; check_user_id?: string };
+        Returns: boolean;
+      };
+      owns_listing: {
+        Args: { target_listing_id: string; check_user_id?: string };
+        Returns: boolean;
+      };
+      storage_path_listing_id: {
+        Args: { object_name: string };
+        Returns: string | null;
+      };
       open_direct_conversation: {
         Args: { other_user_id: string };
         Returns: string;
@@ -807,6 +939,9 @@ export interface Database {
       job_category: JobCategory;
       pay_period: PayPeriod;
       application_status: ApplicationStatus;
+      listing_category: ListingCategory;
+      listing_condition: ListingCondition;
+      listing_status: ListingStatus;
     };
     CompositeTypes: Record<never, never>;
   };

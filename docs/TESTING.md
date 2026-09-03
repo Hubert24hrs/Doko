@@ -10,7 +10,7 @@ npm run verify        # typecheck + lint + test
 
 ## Current state -- honest
 
-**200 unit tests, 14 files, all passing.** Typecheck clean, lint clean,
+**216 unit tests, 15 files, all passing.** Typecheck clean, lint clean,
 production build clean.
 
 **342 database assertions pass against the live hosted project**, across
@@ -87,6 +87,7 @@ and the messaging, presence, events and jobs suites as of 2026-09-02/03:
 | `12_presence.test.sql` | 14 | the presence topic parser refuses ten malformed topics **without raising** |
 | `13_events.test.sql` | 35 | the filled WAT end date; a moderator may cancel but **not move** an event |
 | `14_jobs.test.sql` | 35 | a signed-out reader sees the job and not the phone number; nobody but the applicant and the employer reads an application |
+| `15_marketplace.test.sql` | 32 | **not yet run** -- a private group listing is invisible despite `visibility='public'`; contact details are optional and still not public when given |
 
 With a linked local database they would run as `supabase test db`; here each
 file is pasted into the SQL Editor instead.

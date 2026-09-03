@@ -161,7 +161,7 @@ is listed under "Not yet done" and is honest about being open.
      and check the affected rows.
   3. `?next=` was computed by the proxy and discarded by every consumer, so
      sign-in always landed on /home.
-* 200 unit tests passing; typecheck clean; lint clean; production build clean
+* 216 unit tests passing; typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
   `/login?next=...`, and no secrets appear in the HTML
@@ -187,8 +187,10 @@ is listed under "Not yet done" and is honest about being open.
   live in a second browser. The thread renders correctly either way -- the
   composer says "Live updates unavailable" when the channel is not subscribed
   -- so this degrades rather than breaks.
-* Phase 4 marketplace,
-  directory, issues, map;
+* **Phase 4 slice 3 (marketplace) is BUILT and NOT YET APPLIED.** Migration
+  020 and the 32-assertion `15_marketplace` suite are written. `/marketplace`
+  will fail at runtime until the migration is run.
+* Phase 4 directory, issues, map;
   Phase 5 verification, moderation queue, advertising, payments; Phase 6
   hardening
 * The entire AI intelligence layer (Oba AI, RAG, semantic search, moderation,
@@ -210,7 +212,9 @@ Recommended order, and why:
 2. **Exercise a thread on the live site in two browsers.** The database is
    proven; realtime delivery is not, and watching a message arrive without a
    refresh is the only way to find out whether it does.
-3. Phase 4, rest: marketplace, directory, community issues, map.
+3. **Apply migration 020 and run `15_marketplace`.** The marketplace is
+   built and unbelievable until those 32 assertions pass.
+4. Phase 4, rest: directory, community issues, map.
 
 Operational notes that will otherwise be rediscovered painfully:
 
@@ -269,6 +273,7 @@ src/
     messages/               inbox and one conversation
     events/                 listing, one event, and the composer
     jobs/                   listing, one job, applications, and the composer
+    marketplace/            listing, one item, and the composer
     robots.ts sitemap.ts    SEO surface
     not-found.tsx error.tsx global-error.tsx
     globals.css             ALL design tokens live here
@@ -288,6 +293,7 @@ src/
     messages/{actions,queries,schemas}.ts, components/
     events/{actions,queries,schemas,format}.ts, components/
     jobs/{actions,queries,schemas,format}.ts, components/
+    marketplace/{actions,queries,schemas,media,media-actions,media-queries}.ts, components/
   lib/
     env.ts                  public env (browser-safe)
     env.server.ts           secrets, `server-only` guarded
@@ -299,7 +305,7 @@ src/
 supabase/
   migrations/               numbered, idempotent
   seed.sql                  real Igbo-Eze North data
-supabase/tests/             pgTAP suites 01-14, portable SQL
+supabase/tests/             pgTAP suites 01-15, portable SQL
 tests/unit/                 vitest suites
 docs/                       ARCHITECTURE, DEVELOPMENT, TESTING, SECURITY, DEPLOYMENT
 ```
@@ -355,6 +361,9 @@ events and issues will reference it.
 | `jobs` | vacancies; the public, indexable half |
 | `job_contacts` | the phone number; **no anon policy, deliberately** |
 | `job_applications` | private to the applicant and the employer |
+| `marketplace_listings` | buy/sell listings; `group_id is null` narrowed from the start |
+| `listing_contacts` | the phone number; unlike a job's, genuinely optional |
+| `listing_media` | up to 6 photos; own private `listing-media` bucket |
 
 **`posts.author_id` and `comments.author_id` reference `public.profiles`, not
 `auth.users`.** The identity is the same, since `profiles.id` IS the auth user
@@ -377,7 +386,8 @@ aggregates. `recount_post_engagement()` repairs drift.
 `can_message`, `open_direct_conversation`, `open_group_conversation`,
 `my_conversation_summaries`, `my_unread_message_count`,
 `conversation_from_presence_topic`, `can_see_event`,
-`recount_event_attendance`, `can_see_job`, `employs_for_job`.
+`recount_event_attendance`, `can_see_job`, `employs_for_job`,
+`can_see_listing`, `owns_listing`.
 
 All RBAC helpers are `SECURITY DEFINER` with `set search_path = public,
 pg_temp`.
@@ -618,6 +628,12 @@ If a local database is ever wanted, install Docker Desktop, then
 | A filled job stays listed, marked filled | somebody who applied deserves to see what happened, and in a community where they will meet the employer at the market, a vacancy that silently vanished is worse than a refusal |
 | The job is saved before its contact row | if the second write fails the employer keeps the advert and can add the details again; the other order loses everything they wrote because a phone number did not save. Same reasoning as saving a post before its images |
 | Neither side of an application may edit the other's half | the guard restores `message` for anybody who is not the applicant and refuses a status change for anybody who is -- except 'withdrawn'. An employer cannot rewrite what somebody said about themselves, and an applicant cannot shortlist themselves |
+| `listing_contacts` is genuinely OPTIONAL, unlike `job_contacts` | a job posting with no way to reach the employer is not a posting; a marketplace listing has a second route jobs did not have when built -- "Message the seller", reusing `open_direct_conversation` as-is |
+| A listing's price CHECK is `price is null or price > 0` | simpler than a job's pay-period rule because a price is a one-time figure, not a recurring one; NULL means "ask" and zero is refused so a free item goes in the title, not a price field pretending to be a number |
+| `listing_media` mirrors `post_media` almost exactly | a marketplace listing without photos is not a listing -- nobody buys a used refrigerator sight unseen -- so the same private-bucket, signed-URL, path-carries-the-owner discipline from migration 010 is reused rather than reinvented |
+| Six photos per listing, not four | a listing is an item somebody may travel for, and a buyer reasonably wants more than one angle; a post is a moment, which needs less |
+| `listings_select_public` was narrowed to `group_id is null` FROM THE START | the third table (after posts, then events and jobs) where this matters; writing it correctly on the first migration rather than needing a second one to fix a leak |
+| `createListingAction` returns an id rather than redirecting | events' and jobs' create actions redirect because they have no upload step; a listing's photos upload AFTER the row exists, so the client needs the id back before it can navigate |
 | An event is filtered on `ends_at` and ordered by `starts_at` | an event that began an hour ago and runs all day is STILL HAPPENING. Filtering on the start drops a funeral from the listing at the hour people are most likely to look it up |
 | `events.ends_at` is filled by trigger, never left null | with a missing end set to midnight of the event's own WAT day, "still upcoming" is one indexed comparison instead of a rule restated in every query that asks -- and the copies would drift |
 | Every event time is rendered in `Africa/Lagos`, explicitly | otherwise the same event reads 4pm in Enugu and 3pm in London, and it is the reader in London who turns up at the wrong time. Nigeria is UTC+1 with NO daylight saving, so a fixed zone is exact rather than approximate |

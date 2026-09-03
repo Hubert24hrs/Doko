@@ -18,6 +18,7 @@ const PROTECTED_PREFIXES = [
   // communities directory, and RLS decides what a signed-out reader sees.
   "/events/new",
   "/jobs/new",
+  "/marketplace/new",
   "/groups",
   "/issues",
   "/notifications",

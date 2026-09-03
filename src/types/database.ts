@@ -57,6 +57,25 @@ export type GroupVisibility = "public" | "private";
 
 export type GroupRole = "owner" | "moderator" | "member";
 
+export type EventKind =
+  | "festival"
+  | "funeral"
+  | "wedding"
+  | "meeting"
+  | "religious"
+  | "market"
+  | "sport"
+  | "fundraiser"
+  | "other";
+
+/**
+ * Deliberately not post_visibility: that carries 'followers', which for an
+ * event would be a tier nobody could satisfy.
+ */
+export type EventVisibility = "public" | "community";
+
+export type RsvpStatus = "going" | "interested" | "not_going";
+
 export type GeoEntityRow = {
   id: string;
   parent_id: string | null;
@@ -280,6 +299,41 @@ export type MessageRow = {
   deleted_at: string | null;
 }
 
+export type EventRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  kind: EventKind;
+  /** NULL means the whole LGA rather than a specific community. */
+  geo_id: string | null;
+  venue: string | null;
+  starts_at: string;
+  /** Never null after the fill trigger: end of the event's own day in WAT. */
+  ends_at: string;
+  is_all_day: boolean;
+  organizer_id: string;
+  /** When set, the group governs visibility entirely. */
+  group_id: string | null;
+  visibility: EventVisibility;
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
+  /** Maintained by trigger; see recount_event_attendance() for repair. */
+  going_count: number;
+  interested_count: number;
+  created_at: string;
+  updated_at: string;
+  edited_at: string | null;
+  deleted_at: string | null;
+}
+
+export type EventAttendeeRow = {
+  event_id: string;
+  user_id: string;
+  status: RsvpStatus;
+  created_at: string;
+  updated_at: string;
+}
+
 export type GeoTreeNodeRow = {
   id: string;
   kind: GeoKind;
@@ -385,6 +439,40 @@ export interface Database {
         Row: FollowRow;
         Insert: Insertable<FollowRow, "created_at">;
         Update: Partial<FollowRow>;
+        Relationships: [];
+      };
+      events: {
+        Row: EventRow;
+        Insert: Insertable<
+          EventRow,
+          | "id"
+          | "description"
+          | "kind"
+          | "geo_id"
+          | "venue"
+          | "ends_at"
+          | "is_all_day"
+          | "group_id"
+          | "visibility"
+          | "cancelled_at"
+          | "cancellation_reason"
+          | "going_count"
+          | "interested_count"
+          | "created_at"
+          | "updated_at"
+          | "edited_at"
+          | "deleted_at"
+        >;
+        Update: Partial<EventRow>;
+        Relationships: [];
+      };
+      event_attendees: {
+        Row: EventAttendeeRow;
+        Insert: Insertable<
+          EventAttendeeRow,
+          "status" | "created_at" | "updated_at"
+        >;
+        Update: Partial<EventAttendeeRow>;
         Relationships: [];
       };
       conversations: {
@@ -511,6 +599,10 @@ export interface Database {
        * shares_community_with(), which reads auth.uid() as the viewer.
        */
       can_message: { Args: { target_user_id: string }; Returns: boolean };
+      can_see_event: {
+        Args: { target_event_id: string; check_user_id?: string };
+        Returns: boolean;
+      };
       open_direct_conversation: {
         Args: { other_user_id: string };
         Returns: string;
@@ -563,6 +655,9 @@ export interface Database {
       group_kind: GroupKind;
       group_visibility: GroupVisibility;
       group_role: GroupRole;
+      event_kind: EventKind;
+      event_visibility: EventVisibility;
+      rsvp_status: RsvpStatus;
     };
     CompositeTypes: Record<never, never>;
   };

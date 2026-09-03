@@ -14,6 +14,9 @@ const PROTECTED_PREFIXES = [
   "/feed",
   "/my-community",
   "/messages",
+  // Only the composer. /events and /events/[id] are public pages, like the
+  // communities directory, and RLS decides what a signed-out reader sees.
+  "/events/new",
   "/groups",
   "/issues",
   "/notifications",

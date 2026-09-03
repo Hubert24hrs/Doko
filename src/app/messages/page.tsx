@@ -31,6 +31,7 @@ function whenLabel(iso: string | null): string {
     return then.toLocaleTimeString("en-NG", {
       hour: "numeric",
       minute: "2-digit",
+      hour12: true,
     });
   }
   return then.toLocaleDateString("en-NG", {

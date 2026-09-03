@@ -137,7 +137,7 @@ is listed under "Not yet done" and is honest about being open.
      and check the affected rows.
   3. `?next=` was computed by the proxy and discarded by every consumer, so
      sign-in always landed on /home.
-* 151 unit tests passing; typecheck clean; lint clean; production build clean
+* 178 unit tests passing; typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
   `/login?next=...`, and no secrets appear in the HTML
@@ -163,7 +163,10 @@ is listed under "Not yet done" and is honest about being open.
   live in a second browser. The thread renders correctly either way -- the
   composer says "Live updates unavailable" when the channel is not subscribed
   -- so this degrades rather than breaks.
-* Phase 4 events, jobs, marketplace,
+* **Phase 4 slice 1 (events) is BUILT and NOT YET APPLIED.** Migration 018
+  and the 34-assertion `13_events` suite are written. `/events` will fail at
+  runtime until the migration is run.
+* Phase 4 jobs, marketplace,
   directory, issues, map;
   Phase 5 verification, moderation queue, advertising, payments; Phase 6
   hardening
@@ -186,7 +189,9 @@ Recommended order, and why:
 2. **Exercise a thread on the live site in two browsers.** The database is
    proven; realtime delivery is not, and watching a message arrive without a
    refresh is the only way to find out whether it does.
-3. Phase 4: events, jobs, marketplace, directory, community issues, map.
+3. **Apply migration 018 and run `13_events`.** Events are built and
+   unbelievable until those 34 assertions pass.
+4. Phase 4, rest: jobs, marketplace, directory, community issues, map.
 
 Operational notes that will otherwise be rediscovered painfully:
 
@@ -243,6 +248,7 @@ src/
     members/[username]/     public member profile, indexable
     groups/                 groups, and one group
     messages/               inbox and one conversation
+    events/                 listing, one event, and the composer
     robots.ts sitemap.ts    SEO surface
     not-found.tsx error.tsx global-error.tsx
     globals.css             ALL design tokens live here
@@ -260,6 +266,7 @@ src/
     follows/{actions,queries}.ts, components/
     groups/{actions,queries,schemas,post-actions,post-queries}.ts, components/
     messages/{actions,queries,schemas}.ts, components/
+    events/{actions,queries,schemas,format}.ts, components/
   lib/
     env.ts                  public env (browser-safe)
     env.server.ts           secrets, `server-only` guarded
@@ -271,7 +278,7 @@ src/
 supabase/
   migrations/               numbered, idempotent
   seed.sql                  real Igbo-Eze North data
-supabase/tests/             pgTAP suites 01-12, portable SQL
+supabase/tests/             pgTAP suites 01-13, portable SQL
 tests/unit/                 vitest suites
 docs/                       ARCHITECTURE, DEVELOPMENT, TESTING, SECURITY, DEPLOYMENT
 ```
@@ -322,6 +329,8 @@ events and issues will reference it.
 | `conversations` | a conversation; `dm_key` is a pair, `group_id` a group |
 | `conversation_members` | who is in one, and their `last_read_at` |
 | `messages` | what was said; **no staff read policy, deliberately** |
+| `events` | festivals, funerals, meetings; `ends_at` is filled, never null |
+| `event_attendees` | going / interested / not going, one row per person |
 
 **`posts.author_id` and `comments.author_id` reference `public.profiles`, not
 `auth.users`.** The identity is the same, since `profiles.id` IS the auth user
@@ -343,7 +352,8 @@ aggregates. `recount_post_engagement()` repairs drift.
 `is_group_member`, `leads_group`, `can_see_group`, `in_conversation`,
 `can_message`, `open_direct_conversation`, `open_group_conversation`,
 `my_conversation_summaries`, `my_unread_message_count`,
-`conversation_from_presence_topic`.
+`conversation_from_presence_topic`, `can_see_event`,
+`recount_event_attendance`.
 
 All RBAC helpers are `SECURITY DEFINER` with `set search_path = public,
 pg_temp`.
@@ -576,6 +586,16 @@ If a local database is ever wanted, install Docker Desktop, then
 | A realtime event is a SIGNAL, not data | the payload is discarded and the server component re-runs, so what renders has passed through RLS on the server exactly as a fresh page load would. It costs a round trip per message and buys the guarantee that no broadcast can put on screen something the reader was not entitled to see |
 | The inbox is one RPC, not a query per conversation | the unread count, the last-message preview and the other person are all per-conversation, and an inbox is exactly the screen where an N+1 shows |
 | A conversation the caller is not in 404s | as for posts and profiles: a 403 would confirm that a conversation between two other people exists |
+| An event is filtered on `ends_at` and ordered by `starts_at` | an event that began an hour ago and runs all day is STILL HAPPENING. Filtering on the start drops a funeral from the listing at the hour people are most likely to look it up |
+| `events.ends_at` is filled by trigger, never left null | with a missing end set to midnight of the event's own WAT day, "still upcoming" is one indexed comparison instead of a rule restated in every query that asks -- and the copies would drift |
+| Every event time is rendered in `Africa/Lagos`, explicitly | otherwise the same event reads 4pm in Enugu and 3pm in London, and it is the reader in London who turns up at the wrong time. Nigeria is UTC+1 with NO daylight saving, so a fixed zone is exact rather than approximate |
+| The form value is parsed as WAT, not as the viewer's clock | `<input type="datetime-local">` sends "2026-09-12T16:00" with no zone at all; `new Date()` would read it wherever the browser happens to be, so one funeral submitted from Lagos and from London would become two different instants |
+| Events are CANCELLED, not quietly removed | people arrange their day around a funeral or a meeting. An event that simply vanished would leave them turning up; the row is what tells them, and it can say why |
+| `event_visibility` has no 'followers' tier | an event is an invitation to a place at a time, and "only my followers may know" is not something anybody organising a village meeting means. A tier nobody can satisfy is a trap |
+| RSVP counts are RECOUNTED by trigger, not incremented | changing 'interested' to 'going' must MOVE a person between two counters, and a pair of deltas gets that wrong far more easily than a pair of counts gets it slow |
+| Withdrawing an RSVP hard-deletes | an RSVP is a current intention, not speech; a tombstone would misstate who is coming, which is the one question the table exists to answer |
+| 'not_going' is collected and never displayed | it is a useful number for the organiser and a needlessly public one to show -- naming everybody who declined a funeral would stop people answering honestly at all |
+| Moderators may cancel or remove an event, never move it | the guard trigger restores every content column for anybody who is not the organiser. Moderation must not be able to change where somebody's funeral is being held |
 | Presence is NOT a table | "who is online" is worthless a minute later, and storing it means a write per member per heartbeat to keep a fact nobody reads twice. It lives in Realtime, where it disappears with the connection -- which is exactly the lifetime the fact has |
 | Presence rides its OWN channel, not the message channel | the two fail differently: presence needs a private channel whose authorization can refuse, and message delivery must not go down with it. If the presence channel never joins, the bar renders nothing and the thread behaves as it did before presence existed |
 | The presence topic is authorised by `in_conversation`, the same rule as the messages | a broadcast channel is open to anyone holding its name by default. "They would have to know the conversation id" is obscurity, and the same argument was already rejected for the media bucket |

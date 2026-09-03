@@ -46,9 +46,12 @@ function dayLabel(iso: string): string {
 }
 
 function clockTime(iso: string): string {
+  // hour12 stated, matching the events surface: the app should not speak
+  // 24-hour time in one place and 12-hour in another.
   return new Date(iso).toLocaleTimeString("en-NG", {
     hour: "numeric",
     minute: "2-digit",
+    hour12: true,
   });
 }
 

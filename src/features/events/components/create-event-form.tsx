@@ -137,8 +137,11 @@ export function CreateEventForm({ villages }: { villages: VillageOption[] }) {
           <option value="community">Only my community</option>
         </FieldSelect>
         <FieldDescription>
-          &ldquo;Only my community&rdquo; needs a community chosen above, or
-          nobody but you will see it.
+          {/* This sentence used to say the opposite, and was wrong.
+              member_of_geo(null) is TRUE by design -- an event with no
+              community chosen belongs to the whole LGA, not to nobody. */}
+          &ldquo;Only my community&rdquo; needs a community chosen above.
+          Without one it still reaches everybody in Igbo-Eze North.
         </FieldDescription>
       </Field>
 

@@ -21,7 +21,7 @@
 begin;
 
 set local search_path = public, extensions, pg_temp;
-select plan(34);
+select plan(35);
 
 create table public._tap_out (
   at   timestamptz not null default clock_timestamp(),
@@ -172,13 +172,33 @@ insert into public._tap_out(line) select is(
 );
 reset role;
 
--- A community event needs a community shared, and these fixtures share none.
+-- A community event has to be ANCHORED to a community to be restricted at
+-- all. member_of_geo(null) returns TRUE by design -- "an LGA-wide post belongs
+-- to everyone" -- so visibility='community' with no geo_id means the whole of
+-- Igbo-Eze North, exactly as it does for a post. Written without the anchor,
+-- this fixture asserted that a member could not see an event that every member
+-- is entitled to see.
+insert into public._tap_fixture (name, value)
+select 'village', id from public.geo_entities
+ where kind = 'village' and deleted_at is null
+ order by slug limit 1;
+
 select pg_temp.become('b1110000-1111-1111-1111-111111111111'::uuid);
-insert into public.events (id, title, kind, starts_at, organizer_id, visibility)
-values ('be000000-0000-0000-0000-000000000004', 'Community only', 'meeting',
-        '2026-09-15 10:00:00+01', 'b1110000-1111-1111-1111-111111111111',
-        'community');
+insert into public.events (id, title, kind, starts_at, organizer_id, visibility, geo_id)
+select 'be000000-0000-0000-0000-000000000004', 'Community only', 'meeting',
+       '2026-09-15 10:00:00+01', 'b1110000-1111-1111-1111-111111111111',
+       'community', value
+  from public._tap_fixture where name = 'village';
 reset role;
+
+-- Guard: if the seed ever loses its villages this fixture would insert nothing
+-- and the three assertions below would all pass by measuring an event that
+-- does not exist.
+insert into public._tap_out(line) select is(
+  (select count(*)::int from public.events
+    where id = 'be000000-0000-0000-0000-000000000004'::uuid),
+  1, 'fixture check: the community event was actually created'
+);
 
 select pg_temp.become_anon();
 insert into public._tap_out(line) select is(
@@ -192,7 +212,7 @@ select pg_temp.become('b2220000-2222-2222-2222-222222222222'::uuid);
 insert into public._tap_out(line) select is(
   (select count(*)::int from public.events
     where id = 'be000000-0000-0000-0000-000000000004'::uuid),
-  0, 'nor can a member who shares no community with the organiser'
+  0, 'nor can a member who belongs to no community at all'
 );
 reset role;
 

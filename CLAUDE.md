@@ -68,10 +68,10 @@ is listed under "Not yet done" and is honest about being open.
   four reactions, trigger-maintained engagement counts, and a public
   `/posts/[id]` page. Verified against the hosted project with real data,
   including the author embed and the generated SEO metadata for public posts.
-* **272 database assertions passing** against the live project: 38 schema,
+* **307 database assertions passing** against the live project: 38 schema,
   29 RLS, 9 seed, 22 posts, 18 comments/reactions, 19 media, 16 follows,
   13 followers-only posts, 27 groups, 38 messages, 29 group conversations,
-  14 presence.
+  14 presence, 35 events.
 * **Followers-only posts verified**, including that replies and images inherit
   the tier without those tables having been modified.
 * **Phase 2 slice 7 (groups) verified against the live database.** 27
@@ -117,6 +117,18 @@ is listed under "Not yet done" and is honest about being open.
   conversation topic, since an error inside a policy is not a refusal.
 * **Phase 3 is complete**: direct messages, group conversations, presence and
   typing. Realtime DELIVERY remains the one unverified thing.
+* **Phase 4 slice 1 (events) verified against the live database.** Migration
+  018 is applied and 35 assertions pass. They cover the WAT end-of-day fill
+  (including an event just after midnight, which a UTC-based fill would end a
+  day early), that an event in a private group is invisible despite carrying
+  `visibility = 'public'`, that RSVP counts move a person between counters
+  rather than double-counting, and that a moderator may cancel or remove an
+  event but may NOT move it.
+  Two defects were found by writing them: `eventWhen()` checked for a filled
+  midnight end inside a branch that could never be reached, and the composer
+  told organisers that a community event with no community chosen would be
+  seen by "nobody but you" -- when `member_of_geo(null)` is TRUE and it in
+  fact reaches the whole LGA.
 * **Phase 2 slices 4 and 5 verified on the live site**: member profiles at
   `/members/[username]`, and following -- Follow button, counts, and the
   Everyone / Following feed views, including the empty-following case showing
@@ -163,9 +175,6 @@ is listed under "Not yet done" and is honest about being open.
   live in a second browser. The thread renders correctly either way -- the
   composer says "Live updates unavailable" when the channel is not subscribed
   -- so this degrades rather than breaks.
-* **Phase 4 slice 1 (events) is BUILT and NOT YET APPLIED.** Migration 018
-  and the 34-assertion `13_events` suite are written. `/events` will fail at
-  runtime until the migration is run.
 * Phase 4 jobs, marketplace,
   directory, issues, map;
   Phase 5 verification, moderation queue, advertising, payments; Phase 6
@@ -189,9 +198,7 @@ Recommended order, and why:
 2. **Exercise a thread on the live site in two browsers.** The database is
    proven; realtime delivery is not, and watching a message arrive without a
    refresh is the only way to find out whether it does.
-3. **Apply migration 018 and run `13_events`.** Events are built and
-   unbelievable until those 34 assertions pass.
-4. Phase 4, rest: jobs, marketplace, directory, community issues, map.
+3. Phase 4, rest: jobs, marketplace, directory, community issues, map.
 
 Operational notes that will otherwise be rediscovered painfully:
 

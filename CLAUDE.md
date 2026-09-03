@@ -68,10 +68,10 @@ is listed under "Not yet done" and is honest about being open.
   four reactions, trigger-maintained engagement counts, and a public
   `/posts/[id]` page. Verified against the hosted project with real data,
   including the author embed and the generated SEO metadata for public posts.
-* **342 database assertions passing** against the live project: 38 schema,
+* **374 database assertions passing** against the live project: 38 schema,
   29 RLS, 9 seed, 22 posts, 18 comments/reactions, 19 media, 16 follows,
   13 followers-only posts, 27 groups, 38 messages, 29 group conversations,
-  14 presence, 35 events, 35 jobs.
+  14 presence, 35 events, 35 jobs, 32 marketplace.
 * **Followers-only posts verified**, including that replies and images inherit
   the tier without those tables having been modified.
 * **Phase 2 slice 7 (groups) verified against the live database.** 27
@@ -141,6 +141,16 @@ is listed under "Not yet done" and is honest about being open.
   checks `employs_for_job()` before the row ever reaches the unique constraint.
   Split into the authorisation case and the duplicate case, tested where each
   can actually happen.
+* **Phase 4 slice 3 (marketplace) verified against the live database.**
+  Migration 020 is applied and 32 assertions pass. They cover the same
+  public-listing/private-contact split as jobs, plus two things unique to a
+  marketplace: a listing in a private group is invisible despite carrying
+  `visibility='public'` by column default -- narrowed correctly from the
+  first migration rather than needing a second one, the way posts did -- and
+  `listing_media` accepts up to six photos and refuses a seventh. Contact
+  details are genuinely optional here, unlike a job's: a listing with none
+  at all is a normal listing, because "Message the seller" reuses messaging
+  exactly as it stands.
 * **Phase 2 slices 4 and 5 verified on the live site**: member profiles at
   `/members/[username]`, and following -- Follow button, counts, and the
   Everyone / Following feed views, including the empty-following case showing
@@ -187,9 +197,6 @@ is listed under "Not yet done" and is honest about being open.
   live in a second browser. The thread renders correctly either way -- the
   composer says "Live updates unavailable" when the channel is not subscribed
   -- so this degrades rather than breaks.
-* **Phase 4 slice 3 (marketplace) is BUILT and NOT YET APPLIED.** Migration
-  020 and the 32-assertion `15_marketplace` suite are written. `/marketplace`
-  will fail at runtime until the migration is run.
 * Phase 4 directory, issues, map;
   Phase 5 verification, moderation queue, advertising, payments; Phase 6
   hardening
@@ -212,9 +219,7 @@ Recommended order, and why:
 2. **Exercise a thread on the live site in two browsers.** The database is
    proven; realtime delivery is not, and watching a message arrive without a
    refresh is the only way to find out whether it does.
-3. **Apply migration 020 and run `15_marketplace`.** The marketplace is
-   built and unbelievable until those 32 assertions pass.
-4. Phase 4, rest: directory, community issues, map.
+3. Phase 4, rest: directory, community issues, map.
 
 Operational notes that will otherwise be rediscovered painfully:
 

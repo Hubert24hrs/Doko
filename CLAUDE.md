@@ -68,9 +68,9 @@ is listed under "Not yet done" and is honest about being open.
   four reactions, trigger-maintained engagement counts, and a public
   `/posts/[id]` page. Verified against the hosted project with real data,
   including the author embed and the generated SEO metadata for public posts.
-* **229 database assertions passing** against the live project: 38 schema,
+* **258 database assertions passing** against the live project: 38 schema,
   29 RLS, 9 seed, 22 posts, 18 comments/reactions, 19 media, 16 follows,
-  13 followers-only posts, 27 groups, 38 messages.
+  13 followers-only posts, 27 groups, 38 messages, 29 group conversations.
 * **Followers-only posts verified**, including that replies and images inherit
   the tier without those tables having been modified.
 * **Phase 2 slice 7 (groups) verified against the live database.** 27
@@ -97,6 +97,16 @@ is listed under "Not yet done" and is honest about being open.
   being the transaction timestamp made two rows compare EQUAL so an unread
   count was silently zero. Each passed or failed without reaching the thing it
   named.
+* **Phase 3 slice 2 (group conversations) verified against the live database.**
+  Migration 016 is applied and 29 assertions pass. A group has one chat,
+  membership of the GROUP is the access rule, and the assertion that earned
+  the suite is that **leaving the group ends access even though the read
+  marker survives** -- `conversation_members` rows are markers, not grants,
+  and nothing deletes them when somebody leaves. The suite leaves a stale one
+  behind on purpose before asserting the departed member sees nothing.
+  Almost no policy was written for this: every message policy asks
+  `in_conversation()`, so teaching that one function about groups gave
+  reading, writing and withdrawing their group rules for free.
 * **Phase 2 slices 4 and 5 verified on the live site**: member profiles at
   `/members/[username]`, and following -- Follow button, counts, and the
   Everyone / Following feed views, including the empty-following case showing
@@ -143,11 +153,6 @@ is listed under "Not yet done" and is honest about being open.
   live in a second browser. The thread renders correctly either way -- the
   composer says "Live updates unavailable" when the channel is not subscribed
   -- so this degrades rather than breaks.
-* **Phase 3 slice 2 (group conversations) is BUILT and NOT YET APPLIED.**
-  Migration 016 and the 29-assertion `11_group_conversations` suite are
-  written and the app compiles against them. Apply it BEFORE deploying the
-  code: `my_conversation_summaries()` gains two columns, and against the old
-  function the inbox would label every direct conversation as a group.
 * Presence (who is online, who is typing); Phase 4 events, jobs, marketplace,
   directory, issues, map;
   Phase 5 verification, moderation queue, advertising, payments; Phase 6
@@ -171,10 +176,8 @@ Recommended order, and why:
 2. **Exercise a thread on the live site in two browsers.** The database is
    proven; realtime delivery is not, and watching a message arrive without a
    refresh is the only way to find out whether it does.
-3. **Apply migration 016 and run `11_group_conversations`.** Group chat is
-   built, and unbelievable until those 29 assertions pass.
-4. **Presence:** who is online, and who is typing.
-5. Phase 4: events, jobs, marketplace, directory, community issues, map.
+3. **Presence:** who is online, and who is typing. The last piece of Phase 3.
+4. Phase 4: events, jobs, marketplace, directory, community issues, map.
 
 Operational notes that will otherwise be rediscovered painfully:
 

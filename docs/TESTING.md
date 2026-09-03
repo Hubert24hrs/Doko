@@ -13,8 +13,8 @@ npm run verify        # typecheck + lint + test
 **146 unit tests, 10 files, all passing.** Typecheck clean, lint clean,
 production build clean.
 
-**229 database assertions pass against the live hosted project**, across ten
-pgTAP suites. They are run by pasting each file into the Supabase SQL Editor,
+**258 database assertions pass against the live hosted project**, across
+eleven pgTAP suites. They are run by pasting each file into the Supabase SQL Editor,
 not by `supabase test db` -- there is no Docker here. See "Database tests"
 below.
 
@@ -68,8 +68,8 @@ database.
 
 ### Database tests -- RUN AND PASSING against the hosted project
 
-**All 229 assertions pass** against the live project, 01-09 as of 2026-09-01
-and `10_messages` as of 2026-09-02:
+**All 258 assertions pass** against the live project, 01-09 as of 2026-09-01
+and the two messaging suites as of 2026-09-02:
 
 | Suite | Assertions | Covers |
 |---|---|---|
@@ -83,7 +83,7 @@ and `10_messages` as of 2026-09-02:
 | `08_followers_posts.test.sql` | 13 | the followers-only tier, inherited by replies and images |
 | `09_groups.test.sql` | 27 | membership as the access rule; the private-group leak below |
 | `10_messages.test.sql` | 38 | the pair key; withdrawal; **staff read nothing** |
-| `11_group_conversations.test.sql` | 29 | **not yet run** -- leaving a group ends access despite the surviving read marker |
+| `11_group_conversations.test.sql` | 29 | **leaving a group ends access despite the surviving read marker** |
 
 With a linked local database they would run as `supabase test db`; here each
 file is pasted into the SQL Editor instead.

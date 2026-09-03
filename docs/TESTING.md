@@ -10,7 +10,7 @@ npm run verify        # typecheck + lint + test
 
 ## Current state -- honest
 
-**146 unit tests, 10 files, all passing.** Typecheck clean, lint clean,
+**151 unit tests, 11 files, all passing.** Typecheck clean, lint clean,
 production build clean.
 
 **258 database assertions pass against the live hosted project**, across
@@ -84,6 +84,7 @@ and the two messaging suites as of 2026-09-02:
 | `09_groups.test.sql` | 27 | membership as the access rule; the private-group leak below |
 | `10_messages.test.sql` | 38 | the pair key; withdrawal; **staff read nothing** |
 | `11_group_conversations.test.sql` | 29 | **leaving a group ends access despite the surviving read marker** |
+| `12_presence.test.sql` | 14 | **not yet run** -- the presence topic parser refuses ten malformed topics without raising |
 
 With a linked local database they would run as `supabase test db`; here each
 file is pasted into the SQL Editor instead.

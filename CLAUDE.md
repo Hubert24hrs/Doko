@@ -127,7 +127,7 @@ is listed under "Not yet done" and is honest about being open.
      and check the affected rows.
   3. `?next=` was computed by the proxy and discarded by every consumer, so
      sign-in always landed on /home.
-* 146 unit tests passing; typecheck clean; lint clean; production build clean
+* 151 unit tests passing; typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
   `/login?next=...`, and no secrets appear in the HTML
@@ -153,7 +153,12 @@ is listed under "Not yet done" and is honest about being open.
   live in a second browser. The thread renders correctly either way -- the
   composer says "Live updates unavailable" when the channel is not subscribed
   -- so this degrades rather than breaks.
-* Presence (who is online, who is typing); Phase 4 events, jobs, marketplace,
+* **Phase 3 slice 3 (presence) is BUILT and NOT YET APPLIED.** Migration 017
+  and the 14-assertion `12_presence` suite are written. Presence stores
+  nothing, so the app degrades cleanly without the migration -- the private
+  channel simply refuses to join and the thread shows no presence at all --
+  but the channel is unauthorised until it is applied.
+* Phase 4 events, jobs, marketplace,
   directory, issues, map;
   Phase 5 verification, moderation queue, advertising, payments; Phase 6
   hardening
@@ -176,7 +181,8 @@ Recommended order, and why:
 2. **Exercise a thread on the live site in two browsers.** The database is
    proven; realtime delivery is not, and watching a message arrive without a
    refresh is the only way to find out whether it does.
-3. **Presence:** who is online, and who is typing. The last piece of Phase 3.
+3. **Apply migration 017 and run `12_presence`.** Presence is built; without
+   the migration its channel is not authorised.
 4. Phase 4: events, jobs, marketplace, directory, community issues, map.
 
 Operational notes that will otherwise be rediscovered painfully:
@@ -262,7 +268,7 @@ src/
 supabase/
   migrations/               numbered, idempotent
   seed.sql                  real Igbo-Eze North data
-supabase/tests/             pgTAP suites 01-11, portable SQL
+supabase/tests/             pgTAP suites 01-12, portable SQL
 tests/unit/                 vitest suites
 docs/                       ARCHITECTURE, DEVELOPMENT, TESTING, SECURITY, DEPLOYMENT
 ```
@@ -333,7 +339,8 @@ aggregates. `recount_post_engagement()` repairs drift.
 `is_active_member`, `member_of_geo`, `recount_post_engagement`,
 `is_group_member`, `leads_group`, `can_see_group`, `in_conversation`,
 `can_message`, `open_direct_conversation`, `open_group_conversation`,
-`my_conversation_summaries`, `my_unread_message_count`.
+`my_conversation_summaries`, `my_unread_message_count`,
+`conversation_from_presence_topic`.
 
 All RBAC helpers are `SECURITY DEFINER` with `set search_path = public,
 pg_temp`.
@@ -566,6 +573,12 @@ If a local database is ever wanted, install Docker Desktop, then
 | A realtime event is a SIGNAL, not data | the payload is discarded and the server component re-runs, so what renders has passed through RLS on the server exactly as a fresh page load would. It costs a round trip per message and buys the guarantee that no broadcast can put on screen something the reader was not entitled to see |
 | The inbox is one RPC, not a query per conversation | the unread count, the last-message preview and the other person are all per-conversation, and an inbox is exactly the screen where an N+1 shows |
 | A conversation the caller is not in 404s | as for posts and profiles: a 403 would confirm that a conversation between two other people exists |
+| Presence is NOT a table | "who is online" is worthless a minute later, and storing it means a write per member per heartbeat to keep a fact nobody reads twice. It lives in Realtime, where it disappears with the connection -- which is exactly the lifetime the fact has |
+| Presence rides its OWN channel, not the message channel | the two fail differently: presence needs a private channel whose authorization can refuse, and message delivery must not go down with it. If the presence channel never joins, the bar renders nothing and the thread behaves as it did before presence existed |
+| The presence topic is authorised by `in_conversation`, the same rule as the messages | a broadcast channel is open to anyone holding its name by default. "They would have to know the conversation id" is obscurity, and the same argument was already rejected for the media bucket |
+| The topic parser returns NULL, never raises | a cast that throws inside a policy turns a nonsense channel name into an ERROR, and an error in a policy is not a refusal. `12_presence` asserts null for ten malformed topics |
+| Typing is asserted, never retracted | a client that closes its laptop mid-sentence sends no "stopped typing", so each signal carries its own expiry and the label goes away on its own |
+| Typing is throttled, not debounced | somebody typing steadily should keep the label alive; a debounce would only ever fire once they had stopped |
 | A group conversation consults `group_members` ONLY | `conversation_members` rows are READ MARKERS and nothing deletes them when somebody leaves a group. "A marker exists OR you are in the group" would mean anyone who once opened a group chat could read it forever after leaving. A read marker is not an access grant |
 | A group chat is not fanned out to its members | opening it inserts no membership rows at all; markers are created on demand by the people who actually read. A group of five hundred must not materialise five hundred rows nobody has looked at |
 | The unread baseline for a group is `greatest(marker, joined_at)` | joining should not greet you with everything said before you arrived, and REJOINING should not resurrect what was said while you were away. Without the `greatest`, a stale marker from a previous membership does exactly that |

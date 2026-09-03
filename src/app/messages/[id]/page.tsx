@@ -94,6 +94,7 @@ export default async function ConversationPage({
           conversationId={id}
           messages={page.messages}
           viewerId={user.id}
+          viewerName={user.profile?.full_name ?? "A member"}
           olderCursor={page.olderCursor}
           available={page.available}
           isGroup={group !== null}

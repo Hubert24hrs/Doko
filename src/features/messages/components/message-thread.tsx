@@ -21,6 +21,7 @@ import {
   type MessageState,
 } from "../actions";
 import type { ThreadMessage } from "../queries";
+import { typingLabel, usePresence } from "../use-presence";
 
 const INITIAL: MessageState = { ok: false };
 
@@ -79,6 +80,7 @@ export function MessageThread({
   conversationId,
   messages,
   viewerId,
+  viewerName,
   olderCursor,
   available,
   isGroup = false,
@@ -86,6 +88,8 @@ export function MessageThread({
   conversationId: string;
   messages: ThreadMessage[];
   viewerId: string;
+  /** Shown to the other side as "<name> is typing". */
+  viewerName: string;
   olderCursor: string | null;
   available: boolean;
   /**
@@ -106,6 +110,12 @@ export function MessageThread({
   const [live, setLive] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const { others, typing, notifyTyping } = usePresence(conversationId, {
+    id: viewerId,
+    name: viewerName,
+  });
+  const nowTyping = typingLabel(typing);
 
   const remaining = MESSAGE_MAX_LENGTH - draft.length;
   const overLimit = remaining < 0;
@@ -313,6 +323,23 @@ export function MessageThread({
         </p>
       ) : null}
 
+      <div
+        aria-live="polite"
+        className="min-h-5 px-1 text-xs text-muted-foreground"
+      >
+        {/* Its own row with a reserved height: without one the composer would
+            jump every time somebody started or stopped typing. */}
+        {nowTyping
+          ? nowTyping
+          : others.length === 0
+            ? null
+            : isGroup
+              ? `${others.length} other ${
+                  others.length === 1 ? "member is" : "members are"
+                } here now`
+              : `${others[0].name} is here now`}
+      </div>
+
       <div className="border-t border-border pt-3">
         <form onSubmit={handleSend} className="space-y-2" noValidate>
           <input type="hidden" name="conversationId" value={conversationId} />
@@ -334,7 +361,10 @@ export function MessageThread({
               maxLength={MESSAGE_MAX_LENGTH + 100}
               placeholder="Write a message…"
               value={draft}
-              onChange={(e) => setDraft(e.target.value)}
+              onChange={(e) => {
+                setDraft(e.target.value);
+                notifyTyping();
+              }}
             />
           </Field>
 

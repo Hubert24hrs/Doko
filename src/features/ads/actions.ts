@@ -6,7 +6,7 @@ import { requireUser, requireStaff } from "@/features/auth/session";
 import { adCampaignSchema, adModerationSchema } from "./schemas";
 import { AdStatus } from "@/types/database";
 
-export async function createAdCampaignAction(prevState: any, formData: FormData) {
+export async function createAdCampaignAction(prevState: unknown, formData: FormData) {
   try {
     const user = await requireUser();
     const rawData = {
@@ -72,8 +72,8 @@ export async function createAdCampaignAction(prevState: any, formData: FormData)
       message: "Your ad campaign has been submitted for administrative review!",
       adId: data.id,
     };
-  } catch (err: any) {
-    return { success: false, error: err.message || "An unexpected error occurred" };
+  } catch (err: unknown) {
+    return { success: false, error: (err instanceof Error ? err.message : null) || "An unexpected error occurred" };
   }
 }
 
@@ -122,8 +122,8 @@ export async function moderateAdCampaignAction(
     revalidatePath("/admin/ads");
 
     return { success: true, message: `Ad campaign status updated to ${newStatus}` };
-  } catch (err: any) {
-    return { success: false, error: err.message || "Action failed" };
+  } catch (err: unknown) {
+    return { success: false, error: (err instanceof Error ? err.message : null) || "Action failed" };
   }
 }
 

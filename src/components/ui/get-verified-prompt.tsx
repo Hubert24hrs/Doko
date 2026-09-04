@@ -28,10 +28,10 @@ export function GetVerifiedPrompt({
     try {
       const isDismissed = sessionStorage.getItem("eo_get_verified_dismissed");
       if (!isDismissed) {
-        setDismissed(false);
+        queueMicrotask(() => setDismissed(false));
       }
     } catch {
-      setDismissed(false);
+      queueMicrotask(() => setDismissed(false));
     }
   }, [isVerified]);
 

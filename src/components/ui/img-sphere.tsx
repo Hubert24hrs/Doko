@@ -410,11 +410,11 @@ const SphereImageGrid: React.FC<SphereImageGridProps> = ({
   // ==========================================
 
   useEffect(() => {
-    setIsMounted(true);
+    queueMicrotask(() => setIsMounted(true));
   }, []);
 
   useEffect(() => {
-    setImagePositions(generateSpherePositions());
+    queueMicrotask(() => setImagePositions(generateSpherePositions()));
   }, [generateSpherePositions]);
 
   useEffect(() => {

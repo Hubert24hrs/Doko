@@ -113,6 +113,15 @@ export function MessageThread({
   const [sending, setSending] = useState(false);
   const [live, setLive] = useState(false);
   const [soundMuted, setSoundMuted] = useState(false);
+  const soundMutedRef = useRef(soundMuted);
+  useEffect(() => {
+    soundMutedRef.current = soundMuted;
+  }, [soundMuted]);
+
+  const viewerIdRef = useRef(viewerId);
+  useEffect(() => {
+    viewerIdRef.current = viewerId;
+  }, [viewerId]);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -179,8 +188,8 @@ export function MessageThread({
           table: "messages",
           filter: `conversation_id=eq.${conversationId}`,
         },
-        (payload: any) => {
-          if (payload?.new?.author_id && payload.new.author_id !== viewerId && !soundMuted) {
+        (payload: { new?: { author_id?: string } }) => {
+          if (payload?.new?.author_id && payload.new.author_id !== viewerIdRef.current && !soundMutedRef.current) {
             playNotificationChime();
           }
           router.refresh();

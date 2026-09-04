@@ -10,15 +10,17 @@ export function PaymentCallbackContent() {
   const searchParams = useSearchParams();
   const reference = searchParams.get("reference");
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState<"success" | "failed" | "error">("loading" as any);
-  const [details, setDetails] = useState<any>(null);
+  const [status, setStatus] = useState<"loading" | "success" | "failed" | "error">("loading");
+  const [details, setDetails] = useState<{ amountKobo?: number; channel?: string; reference?: string } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (!reference) {
-      setLoading(false);
-      setStatus("error");
-      setErrorMsg("No payment reference found in query string.");
+      queueMicrotask(() => {
+        setLoading(false);
+        setStatus("error");
+        setErrorMsg("No payment reference found in query string.");
+      });
       return;
     }
 
@@ -34,10 +36,10 @@ export function PaymentCallbackContent() {
           setStatus("failed");
           setErrorMsg(res.error || "Payment verification failed.");
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!isMounted) return;
         setStatus("error");
-        setErrorMsg(err.message || "An unexpected error occurred.");
+        setErrorMsg(err instanceof Error ? err.message : "An unexpected error occurred.");
       } finally {
         if (isMounted) setLoading(false);
       }

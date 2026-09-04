@@ -1,6 +1,6 @@
 "use client";
 
-import { ImageOff, Images } from "lucide-react";
+import { ImageOff } from "lucide-react";
 
 import { cn } from "@/lib/utils/cn";
 import type { IssueImage } from "../media-queries";

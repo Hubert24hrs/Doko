@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  CheckCircle2,
-  ShieldCheck,
-  UserX,
-  Search,
+    ShieldCheck,
+    Search,
   Sparkles,
   Award,
   Clock,

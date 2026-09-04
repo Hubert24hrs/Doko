@@ -2,7 +2,7 @@
 
 import { createAnonymousClient } from "@/lib/supabase/server";
 import { aiQuerySchema, AiResponse } from "./schemas";
-import { queryCulturalKnowledge, IGBO_EZE_NORTH_KNOWLEDGE } from "./knowledge";
+import { queryCulturalKnowledge } from "./knowledge";
 
 export async function askObaAiAction(
   prompt: string,
@@ -118,9 +118,9 @@ Keep answers helpful, respectful, concise (2-4 paragraphs), and suggest relevant
         suggestions: getSmartSuggestions(lower),
       },
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("askObaAiAction error:", err);
-    return { success: false, error: err.message || "Failed to process question" };
+    return { success: false, error: (err instanceof Error ? err.message : null) || "Failed to process question" };
   }
 }
 
@@ -157,13 +157,13 @@ function generateLocalAiResponse(
 
   // Community Projects & Donations
   if (lower.includes("project") || lower.includes("donate") || lower.includes("fund") || lower.includes("diaspora") || lower.includes("road") || lower.includes("borehole")) {
-    let contextStr = liveContext.length > 0 ? `\n\n${liveContext.join("\n")}` : "";
+    const contextStr = liveContext.length > 0 ? `\n\n${liveContext.join("\n")}` : "";
     return `${greeting}\n\nThrough our newly launched **[Community Projects](/projects)** portal, citizens at home and across the diaspora can collaboratively crowdfund civic infrastructure in Igbo-Eze North.\n\nYou can contribute securely via **Paystack** (Card, Transfer, USSD) towards:\n• Community grading and tarring of rural access roads\n• Installation of solar streetlights in dark market squares\n• Drilling and rehabilitation of clean water boreholes\n• School classrooms and healthcare facility upgrades${contextStr}`;
   }
 
   // Jobs
   if (lower.includes("job") || lower.includes("hiring") || lower.includes("work")) {
-    let contextStr = liveContext.length > 0 ? `\n\n${liveContext.join("\n")}` : "";
+    const contextStr = liveContext.length > 0 ? `\n\n${liveContext.join("\n")}` : "";
     return `${greeting}\n\nLooking for work or hiring in Igbo-Eze North? Visit our **[Jobs Board](/jobs)**. Local employers, traders, schools, and private enterprises post opportunities across Ogrute, Amufie, Imufu, and surrounding villages.${contextStr}`;
   }
 

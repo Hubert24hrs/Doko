@@ -2,7 +2,7 @@ import React from "react";
 import { requireStaff } from "@/features/auth/session";
 import { getPendingAdCampaigns } from "@/features/ads/queries";
 import { AdModerationControls } from "./ad-moderation-controls";
-import { Megaphone, CheckCircle2, XCircle, Clock, BarChart3 } from "lucide-react";
+import { Megaphone, CheckCircle2, Clock, BarChart3 } from "lucide-react";
 
 export const metadata = {
   title: "Ad Moderation Console | Ezike Oba Admin",

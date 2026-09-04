@@ -3,7 +3,6 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
-import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldInput, FieldLabel } from "@/components/ui/field";
 import { cn } from "@/lib/utils/cn";
 import type { IssueStatus } from "@/types/database";

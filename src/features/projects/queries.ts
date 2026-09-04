@@ -25,7 +25,11 @@ export const getCommunityProjects = cache(async (): Promise<ProjectListItem[]> =
       return getFallbackProjects();
     }
 
-    return data.map((item: any) => {
+    type ProjectWithRelations = CommunityProjectRow & {
+      profiles?: { full_name?: string | null } | null;
+      geo_entities?: { name?: string | null } | null;
+    };
+    return (data as unknown as ProjectWithRelations[]).map((item) => {
       const target = Number(item.target_amount_naira) || 1;
       const raised = Number(item.raised_amount_naira) || 0;
       const pct = Math.min(100, Math.round((raised / target) * 100));

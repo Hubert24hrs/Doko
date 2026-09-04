@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ received: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Paystack webhook error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }

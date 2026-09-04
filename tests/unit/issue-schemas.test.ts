@@ -109,7 +109,7 @@ describe("createIssueSchema", () => {
 
   it("rejects unknown categories", () => {
     expect(
-      createIssueSchema.safeParse({ ...baseIssue, category: "alien_invasion" as any }).success,
+      createIssueSchema.safeParse({ ...baseIssue, category: "alien_invasion" as never }).success,
     ).toBe(false);
   });
 });

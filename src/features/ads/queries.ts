@@ -66,7 +66,8 @@ export const getPendingAdCampaigns = cache(
         return [];
       }
 
-      return data.map((item: any) => ({
+      type AdWithProfile = AdCampaignRow & { profiles?: { full_name?: string | null } | null };
+      return (data as unknown as AdWithProfile[]).map((item) => ({
         ...item,
         advertiser_name: item.profiles?.full_name || "Community Member",
       }));

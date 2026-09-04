@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/features/auth/session";
 import {
-  initializePaymentSchema,
   verifyPaymentSchema,
   nairaToKobo,
 } from "./schemas";
@@ -77,9 +76,9 @@ export async function initializeAdPaymentAction(adId: string, amountNaira?: numb
       reference,
       is_mock: paystackRes.is_mock,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("initializeAdPaymentAction error:", err);
-    return { success: false, error: err.message || "Failed to initialize payment." };
+    return { success: false, error: (err instanceof Error ? err.message : null) || "Failed to initialize payment." };
   }
 }
 
@@ -156,8 +155,8 @@ export async function verifyPaymentAction(reference: string) {
       channel: verifyResult.channel,
       gatewayResponse: verifyResult.gatewayResponse,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("verifyPaymentAction error:", err);
-    return { success: false, error: err.message || "Failed to verify transaction." };
+    return { success: false, error: (err instanceof Error ? err.message : null) || "Failed to verify transaction." };
   }
 }

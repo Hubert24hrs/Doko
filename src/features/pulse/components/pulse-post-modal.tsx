@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { X, MessageCircle, Heart, ExternalLink, User } from "lucide-react";
+import { X, ExternalLink, User } from "lucide-react";
 
 import { VerifiedBadge, type VerificationTier } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";

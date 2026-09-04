@@ -7,7 +7,7 @@ import { createProjectSchema, donateProjectSchema } from "./schemas";
 import { generatePaymentReference, initializePaystackTransaction } from "@/features/payments/paystack";
 import { nairaToKobo } from "@/features/payments/schemas";
 
-export async function createProjectAction(prevState: any, formData: FormData) {
+export async function createProjectAction(prevState: unknown, formData: FormData) {
   try {
     const user = await requireUser();
     const rawData = {
@@ -54,9 +54,9 @@ export async function createProjectAction(prevState: any, formData: FormData) {
       message: "Community project submitted for administrative review!",
       projectId: data.id,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("createProjectAction error:", err);
-    return { success: false, error: err.message || "Failed to create project" };
+    return { success: false, error: (err instanceof Error ? err.message : null) || "Failed to create project" };
   }
 }
 
@@ -135,8 +135,8 @@ export async function donateToProjectAction(
       reference,
       is_mock: paystackRes.is_mock,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("donateToProjectAction error:", err);
-    return { success: false, error: err.message || "Failed to initialize contribution checkout" };
+    return { success: false, error: (err instanceof Error ? err.message : null) || "Failed to initialize contribution checkout" };
   }
 }

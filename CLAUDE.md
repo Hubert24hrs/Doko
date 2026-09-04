@@ -171,7 +171,7 @@ is listed under "Not yet done" and is honest about being open.
      and check the affected rows.
   3. `?next=` was computed by the proxy and discarded by every consumer, so
      sign-in always landed on /home.
-* 268 unit tests passing (20 test files); typecheck clean; lint clean; production build clean
+* 274 unit tests passing (21 test files); typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
   `/login?next=...`, and no secrets appear in the HTML
@@ -672,3 +672,5 @@ If a local database is ever wanted, install Docker Desktop, then
 | The unread baseline for a group is `greatest(marker, joined_at)` | joining should not greet you with everything said before you arrived, and REJOINING should not resurrect what was said while you were away. Without the `greatest`, a stale marker from a previous membership does exactly that |
 | `conversations` carries a pair-or-group CHECK | a row with both a `dm_key` and a `group_id` would satisfy two different access rules at once, which is the sort of thing that gets discovered late |
 | Teaching `in_conversation()` about groups was the whole slice | every message policy asks it, so reading, writing and withdrawing picked up their group rules without one of them being edited -- the same inheritance that gave comments and reactions the followers-only tier for free |
+| Sponsored ads enter `pending` status by default | preserves community trust; staff and admins review and approve campaigns via `/admin/ads` before going live |
+| Ad impression/click counter RPCs | security definer functions `increment_ad_impressions` and `increment_ad_clicks` safely update analytics without exposing direct update permissions |

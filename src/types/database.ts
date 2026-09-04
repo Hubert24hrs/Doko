@@ -169,6 +169,51 @@ export type GeoEntityRow = {
 
 export type VerificationType = "blue" | "gold";
 
+export type AdPlacement = "feed_sponsored" | "marketplace_banner" | "community_sidebar";
+export type AdStatus = "pending" | "approved" | "rejected" | "active" | "paused" | "completed";
+
+export type AdCampaignRow = {
+  id: string;
+  advertiser_id: string;
+  title: string;
+  description: string;
+  target_url: string | null;
+  image_url: string | null;
+  placement: AdPlacement;
+  status: AdStatus;
+  target_village_id: string | null;
+  budget_naira: number;
+  impressions_count: number;
+  clicks_count: number;
+  rejection_reason: string | null;
+  starts_at: string;
+  ends_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SponsoredAdItem = {
+  id: string;
+  advertiser_id: string;
+  title: string;
+  description: string;
+  target_url: string | null;
+  image_url: string | null;
+  placement: AdPlacement;
+  status: AdStatus;
+  target_village_id: string | null;
+  budget_naira: number;
+  impressions_count: number;
+  clicks_count: number;
+  starts_at: string;
+  ends_at: string;
+  created_at: string;
+  advertiser_name: string;
+  advertiser_avatar: string | null;
+  advertiser_is_verified: boolean;
+  advertiser_verification_type: VerificationType | null;
+};
+
 export type VerificationDelegateRow = {
   user_id: string;
   delegated_by: string | null;
@@ -974,9 +1019,42 @@ export interface Database {
          * table's Insert/Update to extend Record<string, unknown>, and `never`
          * here silently invalidates the entire schema, degrading every table
          * and RPC in the client to `never`.
+};
+      audit_logs: {
+        Row: AuditLogRow;
+        /**
+         * Append-only in practice: the table has no INSERT/UPDATE/DELETE
+         * policy for any role, so these calls are rejected at runtime. Rows
+         * arrive only through log_admin_action().
+         *
+         * These must still be object types — postgrest-js requires every
+         * table's Insert/Update to extend Record<string, unknown>, and `never`
+         * here silently invalidates the entire schema, degrading every table
+         * and RPC in the client to `never`.
          */
         Insert: Partial<Omit<AuditLogRow, "id" | "created_at">>;
         Update: Partial<Omit<AuditLogRow, "id" | "created_at">>;
+        Relationships: [];
+      };
+      ad_campaigns: {
+        Row: AdCampaignRow;
+        Insert: Insertable<
+          AdCampaignRow,
+          | "id"
+          | "target_url"
+          | "image_url"
+          | "status"
+          | "target_village_id"
+          | "budget_naira"
+          | "impressions_count"
+          | "clicks_count"
+          | "rejection_reason"
+          | "starts_at"
+          | "ends_at"
+          | "created_at"
+          | "updated_at"
+        >;
+        Update: Partial<AdCampaignRow>;
         Relationships: [];
       };
     };
@@ -987,10 +1065,22 @@ export interface Database {
       v_autonomous_communities: { Row: GeoEntityRow; Relationships: [] };
     };
     Functions: {
-        get_community_pulse: {
-          Args: { p_limit?: number };
-          Returns: CommunityPulseItem[];
-        };
+      get_active_sponsored_ads: {
+        Args: { p_placement?: string; p_limit?: number };
+        Returns: SponsoredAdItem[];
+      };
+      increment_ad_impressions: {
+        Args: { p_ad_id: string };
+        Returns: void;
+      };
+      increment_ad_clicks: {
+        Args: { p_ad_id: string };
+        Returns: void;
+      };
+      get_community_pulse: {
+        Args: { p_limit?: number };
+        Returns: CommunityPulseItem[];
+      };
       geo_ancestors: {
         Args: { entity_id: string };
         Returns: GeoTreeNodeRow[];

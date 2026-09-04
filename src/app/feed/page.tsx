@@ -18,6 +18,8 @@ import { MessagesNavLink } from "@/features/messages/components/messages-nav-lin
 import { NotificationsNavLink } from "@/features/notifications/components/notifications-nav-link";
 import { getCommunityPulseMembers } from "@/features/pulse/queries";
 import { CommunityPulse } from "@/features/pulse/components/community-pulse";
+import { getActiveSponsoredAds } from "@/features/ads/queries";
+import { SponsoredFeedCard } from "@/features/ads/components/sponsored-feed-card";
 
 export const metadata: Metadata = {
   title: "Feed",
@@ -36,20 +38,16 @@ export default async function FeedPage({
 
   const followingOnly = view === "following";
 
-  // Only fetched when needed. An empty result is passed through as an empty
-  // array rather than undefined, so getFeedPage shows an empty feed instead of
-  // silently falling back to everything.
   const followedIds = followingOnly ? await getFollowedIds() : undefined;
 
-  const [villages, pulseMembers, page] = await Promise.all([
+  const [villages, pulseMembers, page, sponsoredAds] = await Promise.all([
     getVillageOptions(),
-      getCommunityPulseMembers(60),
+    getCommunityPulseMembers(60),
     getFeedPage(before, followedIds),
+    getActiveSponsoredAds("feed_sponsored", 2),
   ]);
 
   const staff = isStaff(user);
-
-  // One query and one batch signing for the whole page, rather than per post.
   const imagesByPost = await getPostImages(page.posts.map((p) => p.id));
 
   return (
@@ -61,6 +59,7 @@ export default async function FeedPage({
           </Link>
           <div className="flex items-center gap-1">
             <MessagesNavLink />
+            <NotificationsNavLink />
             <Link
               href="/events"
               className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken"
@@ -141,6 +140,14 @@ export default async function FeedPage({
         <CommunityPulse initialMembers={pulseMembers} className="mt-6" />
 
         <GetVerifiedPrompt variant="banner" isVerified={Boolean(user?.profile?.is_verified)} className="mt-6" />
+
+        {sponsoredAds.length > 0 && (
+          <div className="mt-6 space-y-4">
+            {sponsoredAds.map((ad) => (
+              <SponsoredFeedCard key={ad.id} ad={ad} />
+            ))}
+          </div>
+        )}
 
         <nav aria-label="Feed view" className="mt-8 flex gap-1 border-b border-border">
           <Link

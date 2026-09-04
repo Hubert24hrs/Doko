@@ -12,6 +12,8 @@ import {
   LISTING_CATEGORY_LABEL,
   listingCategories,
 } from "@/features/marketplace/schemas";
+import { getActiveSponsoredAds } from "@/features/ads/queries";
+import { MarketplaceBannerAd } from "@/features/ads/components/marketplace-banner-ad";
 
 export const metadata: Metadata = {
   title: "Marketplace",
@@ -32,9 +34,10 @@ export default async function MarketplacePage({
 
   const validCategory = listingCategories.find((c) => c === category);
 
-  const [page, mine] = await Promise.all([
+  const [page, mine, bannerAds] = await Promise.all([
     getListings(before, { category: validCategory }),
     viewer ? getMyListings() : Promise.resolve([]),
+    getActiveSponsoredAds("marketplace_banner", 1),
   ]);
 
   const allIds = [...mine.map((l) => l.id), ...page.listings.map((l) => l.id)];
@@ -82,6 +85,12 @@ export default async function MarketplacePage({
         <p className="mt-1 text-sm text-muted-foreground">
           Buying and selling between neighbours across Igbo-Eze North.
         </p>
+
+        {bannerAds.length > 0 && (
+          <div className="mt-6">
+            <MarketplaceBannerAd ad={bannerAds[0]} />
+          </div>
+        )}
 
         <div className="mt-6 flex flex-wrap gap-1.5">
           <Link

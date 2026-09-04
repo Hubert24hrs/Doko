@@ -487,3 +487,14 @@ The **Community Pulse** section provides a living visual representation of Ezike
 * **Duplicate Prevention:** Groups by `user_id` so every member appears **at most once** regardless of activity count.
 * **Strict Verification Guard:** Filters exclusively for verified, non-suspended profiles (`is_verified = true`). Unverified members never appear.
 * **Post Interaction Modal (`PulsePostModal`):** Tapping an avatar node retrieves the member's latest post, rendering their content, media, reactions count, and comment thread.
+
+## Advertising & Local Business Promotion Engine Architecture
+
+### Commercial Ecosystem & Promotion Placements
+
+To support local commerce and empower Igbo-Eze North vendors, artisans, and community organizations:
+* **`ad_campaigns` Schema:** Stores campaign title, description, target URL (e.g. WhatsApp/Website), placement type (`feed_sponsored`, `marketplace_banner`, `community_sidebar`), budget, and duration.
+* **Moderation Workflow:** All member-submitted ad campaigns default to `status = 'pending'`, requiring staff/admin approval via `/admin/ads` before going live.
+* **Feed & Marketplace Integration:** `SponsoredFeedCard` renders promoted local business cards in `/feed`; `MarketplaceBannerAd` renders featured merchant banners in `/marketplace`.
+* **Analytics Counters:** Security definer functions `increment_ad_impressions` and `increment_ad_clicks` record campaign metrics without requiring broad UPDATE privileges.
+

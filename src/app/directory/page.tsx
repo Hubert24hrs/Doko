@@ -72,26 +72,13 @@ export default async function DirectoryPage({
       </header>
 
       <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
-        {/* Nano Banana Directory Header Banner */}
-        <div className="relative mb-6 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-          <div className="relative h-44 w-full sm:h-52">
-            <img
-              src="/images/directory-banner.jpg"
-              alt="Igbo Eze North Verified Citizens Directory"
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-          </div>
-          <div className="relative -mt-14 px-6 pb-6">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Citizens & Professional Grid
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Find verified people across Igbo Eze North by name, trade, or community.
-              {viewer ? null : " Sign in to connect with neighbours who share your village."}
-            </p>
-          </div>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Directory
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Find people across Igbo Eze North by name, trade or community.
+          {viewer ? null : " Sign in to see neighbours who share your community."}
+        </p>
 
         {/* A GET form, so a search is a URL somebody can bookmark or share and
             the back button behaves. No client JavaScript is involved at all. */}

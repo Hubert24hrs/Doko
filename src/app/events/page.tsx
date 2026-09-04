@@ -69,25 +69,13 @@ export default async function EventsPage({
       </header>
 
       <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
-        {/* Nano Banana Events Header Banner */}
-        <div className="relative mb-6 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-          <div className="relative h-44 w-full sm:h-52">
-            <img
-              src="/images/events-banner.jpg"
-              alt="Igbo Eze North Cultural Events & Summits"
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-          </div>
-          <div className="relative -mt-14 px-6 pb-6">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Community Events & Cultural Summits
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Festivals, funerals, town hall meetings, and traditional market days across Igbo Eze North. All times in West Africa Time.
-            </p>
-          </div>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Events
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Festivals, funerals, meetings and market days across Igbo Eze North.
+          All times are West Africa Time.
+        </p>
 
         <nav aria-label="Event view" className="mt-6 flex gap-1 border-b border-border">
           <Link

@@ -70,35 +70,22 @@ export default async function HomePage({
 
         {!profile?.is_verified ? <GetVerifiedPrompt variant="card" isVerified={Boolean(profile?.is_verified)} className="mb-6" /> : null}
 
-        {/* Nano Banana African Hero Header Card */}
-        <div className="relative mb-8 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-          <div className="relative h-48 w-full sm:h-64">
-            <img
-              src="/images/hero-banner.jpg"
-              alt="Igbo Eze North Civic Tech & Cultural Heritage Hub"
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-          </div>
-          <div className="relative -mt-16 px-6 pb-6 sm:px-8">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                    Nnọọ, {displayName}!
-                  </h1>
-                  {profile?.is_verified ? <VerifiedBadge type={profile.verification_type} showLabel /> : null}
-                  {profile?.username ? (
-                    <Link href={`/members/${profile.username}`} className="rounded-full">
-                      <Badge variant="neutral">@{profile.username}</Badge>
-                    </Link>
-                  ) : null}
-                </div>
-                <p className="mt-1.5 text-sm text-muted-foreground">
-                  Welcome to your Igbo Eze North civic hub — connecting citizens, traditional leaders, and the global diaspora.
-                </p>
-              </div>
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card p-6 shadow-xs">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                Nnọọ, {displayName}!
+              </h1>
+              {profile?.is_verified ? <VerifiedBadge type={profile.verification_type} showLabel /> : null}
+              {profile?.username ? (
+                <Link href={`/members/${profile.username}`} className="rounded-full">
+                  <Badge variant="neutral">@{profile.username}</Badge>
+                </Link>
+              ) : null}
             </div>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Welcome to your Igbo Eze North civic hub — connecting citizens, traditional leaders, and the global diaspora.
+            </p>
           </div>
         </div>
 

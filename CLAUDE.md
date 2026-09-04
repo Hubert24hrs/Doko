@@ -162,11 +162,15 @@ is listed under "Not yet done" and is honest about being open.
 * **Deployed to production and verified on the live URL**: public routes serve,
   protected routes redirect, real community data renders, canonical URLs and
   the sitemap carry the production host, and no secret appears in the HTML.
-* **Phase 5 (Advertising Engine, Golden/Blue Verification, African Nano Banana UI Redesign)**:
-  - Created migration `20260904000025_advertising.sql` (`ad_campaigns` table, RLS, impression/click counters).
+* **Phase 5 Complete (Verification, Advertising Engine, Community Pulse, Issues Map & Unified Notifications)**:
+  - Created migrations 021-025 (`community_issues`, `notifications`, `verification_tiers_and_delegation`, `community_pulse`, `advertising`).
   - Two-tier community verification: **Golden Verification** (officials, Igwes, elders, patrons) and **Blue Verification** (citizens, artisans, active members) with golden and blue ticker badges across posts, comments, profiles.
-  - Redesigned UI with African warmth, royal Igbo heritage assets, studio Nano Banana Pro generated banners (`hero-banner.jpg`, `verification-banner.jpg`, `marketplace-banner.jpg`, `events-banner.jpg`, `directory-banner.jpg`).
-  - Removed hyphens from all visible display text across all pages and components.
+  - Admin Delegation system allowing admin to delegate verification approval duties.
+  - Interactive "Get Verified" prompt card on home dashboard.
+  - Advertising Engine: Sponsored Feed Cards, Marketplace Banner Ads, impression/click counter RPCs, and Admin Moderation Queue (`/admin/ads`).
+  - Community Pulse: 3D Fibonacci sphere featuring 24h active verified members.
+  - Interactive Leaflet Map for Igbo Eze North community issue reporting.
+  - Global display text hyphen cleanup across all pages (`Igbo Eze North`, `Enugu Ezike`, `Sign in`).
   - **274 unit tests passing** across 21 test files with 0 TypeScript compilation errors.
 * **Audited 2026-09-01**, 15/15 live routes healthy. Three real defects found
   and fixed, all recorded in docs/SECURITY.md:

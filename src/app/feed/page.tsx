@@ -16,6 +16,8 @@ import { PostComposer, VisibilityHint } from "@/features/posts/components/post-c
 import { PostCard } from "@/features/posts/components/post-card";
 import { MessagesNavLink } from "@/features/messages/components/messages-nav-link";
 import { NotificationsNavLink } from "@/features/notifications/components/notifications-nav-link";
+import { getCommunityPulseMembers } from "@/features/pulse/queries";
+import { CommunityPulse } from "@/features/pulse/components/community-pulse";
 
 export const metadata: Metadata = {
   title: "Feed",
@@ -39,8 +41,9 @@ export default async function FeedPage({
   // silently falling back to everything.
   const followedIds = followingOnly ? await getFollowedIds() : undefined;
 
-  const [villages, page] = await Promise.all([
+  const [villages, pulseMembers, page] = await Promise.all([
     getVillageOptions(),
+      getCommunityPulseMembers(60),
     getFeedPage(before, followedIds),
   ]);
 
@@ -134,6 +137,8 @@ export default async function FeedPage({
           />
           <VisibilityHint />
         </div>
+
+        <CommunityPulse initialMembers={pulseMembers} className="mt-6" />
 
         <GetVerifiedPrompt variant="banner" isVerified={Boolean(user?.profile?.is_verified)} className="mt-6" />
 

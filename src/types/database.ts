@@ -176,6 +176,17 @@ export type VerificationDelegateRow = {
   notes: string | null;
 };
 
+export type CommunityPulseItem = {
+  user_id: string;
+  username: string;
+  full_name: string;
+  avatar_path: string | null;
+  is_verified: boolean;
+  verification_type: VerificationType | null;
+  last_activity_at: string;
+  latest_post_id: string | null;
+};
+
 export type VerificationRequestRow = {
   id: string;
   user_id: string;
@@ -976,6 +987,10 @@ export interface Database {
       v_autonomous_communities: { Row: GeoEntityRow; Relationships: [] };
     };
     Functions: {
+        get_community_pulse: {
+          Args: { p_limit?: number };
+          Returns: CommunityPulseItem[];
+        };
       geo_ancestors: {
         Args: { entity_id: string };
         Returns: GeoTreeNodeRow[];

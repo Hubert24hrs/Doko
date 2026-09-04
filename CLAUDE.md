@@ -171,7 +171,7 @@ is listed under "Not yet done" and is honest about being open.
      and check the affected rows.
   3. `?next=` was computed by the proxy and discarded by every consumer, so
      sign-in always landed on /home.
-* 262 unit tests passing (19 test files); typecheck clean; lint clean; production build clean
+* 268 unit tests passing (20 test files); typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
   `/login?next=...`, and no secrets appear in the HTML
@@ -640,6 +640,8 @@ If a local database is ever wanted, install Docker Desktop, then
 | Issue coordinates must be strictly paired | a single coordinate puts a marker in the Gulf of Guinea (0,0); a database CHECK enforces both or neither |
 | Community confirmations recount by trigger | confirming an issue is a statement of fact, not speech; withdrawing hard-deletes to keep the priority count accurate |
 | Notifications are private to the recipient | `notifications` has no staff read policy; a member reads only their own alerts, keeping user activity private |
+| Community Pulse 3D sphere | `SphereImageGrid` renders verified members active in last 24h; node badges overlay Gold vs Blue badges; images only (no text inside sphere); clicking opens post detail modal |
+| Community Pulse 24h aggregation | RPC `get_community_pulse(limit)` aggregates activity across posts, comments, reactions for verified non-suspended members; groups by user for 1 entry per member |
 | Two verification tiers: Golden & Blue | office holders, traditional leaders (Igwes, elders, councilors) receive a golden ticker with verification mark; regular citizens and active members receive a blue ticker with verification mark |
 | Verification delegation is admin-only | only super_admin/admin can delegate verification authority via `verification_delegates`; delegated verifiers can grant/revoke badges but cannot suspend users or delete accounts |
 | Verification requests queue | registered members can submit requests from `/verification`; admins and delegates review requests in `/admin/members` |

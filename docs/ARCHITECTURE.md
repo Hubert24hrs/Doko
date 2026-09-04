@@ -471,3 +471,19 @@ To mirror authentic governance and community trust across Igbo-Eze North:
 * **Unverified Prompt (`<GetVerifiedPrompt />`):** Renders banner on `/feed` and card on `/home` for registered unverified members, linking directly to `/verification`.
 * **Verification Portal (`/verification`):** Public/member guide explaining the two tiers with an application form allowing members to apply for their desired tier.
 * **Administrative Review Queue (`/admin/members`):** Dedicated tab for reviewing incoming applications with 1-click "Approve Gold", "Approve Blue", or "Decline" decisions.
+
+## Community Pulse — Active Today Architecture
+
+### 3D Fibonacci Sphere & Verification Badges
+
+The **Community Pulse** section provides a living visual representation of Ezike Oba community engagement:
+* **Interactive 3D Sphere (`SphereImageGrid`):** Placed in `src/components/ui/img-sphere.tsx`. Uses Fibonacci sphere distribution for optimal 3D node placement, momentum drag physics, auto-rotation, and depth scaling.
+* **Pure Image Focus:** Displays **member profile images only**. No text labels, captions, or names clutter the sphere space.
+* **Badge Overlay:** Each node dynamically overlays the member's official **Gold Verification Badge** or **Blue Verification Badge** (`VerifiedBadge`) at the bottom-right corner.
+
+### 24-Hour Rolling Window & Qualifying Activity
+
+* **Security Definer RPC (`get_community_pulse`):** Aggregates activity across `posts` (created_at), `comments` (created_at), and `reactions` (created_at) within `now() - interval '24 hours'`.
+* **Duplicate Prevention:** Groups by `user_id` so every member appears **at most once** regardless of activity count.
+* **Strict Verification Guard:** Filters exclusively for verified, non-suspended profiles (`is_verified = true`). Unverified members never appear.
+* **Post Interaction Modal (`PulsePostModal`):** Tapping an avatar node retrieves the member's latest post, rendering their content, media, reactions count, and comment thread.

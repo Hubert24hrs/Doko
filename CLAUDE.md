@@ -162,8 +162,11 @@ is listed under "Not yet done" and is honest about being open.
 * **Deployed to production and verified on the live URL**: public routes serve,
   protected routes redirect, real community data renders, canonical URLs and
   the sitemap carry the production host, and no secret appears in the HTML.
-* **Phase 5 Complete (Verification, Advertising Engine, Paystack Payments, Community Pulse, Issues Map & Unified Notifications)**:
-  - Created migrations 021-026 (`community_issues`, `notifications`, `verification_tiers_and_delegation`, `community_pulse`, `advertising`, `payments`).
+* **Phase 5 & 6 Progress (Verification, Advertising, Paystack Payments, Oba AI, Community Projects, Realtime Hardening)**:
+  - Created migrations 021-027 (`community_issues`, `notifications`, `verification_tiers_and_delegation`, `community_pulse`, `advertising`, `payments`, `community_projects`).
+  - **Oba AI Assistant & Civic Intelligence Engine**: Cultural knowledge base of 33+ Igbo-Eze North communities, Omabe festival, market days, and dialect glossary; floating `<ObaAiWidget />` across the site and dedicated portal at `/ai`.
+  - **Community Projects & Diaspora Crowdfunding**: `community_projects` ledger and `/projects` directory with progress bars and Paystack contribution checkout (`confirm_project_donation` RPC).
+  - **Realtime Hardening**: WebSocket reconnection indicators (`<RealtimeIndicator />`), incoming message Web Audio API synthetic chimes with user mute toggle.
   - Native Paystack payment gateway integration: `payments` ledger table, RLS, `confirm_ad_payment` RPC, webhook HMAC SHA512 signature verification (`/api/webhooks/paystack`), and payment return page (`/payments/callback`).
   - Direct campaign budget checkout via Paystack modal inside `CreateAdModal` and admin payment status indicators in `/admin/ads`.
   - Two-tier community verification: **Golden Verification** (officials, Igwes, elders, patrons) and **Blue Verification** (citizens, artisans, active members) with golden and blue ticker badges across posts, comments, profiles.
@@ -183,7 +186,7 @@ is listed under "Not yet done" and is honest about being open.
      and check the affected rows.
   3. `?next=` was computed by the proxy and discarded by every consumer, so
      sign-in always landed on /home.
-* 281 unit tests passing (22 test files); typecheck clean; lint clean; production build clean
+* 293 unit tests passing (24 test files); typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
   `/login?next=...`, and no secrets appear in the HTML

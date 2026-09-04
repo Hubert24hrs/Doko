@@ -4,7 +4,8 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useFormStatus } from "react-dom";
-import { Send, Trash2 } from "lucide-react";
+import { Send, Trash2, Volume2, VolumeX } from "lucide-react";
+import { RealtimeIndicator, playNotificationChime } from "@/components/ui/realtime-indicator";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel, FieldTextarea } from "@/components/ui/field";
@@ -111,6 +112,7 @@ export function MessageThread({
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [live, setLive] = useState(false);
+  const [soundMuted, setSoundMuted] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -177,8 +179,10 @@ export function MessageThread({
           table: "messages",
           filter: `conversation_id=eq.${conversationId}`,
         },
-        () => {
-          // Deliberately ignores the payload. See the note above.
+        (payload: any) => {
+          if (payload?.new?.author_id && payload.new.author_id !== viewerId && !soundMuted) {
+            playNotificationChime();
+          }
           router.refresh();
           void markConversationReadAction(conversationId);
         },
@@ -382,9 +386,22 @@ export function MessageThread({
           </Field>
 
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs text-muted-foreground">
-              {live ? "Delivering live" : "Live updates unavailable"}
-            </p>
+            <div className="flex items-center gap-2">
+              <RealtimeIndicator isLive={live} />
+              <button
+                type="button"
+                onClick={() => setSoundMuted((prev) => !prev)}
+                className="rounded-lg p-1 text-muted-foreground hover:bg-surface-sunken hover:text-foreground transition-colors"
+                title={soundMuted ? "Unmute message chime" : "Mute message chime"}
+              >
+                {soundMuted ? (
+                  <VolumeX className="size-3.5 text-muted-foreground" />
+                ) : (
+                  <Volume2 className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+                )}
+                <span className="sr-only">{soundMuted ? "Unmute audio chime" : "Mute audio chime"}</span>
+              </button>
+            </div>
             <div className="flex items-center gap-3">
               {draft.length > MESSAGE_MAX_LENGTH - 400 ? (
                 <span

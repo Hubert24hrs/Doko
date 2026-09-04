@@ -131,12 +131,23 @@ export async function verifyPaymentAction(reference: string) {
           .from("ad_campaigns")
           .update({ payment_status: "paid", updated_at: new Date().toISOString() })
           .eq("id", pmt.target_id);
+      } else if (pmt?.target_id && pmt.purpose === "donation") {
+        const donationNaira = Math.round(verifyResult.amountKobo / 100);
+        await supabase.rpc("confirm_project_donation", {
+          p_payment_reference: reference,
+          p_project_id: pmt.target_id,
+          p_amount_naira: donationNaira,
+          p_paystack_ref: verifyResult.reference,
+          p_channel: verifyResult.channel,
+          p_paid_at: verifyResult.paidAt,
+        });
       }
     }
 
     revalidatePath("/feed");
     revalidatePath("/marketplace");
     revalidatePath("/admin/ads");
+    revalidatePath("/projects");
 
     return {
       success: true,

@@ -45,9 +45,9 @@ communities, share what matters, find opportunities and build together.
 
 ## What is next
 
-* **Advertising & Payments**: Paystack checkout flow and webhooks implemented for
-  sponsored ad campaigns and community boost
-* **Phase 6 Hardening**: Production performance tuning, edge caching, and automated E2E suites
+* **Oba AI & Civic Intelligence**: Grounded AI assistant for Igbo Eze North culture, dialect, and platform search
+* **Community Projects & Diaspora Crowdfunding**: Crowdfunding portal for local roads, solar lights, and boreholes via Paystack
+* **Phase 6 Hardening**: Realtime WebSockets, Web Audio notification chimes, edge caching, and automated unit suites (293 passing)
 
 ## Quick start
 

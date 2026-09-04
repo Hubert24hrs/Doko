@@ -55,6 +55,16 @@ export async function POST(req: Request) {
           .from("ad_campaigns")
           .update({ payment_status: "paid", updated_at: new Date().toISOString() })
           .eq("id", payment.target_id);
+      } else if (!error && payment?.purpose === "donation" && payment.target_id) {
+        const donationNaira = Math.round((data.amount || 0) / 100);
+        await supabase.rpc("confirm_project_donation", {
+          p_payment_reference: reference,
+          p_project_id: payment.target_id,
+          p_amount_naira: donationNaira,
+          p_paystack_ref: reference,
+          p_channel: data.channel || "card",
+          p_paid_at: data.paid_at || new Date().toISOString(),
+        });
       }
     }
 

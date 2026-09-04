@@ -175,6 +175,36 @@ export type AdStatus = "pending" | "approved" | "rejected" | "active" | "paused"
 export type PaymentStatus = "pending" | "success" | "failed" | "abandoned";
 export type PaymentPurpose = "ad_campaign" | "featured_listing" | "donation";
 
+export type ProjectCategory =
+  | "road"
+  | "water_borehole"
+  | "electricity_solar"
+  | "school_education"
+  | "health_center"
+  | "security"
+  | "culture";
+
+export type ProjectStatus = "pending_review" | "active" | "completed" | "paused" | "rejected";
+
+export type CommunityProjectRow = {
+  id: string;
+  creator_id: string;
+  title: string;
+  description: string;
+  category: ProjectCategory;
+  target_village_id: string | null;
+  target_amount_naira: number;
+  raised_amount_naira: number;
+  donors_count: number;
+  status: ProjectStatus;
+  image_url: string | null;
+  rejection_reason: string | null;
+  starts_at: string;
+  ends_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type PaymentRow = {
   id: string;
   user_id: string;
@@ -1097,6 +1127,26 @@ export interface Database {
         Update: Partial<PaymentRow>;
         Relationships: [];
       };
+      community_projects: {
+        Row: CommunityProjectRow;
+        Insert: Insertable<
+          CommunityProjectRow,
+          | "id"
+          | "category"
+          | "target_village_id"
+          | "raised_amount_naira"
+          | "donors_count"
+          | "status"
+          | "image_url"
+          | "rejection_reason"
+          | "starts_at"
+          | "ends_at"
+          | "created_at"
+          | "updated_at"
+        >;
+        Update: Partial<CommunityProjectRow>;
+        Relationships: [];
+      };
     };
     Views: {
       v_towns: { Row: GeoEntityRow; Relationships: [] };
@@ -1120,6 +1170,17 @@ export interface Database {
       confirm_ad_payment: {
         Args: {
           p_payment_reference: string;
+          p_paystack_ref: string;
+          p_channel: string;
+          p_paid_at: string | null;
+        };
+        Returns: boolean;
+      };
+      confirm_project_donation: {
+        Args: {
+          p_payment_reference: string;
+          p_project_id: string;
+          p_amount_naira: number;
           p_paystack_ref: string;
           p_channel: string;
           p_paid_at: string | null;

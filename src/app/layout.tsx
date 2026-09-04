@@ -1,20 +1,7 @@
-import type { Metadata, Viewport } from "next";
+﻿import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
-
-/**
- * TYPOGRAPHY DECISION (see docs/ARCHITECTURE.md):
- *
- * No `next/font/google`. It downloads font files from Google at build time,
- * which makes every build depend on a third-party CDN being reachable, and
- * ships a request that leaks reader IPs to Google.
- *
- * The font stack in globals.css uses the platform UI font instead. For members
- * on slow Nigerian mobile networks this is the fastest possible option: text
- * paints immediately with zero font bytes and zero layout shift. If a bespoke
- * typeface is wanted later, self-host the .woff2 files under /public and load
- * them with `next/font/local`, which has no network dependency.
- */
+import { ObaAiWidget } from "@/components/ai/oba-ai-widget";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -67,6 +54,7 @@ export default function RootLayout({
           Skip to main content
         </a>
         {children}
+        <ObaAiWidget />
       </body>
     </html>
   );

@@ -1,4 +1,4 @@
-﻿-- Migration 027: Community Projects & Diaspora Crowdfunding Engine
+-- Migration 027: Community Projects & Diaspora Crowdfunding Engine
 -- Enables citizens and diaspora members to collaboratively fund civic infrastructure in Igbo-Eze North.
 
 do $$ begin

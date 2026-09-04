@@ -1,4 +1,4 @@
-﻿-- Migration 026: Paystack Payments & Transactions Ledger
+-- Migration 026: Paystack Payments & Transactions Ledger
 -- Records all platform payments (sponsored ads, featured marketplace listings, community donations).
 
 do $$ begin

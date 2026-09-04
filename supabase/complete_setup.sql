@@ -1,6 +1,6 @@
 -- =============================================================================
 -- Ezike Oba: Consolidated Schema Update (Migrations 023 -> 027)
--- Idempotent and safe to run in the Supabase SQL Editor
+-- Clean ASCII/UTF-8 without Byte Order Marks (BOM)
 -- =============================================================================
 
 
@@ -399,7 +399,7 @@ $$;
 -- START: 20260904000026_payments.sql
 -- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-﻿-- Migration 026: Paystack Payments & Transactions Ledger
+-- Migration 026: Paystack Payments & Transactions Ledger
 -- Records all platform payments (sponsored ads, featured marketplace listings, community donations).
 
 do $$ begin
@@ -510,11 +510,12 @@ begin
 end;
 $$;
 
+
 -- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 -- START: 20260904000027_community_projects.sql
 -- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-﻿-- Migration 027: Community Projects & Diaspora Crowdfunding Engine
+-- Migration 027: Community Projects & Diaspora Crowdfunding Engine
 -- Enables citizens and diaspora members to collaboratively fund civic infrastructure in Igbo-Eze North.
 
 do $$ begin
@@ -633,3 +634,4 @@ begin
   return true;
 end;
 $$;
+

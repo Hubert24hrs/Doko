@@ -171,7 +171,7 @@ is listed under "Not yet done" and is honest about being open.
      and check the affected rows.
   3. `?next=` was computed by the proxy and discarded by every consumer, so
      sign-in always landed on /home.
-* 216 unit tests passing; typecheck clean; lint clean; production build clean
+* 249 unit tests passing (18 test files); typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
   `/login?next=...`, and no secrets appear in the HTML
@@ -219,7 +219,7 @@ Recommended order, and why:
 2. **Exercise a thread on the live site in two browsers.** The database is
    proven; realtime delivery is not, and watching a message arrive without a
    refresh is the only way to find out whether it does.
-3. Phase 4, rest: directory, community issues, map.
+3. Phase 5, rest: advertising & payments (Paystack / Flutterwave), and Phase 6 hardening.
 
 Operational notes that will otherwise be rediscovered painfully:
 
@@ -635,6 +635,12 @@ If a local database is ever wanted, install Docker Desktop, then
 | Neither side of an application may edit the other's half | the guard restores `message` for anybody who is not the applicant and refuses a status change for anybody who is -- except 'withdrawn'. An employer cannot rewrite what somebody said about themselves, and an applicant cannot shortlist themselves |
 | `listing_contacts` is genuinely OPTIONAL, unlike `job_contacts` | a job posting with no way to reach the employer is not a posting; a marketplace listing has a second route jobs did not have when built -- "Message the seller", reusing `open_direct_conversation` as-is |
 | A listing's price CHECK is `price is null or price > 0` | simpler than a job's pay-period rule because a price is a one-time figure, not a recurring one; NULL means "ask" and zero is refused so a free item goes in the title, not a price field pretending to be a number |
+| An issue has no visibility tiers and no groups | a broken borehole or washed-out road is not private information. Issues exist to be seen by as many people as possible, including whoever can fix it |
+| `geo_id` is NOT NULL on issues | everywhere else NULL means "the whole LGA", which is a sensible default for a post and meaningless for a pothole |
+| Issue coordinates must be strictly paired | a single coordinate puts a marker in the Gulf of Guinea (0,0); a database CHECK enforces both or neither |
+| Community confirmations recount by trigger | confirming an issue is a statement of fact, not speech; withdrawing hard-deletes to keep the priority count accurate |
+| Notifications are private to the recipient | `notifications` has no staff read policy; a member reads only their own alerts, keeping user activity private |
+| Verification requires a timestamp | `profiles_verified_check` enforces (is_verified = false and verified_at is null) or (is_verified = true and verified_at is not null) |
 | `listing_media` mirrors `post_media` almost exactly | a marketplace listing without photos is not a listing -- nobody buys a used refrigerator sight unseen -- so the same private-bucket, signed-URL, path-carries-the-owner discipline from migration 010 is reused rather than reinvented |
 | Six photos per listing, not four | a listing is an item somebody may travel for, and a buyer reasonably wants more than one angle; a post is a moment, which needs less |
 | `listings_select_public` was narrowed to `group_id is null` FROM THE START | the third table (after posts, then events and jobs) where this matters; writing it correctly on the first migration rather than needing a second one to fix a leak |

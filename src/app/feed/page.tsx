@@ -14,6 +14,7 @@ import { getFollowedIds } from "@/features/follows/queries";
 import { PostComposer, VisibilityHint } from "@/features/posts/components/post-composer";
 import { PostCard } from "@/features/posts/components/post-card";
 import { MessagesNavLink } from "@/features/messages/components/messages-nav-link";
+import { NotificationsNavLink } from "@/features/notifications/components/notifications-nav-link";
 
 export const metadata: Metadata = {
   title: "Feed",

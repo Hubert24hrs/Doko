@@ -555,6 +555,27 @@ export type IssueMediaRow = {
   created_at: string;
 }
 
+export type NotificationType =
+  | 'issue_confirmed'
+  | 'issue_status'
+  | 'comment'
+  | 'reaction'
+  | 'follow'
+  | 'message'
+  | 'system';
+
+export type NotificationRow = {
+  id: string;
+  user_id: string;
+  actor_id: string | null;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  link: string | null;
+  read_at: string | null;
+  created_at: string;
+};
+
 export type GeoTreeNodeRow = {
   id: string;
   kind: GeoKind;
@@ -792,6 +813,15 @@ export interface Database {
           "id" | "width" | "height" | "alt_text" | "sort_order" | "created_at"
         >;
         Update: Partial<ListingMediaRow>;
+        Relationships: [];
+      };
+      notifications: {
+        Row: NotificationRow;
+        Insert: Insertable<
+          NotificationRow,
+          'id' | 'actor_id' | 'body' | 'link' | 'read_at' | 'created_at'
+        >;
+        Update: Partial<NotificationRow>;
         Relationships: [];
       };
       community_issues: {

@@ -8,6 +8,7 @@ import {
   MessageSquareText,
   UsersRound,
   AlertTriangle,
+  Bell,
 } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -150,6 +151,26 @@ export default async function HomePage({
           </Card>
 
                     <Card>
+            <CardHeader>
+              <div className="mb-1 text-primary">
+                <Bell className="size-5" aria-hidden="true" />
+              </div>
+              <CardTitle as="h2">Notifications</CardTitle>
+              <CardDescription>
+                Alerts on issue confirmations, status changes, and community activity.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link
+                href="/notifications"
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                View your alerts
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader>
               <div className="mb-1 text-primary">
                 <AlertTriangle className="size-5" aria-hidden="true" />

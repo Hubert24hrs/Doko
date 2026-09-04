@@ -6,9 +6,9 @@ communities, share what matters, find opportunities and build together.
 
 **Live: <https://doko-delta.vercel.app>**
 
-> **Status: Phase 1 complete, Phase 2 in progress.** Deployed and running
-> against a hosted Supabase project. 112 database assertions and 79 unit tests
-> pass; typecheck, lint and the production build are clean.
+> **Status: Phases 1 through 5 complete.** Deployed and running
+> against a hosted Supabase project. 249 unit tests (18 test files) pass;
+> typecheck, lint and the production build are clean.
 >
 > **Before sharing the link publicly:** registration currently verifies
 > nothing — email confirmation is off and no identity provider is enabled, so
@@ -22,27 +22,32 @@ communities, share what matters, find opportunities and build together.
 * Public landing page and a communities directory covering the real
   Igbo-Eze North hierarchy — 2 towns, 4 districts, 31 villages, 20 council
   wards, seeded from cited sources and editable by administrators
-* Registration and sign-in, validated on both client and server, with a
-  password reveal toggle and a welcome flow
-* Profile settings, including optional village and profile visibility
-* A community feed: posts scoped to a village, a town or the whole LGA, with
-  public or community-only visibility
-* Replies and four reactions — like, celebrate, support, sad — chosen for a
-  community where funerals and festivals both matter
-* Public post pages with real metadata, a sitemap and robots rules
-* Role-based access control enforced in the database, not the UI
-* An admin console with a live platform overview and the community directory
-* A design system with light/dark themes, accessible primitives, and
-  reduced-motion support
+* Registration, sign-in, and profile settings with village affiliation and
+  privacy controls
+* Community feed: posts scoped to a village, a town or the whole LGA, with
+  public, community-only, or followers-only visibility
+* Replies, threaded discussions, and four culturally resonant reactions
+* Multi-image uploads on posts with signed URLs and private storage policies
+* Member profiles, follower relationships, and filtered following feeds
+* Community groups (public and private) with membership controls
+* Direct messaging, group chats, presence, and typing indicators
+* Community events & calendar with WAT timezone alignment
+* Local job board & applications with applicant privacy guards
+* Community marketplace with multi-image listings and seller messaging
+* **Community Issues Board & Geolocation Map**: Civic infrastructure reporting
+  across 33+ villages, status lifecycle, citizen confirmations, and Leaflet map
+* **Trust & Verification Consoles**: Administrative member verification,
+  suspension controls, and append-only audit trail logging
+* **Unified In-App Notifications**: Real-time alerts for issue confirmations,
+  status updates, unread badges, and bulk mark-all-read
+* Role-based access control enforced in PostgreSQL RLS, not client code
+* Modern, accessible design system with dark/light themes and reduced motion
 
-## What does not work yet
+## What is next
 
-* **Biometric sign-in (passkeys).** Built, enrolment succeeds, sign-in
-  unconfirmed. Recorded honestly rather than described as working.
-* Google and Apple sign-in are switched off — Google needs credentials,
-  Apple needs paid Developer Program membership.
-* Media on posts, following, groups, messaging, events, jobs, marketplace,
-  community issues, the map, and the AI layer.
+* **Advertising & Payments**: Paystack and Flutterwave checkout flows for
+  sponsored listings and community fundraising
+* **Phase 6 Hardening**: Production performance tuning, edge caching, and automated E2E suites
 
 ## Quick start
 

@@ -389,3 +389,60 @@ per-message receipts table: one row per person per conversation answers the
 question just as well and does not grow with the conversation. Sending a
 message advances the sender's own marker, or everyone would carry an unread
 count that included their own messages.
+
+
+## Phase 4, Slice 4: Community Issues Board & Interactive Geolocation
+
+### Civic Accountability Model
+
+Community issues represent civic infrastructure and governance reporting across the 33+ villages of Igbo-Eze North. The data model enforces structured reporting:
+
+* **Village Grounding:** Every issue is anchored to a specific `village_id` with mandatory location text and optional GPS coordinates (`latitude`, `longitude`).
+* **Categorisation & Severity:** Categorised into critical civic domains (`road`, `water`, `electricity`, `health`, `school`, `security`, `other`) with priority weighting (`low`, `medium`, `high`, `critical`).
+* **Lifecycle State Machine:** Transitions through strictly controlled statuses:
+  * `reported`: Initial citizen report submitted.
+  * `verified`: Confirmed by community members or village leadership.
+  * `in_progress`: Acknowledged by LGA authorities, community development associations, or diaspora sponsors.
+  * `resolved`: Remediation confirmed and documented.
+  * `dismissed`: Marked duplicate or unfounded with administrative explanation.
+
+### Citizen Confirmation Mechanism
+
+To prevent noise and prioritize urgent civic needs, issues feature a democratic confirmation engine:
+* `issue_confirmations` captures unique member endorsements per issue.
+* A database trigger increments or decrements `confirmations_count` on `community_issues` automatically.
+* Issues with high confirmation counts bubble up in priority sorting.
+
+### Interactive Geolocation & Map Integration
+
+The map is rendered via Leaflet / OpenStreetMap with careful SSR isolation:
+* **Dynamic Import with `ssr: false`:** Avoids `window is not defined` server execution errors during Next.js server-side rendering.
+* **Category Pin Stying:** Bespoke SVG markers dynamically color-coded by issue category.
+* **Village Clustering:** Grouped pins display status pill tags, confirmation counts, and direct links to issue discussion threads.
+
+---
+
+## Phase 5: Trust, Verification, Moderation Consoles & Notifications
+
+### Verified Profile Architecture & Integrity Guardrails
+
+Civic trust hinges on authentic identity. Phase 5 introduces formal member verification and suspension controls:
+* **Check Constraint:** `constraint profiles_verified_check check ((is_verified = false and verified_at is null) or (is_verified = true and verified_at is not null))`.
+  Any mutation to verification status must atomically assign or clear the timestamp.
+* **Verified Badges:** Verified members carry official gold checkmarks across directory searches, author bylines, and issue comments.
+* **Suspension Engine:** Suspended users are restricted from creating posts, submitting issues, or sending messages.
+
+### Administrative Audit Trail
+
+Every administrative intervention is captured in the append-only `admin_audit_logs` table via the security-definer RPC `log_admin_action()`:
+* Records actor (`admin_id`), action type, target entity ID, table name, and metadata snapshot.
+* RLS restricts inspection exclusively to users passing `is_admin()`.
+* The Moderation Console (`/admin/moderation`) renders filterable operational timelines for transparency.
+
+### Unified In-App Notification System
+
+Notifications keep community members informed of civic progress and social interactions:
+* **Notification Table:** `notifications` table indexed by `recipient_id`, `is_read`, and `created_at`.
+* **Database Triggers:** Automated triggers dispatch notifications when an issue is confirmed or its resolution status advances.
+* **Real-time Navigation Indicator:** `<NotificationsNavLink />` queries unread counts and surfaces badges in the main navigation and home dashboard.
+* **Bulk Mark-as-Read:** Server action updates all unread notifications in one query without page reload flicker.

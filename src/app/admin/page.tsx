@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Users, MapPin, ScrollText, ShieldCheck } from "lucide-react";
+import { Users, MapPin, ScrollText, ShieldCheck, AlertTriangle } from "lucide-react";
 
 import {
   Card,
@@ -22,8 +22,6 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  // Usability gate only. Every figure below is additionally protected by RLS,
-  // so a non-staff user who reached this page would simply see nothing.
   const user = await requireStaff();
   const overview = await getAdminOverview();
 
@@ -59,7 +57,7 @@ export default async function AdminPage() {
           Live figures from the database.
         </p>
 
-        <dl className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <dl className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard
             label="Members"
             value={overview.memberCount}
@@ -76,11 +74,91 @@ export default async function AdminPage() {
             icon={<ShieldCheck className="size-5" aria-hidden="true" />}
           />
           <StatCard
+            label="Reported issues"
+            value={overview.issueCount}
+            icon={<AlertTriangle className="size-5" aria-hidden="true" />}
+          />
+          <StatCard
             label="Audit entries"
             value={overview.auditCount}
             icon={<ScrollText className="size-5" aria-hidden="true" />}
           />
         </dl>
+
+        <section className="mt-10">
+          <h2 className="mb-4 text-lg font-semibold tracking-tight text-foreground">
+            Administration Modules
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader>
+                <CardTitle as="h3">Communities</CardTitle>
+                <CardDescription>
+                  Create, rename, move, merge and archive towns, districts and villages.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link
+                  href="/admin/communities"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  Manage directory &rarr;
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle as="h3">Members &amp; Badges</CardTitle>
+                <CardDescription>
+                  Review registered citizens, manage verified trust badges, and handle suspensions.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link
+                  href="/admin/members"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  Manage members &rarr;
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle as="h3">LGA Issues Ops</CardTitle>
+                <CardDescription>
+                  Administrative oversight of all community infrastructure reports and statuses.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link
+                  href="/admin/issues"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  Track issues &rarr;
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle as="h3">Moderation &amp; Audit</CardTitle>
+                <CardDescription>
+                  Review system audit trail, administrative actions, and moderation records.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link
+                  href="/admin/moderation"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  View audit trail &rarr;
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
 
         <section className="mt-10">
           <h2 className="mb-4 text-lg font-semibold tracking-tight text-foreground">
@@ -134,41 +212,6 @@ export default async function AdminPage() {
               </div>
             </Card>
           )}
-        </section>
-
-        <section className="mt-10">
-          <h2 className="mb-4 text-lg font-semibold tracking-tight text-foreground">
-            Management
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle as="h3">Communities</CardTitle>
-                <CardDescription>
-                  Create, rename, move, merge and archive towns, districts and
-                  villages.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Link
-                  href="/admin/communities"
-                  className="text-sm font-medium text-primary hover:underline"
-                >
-                  Manage the directory
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="border-dashed">
-              <CardHeader>
-                <CardTitle as="h3">Members, moderation and verification</CardTitle>
-                <CardDescription>
-                  These consoles arrive with the social and trust phases. Roles
-                  and permissions are already enforced in the database.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
         </section>
       </main>
     </>

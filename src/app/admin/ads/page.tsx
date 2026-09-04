@@ -83,17 +83,28 @@ export default async function AdminAdsPage() {
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
                   <div>
-                    <span
-                      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider mb-1 ${
-                        ad.status === "active"
-                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                          : ad.status === "pending"
-                          ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                          : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400"
-                      }`}
-                    >
-                      {ad.status}
-                    </span>
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span
+                        className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${
+                          ad.status === "active"
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                            : ad.status === "pending"
+                            ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                            : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400"
+                        }`}
+                      >
+                        {ad.status}
+                      </span>
+                      {ad.payment_status === "paid" ? (
+                        <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                          Paid: ₦{Number(ad.budget_naira || 0).toLocaleString()}
+                        </span>
+                      ) : (
+                        <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                          Unpaid Budget: ₦{Number(ad.budget_naira || 0).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
                     <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">{ad.title}</h3>
                     <p className="text-xs text-zinc-500">By {ad.advertiser_name} • Placement: {ad.placement}</p>
                   </div>

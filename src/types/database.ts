@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Database types for the Ezike Oba schema.
  *
  * Hand-maintained to match supabase/migrations. Once a Supabase project is
@@ -172,6 +172,26 @@ export type VerificationType = "blue" | "gold";
 export type AdPlacement = "feed_sponsored" | "marketplace_banner" | "community_sidebar";
 export type AdStatus = "pending" | "approved" | "rejected" | "active" | "paused" | "completed";
 
+export type PaymentStatus = "pending" | "success" | "failed" | "abandoned";
+export type PaymentPurpose = "ad_campaign" | "featured_listing" | "donation";
+
+export type PaymentRow = {
+  id: string;
+  user_id: string;
+  reference: string;
+  amount_kobo: number;
+  currency: string;
+  status: PaymentStatus;
+  purpose: PaymentPurpose;
+  target_id: string | null;
+  paystack_reference: string | null;
+  channel: string | null;
+  paid_at: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type AdCampaignRow = {
   id: string;
   advertiser_id: string;
@@ -181,6 +201,7 @@ export type AdCampaignRow = {
   image_url: string | null;
   placement: AdPlacement;
   status: AdStatus;
+  payment_status: "unpaid" | "paid" | "refunded";
   target_village_id: string | null;
   budget_naira: number;
   impressions_count: number;
@@ -1049,12 +1070,31 @@ export interface Database {
           | "impressions_count"
           | "clicks_count"
           | "rejection_reason"
+          | "payment_status"
           | "starts_at"
           | "ends_at"
           | "created_at"
           | "updated_at"
         >;
         Update: Partial<AdCampaignRow>;
+        Relationships: [];
+      };
+      payments: {
+        Row: PaymentRow;
+        Insert: Insertable<
+          PaymentRow,
+          | "id"
+          | "currency"
+          | "status"
+          | "target_id"
+          | "paystack_reference"
+          | "channel"
+          | "paid_at"
+          | "metadata"
+          | "created_at"
+          | "updated_at"
+        >;
+        Update: Partial<PaymentRow>;
         Relationships: [];
       };
     };
@@ -1076,6 +1116,15 @@ export interface Database {
       increment_ad_clicks: {
         Args: { p_ad_id: string };
         Returns: void;
+      };
+      confirm_ad_payment: {
+        Args: {
+          p_payment_reference: string;
+          p_paystack_ref: string;
+          p_channel: string;
+          p_paid_at: string | null;
+        };
+        Returns: boolean;
       };
       get_community_pulse: {
         Args: { p_limit?: number };

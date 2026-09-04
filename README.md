@@ -45,8 +45,8 @@ communities, share what matters, find opportunities and build together.
 
 ## What is next
 
-* **Advertising & Payments**: Paystack and Flutterwave checkout flows for
-  sponsored listings and community fundraising
+* **Advertising & Payments**: Paystack checkout flow and webhooks implemented for
+  sponsored ad campaigns and community boost
 * **Phase 6 Hardening**: Production performance tuning, edge caching, and automated E2E suites
 
 ## Quick start

@@ -162,8 +162,10 @@ is listed under "Not yet done" and is honest about being open.
 * **Deployed to production and verified on the live URL**: public routes serve,
   protected routes redirect, real community data renders, canonical URLs and
   the sitemap carry the production host, and no secret appears in the HTML.
-* **Phase 5 Complete (Verification, Advertising Engine, Community Pulse, Issues Map & Unified Notifications)**:
-  - Created migrations 021-025 (`community_issues`, `notifications`, `verification_tiers_and_delegation`, `community_pulse`, `advertising`).
+* **Phase 5 Complete (Verification, Advertising Engine, Paystack Payments, Community Pulse, Issues Map & Unified Notifications)**:
+  - Created migrations 021-026 (`community_issues`, `notifications`, `verification_tiers_and_delegation`, `community_pulse`, `advertising`, `payments`).
+  - Native Paystack payment gateway integration: `payments` ledger table, RLS, `confirm_ad_payment` RPC, webhook HMAC SHA512 signature verification (`/api/webhooks/paystack`), and payment return page (`/payments/callback`).
+  - Direct campaign budget checkout via Paystack modal inside `CreateAdModal` and admin payment status indicators in `/admin/ads`.
   - Two-tier community verification: **Golden Verification** (officials, Igwes, elders, patrons) and **Blue Verification** (citizens, artisans, active members) with golden and blue ticker badges across posts, comments, profiles.
   - Admin Delegation system allowing admin to delegate verification approval duties.
   - Interactive "Get Verified" prompt card on home dashboard.
@@ -181,7 +183,7 @@ is listed under "Not yet done" and is honest about being open.
      and check the affected rows.
   3. `?next=` was computed by the proxy and discarded by every consumer, so
      sign-in always landed on /home.
-* 274 unit tests passing (21 test files); typecheck clean; lint clean; production build clean
+* 281 unit tests passing (22 test files); typecheck clean; lint clean; production build clean
 * Verified by smoke test: every route responds correctly with **no database
   configured** -- public pages render, protected routes 307 to
   `/login?next=...`, and no secrets appear in the HTML

@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useTransition } from "react";
-import { Megaphone, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Megaphone, X, CheckCircle, AlertCircle, Loader2, CreditCard } from "lucide-react";
 import { createAdCampaignAction } from "../actions";
+import { initializeAdPaymentAction } from "@/features/payments/actions";
 
 interface CreateAdModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ export function CreateAdModal({ isOpen, onClose }: CreateAdModalProps) {
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [payWithPaystack, setPayWithPaystack] = useState(true);
 
   if (!isOpen) return null;
 
@@ -22,16 +24,28 @@ export function CreateAdModal({ isOpen, onClose }: CreateAdModalProps) {
     setSuccessMsg(null);
 
     const formData = new FormData(e.currentTarget);
+    const budget = Number(formData.get("budget_naira")) || 5000;
+
     startTransition(async () => {
       const res = await createAdCampaignAction(null, formData);
       if (!res.success) {
         setErrorMsg(res.error || "Failed to submit advertisement campaign.");
-      } else {
-        setSuccessMsg(res.message || "Campaign submitted successfully!");
-        setTimeout(() => {
-          onClose();
-        }, 2000);
+        return;
       }
+
+      if (payWithPaystack && res.adId && budget > 0) {
+        setSuccessMsg("Campaign created! Initializing secure Paystack checkout...");
+        const pmt = await initializeAdPaymentAction(res.adId, budget);
+        if (pmt.success && pmt.authorization_url) {
+          window.location.href = pmt.authorization_url;
+          return;
+        }
+      }
+
+      setSuccessMsg(res.message || "Campaign submitted successfully!");
+      setTimeout(() => {
+        onClose();
+      }, 2000);
     });
   };
 
@@ -119,19 +133,35 @@ export function CreateAdModal({ isOpen, onClose }: CreateAdModalProps) {
             </div>
           </div>
 
+          <div>
+            <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              Ad Placement
+            </label>
+            <select
+              name="placement"
+              defaultValue="feed_sponsored"
+              className="w-full rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 py-2 text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-emerald-600"
+            >
+              <option value="feed_sponsored">Community Feed Sponsored Card</option>
+              <option value="marketplace_banner">Marketplace Top Banner</option>
+            </select>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                Ad Placement
+                Campaign Budget (₦) *
               </label>
-              <select
-                name="placement"
-                defaultValue="feed_sponsored"
+              <input
+                name="budget_naira"
+                type="number"
+                min={100}
+                step={500}
+                defaultValue={5000}
+                required
                 className="w-full rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 py-2 text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-emerald-600"
-              >
-                <option value="feed_sponsored">Community Feed Sponsored Card</option>
-                <option value="marketplace_banner">Marketplace Top Banner</option>
-              </select>
+              />
+              <span className="text-[11px] text-zinc-500 mt-0.5 block">Recommended: ₦5,000 - ₦25,000</span>
             </div>
 
             <div>
@@ -149,6 +179,24 @@ export function CreateAdModal({ isOpen, onClose }: CreateAdModalProps) {
             </div>
           </div>
 
+          <div className="rounded-xl p-3.5 bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-start gap-3">
+            <input
+              type="checkbox"
+              id="payWithPaystack"
+              checked={payWithPaystack}
+              onChange={(e) => setPayWithPaystack(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded text-emerald-600 focus:ring-emerald-500 border-zinc-300"
+            />
+            <label htmlFor="payWithPaystack" className="text-xs cursor-pointer">
+              <span className="font-semibold text-emerald-950 dark:text-emerald-200 block">
+                Fund Campaign Budget via Paystack (Card, Transfer, USSD)
+              </span>
+              <span className="text-zinc-600 dark:text-zinc-400 block mt-0.5">
+                Fund your campaign budget securely now to expedite administrative approval and instant activation.
+              </span>
+            </label>
+          </div>
+
           <div className="pt-2 flex justify-end gap-3">
             <button
               type="button"
@@ -162,8 +210,19 @@ export function CreateAdModal({ isOpen, onClose }: CreateAdModalProps) {
               disabled={isPending}
               className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50"
             >
-              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              <span>Submit Ad Campaign</span>
+              {isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Processing...</span>
+                </>
+              ) : payWithPaystack ? (
+                <>
+                  <CreditCard className="h-4 w-4" />
+                  <span>Proceed to Paystack</span>
+                </>
+              ) : (
+                <span>Submit Ad Campaign</span>
+              )}
             </button>
           </div>
         </form>

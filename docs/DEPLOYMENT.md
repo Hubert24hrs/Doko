@@ -37,6 +37,9 @@ and Development.
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `sb_publishable_…` | Public by design; RLS constrains it |
 | `NEXT_PUBLIC_SITE_URL` | your production URL | See the note below |
 | `NEXT_PUBLIC_OAUTH_PROVIDERS` | empty, or `google` | Empty renders no provider buttons |
+| `PAYSTACK_SECRET_KEY` | `sk_live_...` or `sk_test_...` | Secret: Paystack transactions |
+| `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | `pk_live_...` or `pk_test_...` | Public: Paystack checkout modal |
+| `GEMINI_API_KEY` | Gemini API Key | Secret: dynamic Oba AI intelligence |
 
 `SUPABASE_SERVICE_ROLE_KEY` is **not required** and should be left unset.
 Nothing in the codebase needs it. Add it only if a future privileged task

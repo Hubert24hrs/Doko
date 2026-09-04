@@ -43,11 +43,26 @@ communities, share what matters, find opportunities and build together.
 * Role-based access control enforced in PostgreSQL RLS, not client code
 * Modern, accessible design system with dark/light themes and reduced motion
 
-## What is next
+## What exists today (cont.)
 
-* **Oba AI & Civic Intelligence**: Grounded AI assistant for Igbo Eze North culture, dialect, and platform search
-* **Community Projects & Diaspora Crowdfunding**: Crowdfunding portal for local roads, solar lights, and boreholes via Paystack
-* **Phase 6 Hardening**: Realtime WebSockets, Web Audio notification chimes, edge caching, and automated unit suites (293 passing)
+* **Oba AI Assistant & Civic Intelligence Engine**: Dedicated /ai console and floating
+  assistant widget grounded in 33+ autonomous communities, traditional institutions
+  (Onyishi, Igwe, Umuada), Omabe masquerade festival, market days, and dialect glossary
+* **Community Projects & Diaspora Crowdfunding**: Crowdfunding directory (/projects)
+  for local infrastructure with progress bars and Paystack checkout
+* **Advertising & Promotion Engine**: Sponsored Feed Cards, Marketplace Banners,
+  impression/click counters, and admin moderation queue (/admin/ads)
+* **Dual-Tier Verification System**: Golden badges (traditional leaders, elders) and
+  Blue badges (citizens, artisans) with admin delegation controls
+* **Realtime Chat & Audio Hardening**: Web Audio API harmonic notification chimes,
+  live WebSocket status indicator, and mute toggle
+
+## Operational Launch Tasks
+
+1. **Google OAuth & Verification**: Enable Google Sign-In or turn on email confirmation in Supabase
+2. **Production Paystack Keys**: Add `PAYSTACK_SECRET_KEY` and `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` in Vercel
+3. **Gemini AI API Key**: Add `GEMINI_API_KEY` in Vercel to unlock dynamic LLM reasoning for Oba AI
+4. **Supabase Auth URL Configuration**: Confirm `https://doko-delta.vercel.app/auth/callback` is in Redirect URLs
 
 ## Quick start
 

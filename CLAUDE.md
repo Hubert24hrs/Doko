@@ -191,50 +191,42 @@ is listed under "Not yet done" and is honest about being open.
   configured** -- public pages render, protected routes 307 to
   `/login?next=...`, and no secrets appear in the HTML
 
-### Not yet done
+### Not yet done (External Configurations & Launch Tasks)
 
 * **Biometric sign-in (passkeys) is built but PARKED, not working.** Enrolment
-  succeeds; sign-in has not been confirmed. auth-js ships security-key
-  defaults (`hints: ['security-key']`, `cross-platform`,
-  `residentKey: 'discouraged'`), so the first attempt produced a USB-key
-  prompt and a non-discoverable credential. `passkey-ceremony.ts` drives the
-  ceremony by hand to ask for the platform authenticator instead, but that fix
-  has not been verified on a real device. Do not describe biometrics as
-  working. See docs/SECURITY.md.
-* **Identity providers are switched off.** Google needs credentials; Apple
-  needs paid Developer Program membership. Both are one env var away.
-* **Registration verifies nothing.** Email confirmation is off and no provider
-  is enabled, so a member can register with an address they do not control.
-  Acceptable while the audience is known personally; NOT acceptable once the
-  URL is shared. Resolve before public launch -- see docs/DEPLOYMENT.md section 6.
-* **Realtime delivery is unverified.** The subscription is written and the
-  publication line is in migration 015, but nothing has been observed arriving
-  live in a second browser. The thread renders correctly either way -- the
-  composer says "Live updates unavailable" when the channel is not subscribed
-  -- so this degrades rather than breaks.
-* Phase 4 directory, issues, map;
-  Phase 5 verification, moderation queue, advertising, payments; Phase 6
-  hardening
-* The entire AI intelligence layer (Oba AI, RAG, semantic search, moderation,
-  translation). **Note:** the AI brief assumes an existing platform to
-  integrate into. That platform is what is being built now; AI work starts
-  once there is real content to ground answers in. Posts and comments exist
-  now, so the ground is beginning to be there.
-* Mobile apps
+  succeeds; sign-in has not been confirmed on real mobile hardware. See docs/SECURITY.md.
+* **Identity providers (OAuth) are switched off.** The Google OAuth integration is built;
+  it requires creating OAuth credentials in Google Cloud Console, adding them to Supabase,
+  and setting NEXT_PUBLIC_OAUTH_PROVIDERS="google".
+* **Registration verification is optional.** Email confirmation is currently disabled in Supabase,
+  and no OAuth provider is toggled on. Before inviting the public, either enable Google sign-in
+  or turn on "Confirm email" in Supabase Authentication settings (see docs/DEPLOYMENT.md §6).
+* **Live Paystack banking keys.** The Paystack checkout engine currently runs with an automated
+  mock sandbox fallback for zero-config offline testing. Add PAYSTACK_SECRET_KEY and
+  NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY in Vercel to activate real card/bank payments.
+* **Live Gemini API key (optional).** Oba AI currently answers using its grounded cultural knowledge base.
+  Setting GEMINI_API_KEY in Vercel enables dynamic generative AI reasoning.
+* **Native Mobile Apps (Future roadmap).**
 
-### Where to pick up
+### Where to pick up (Operational Launch Checklist)
 
 Recommended order, and why:
 
-1. **Enable Google sign-in.** Closes the registration gap above. The code is
-   built; it needs credentials and one env var. Free, roughly 20 minutes.
-   Until this is done, a member can register with an address they do not
-   control -- which is fine for an audience known personally and not fine
-   once the URL is shared.
-2. **Exercise a thread on the live site in two browsers.** The database is
-   proven; realtime delivery is not, and watching a message arrive without a
-   refresh is the only way to find out whether it does.
-3. Phase 5, rest: advertising & payments (Paystack / Flutterwave), and Phase 6 hardening.
+1. **Enable Google sign-in (or turn on Supabase Email Confirmation).**
+   Closes the registration gap. The code is built; enter client credentials in
+   Supabase Dashboard -> Authentication -> Providers -> Google, and set
+   NEXT_PUBLIC_OAUTH_PROVIDERS="google" in Vercel.
+2. **Verify Supabase Auth URL configuration.**
+   Ensure https://doko-delta.vercel.app is set as Site URL, and
+   https://doko-delta.vercel.app/auth/callback is added to Redirect URLs.
+3. **Add live Paystack keys & configure webhook.**
+   Add PAYSTACK_SECRET_KEY and NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY to Vercel,
+   and configure https://doko-delta.vercel.app/api/webhooks/paystack in Paystack Dashboard.
+4. **Add Gemini API Key in Vercel (Optional).**
+   Set GEMINI_API_KEY to unlock multimodal/generative expansions for Oba AI.
+5. **Real-time thread verification across two browser windows.**
+   Open /messages in two windows or devices to test WebSocket delivery and
+   Web Audio API chimes live.
 
 Operational notes that will otherwise be rediscovered painfully:
 

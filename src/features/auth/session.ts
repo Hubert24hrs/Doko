@@ -99,3 +99,28 @@ export async function requireAdmin(): Promise<SessionUser> {
   }
   return user;
 }
+
+export async function isVerifier(user: SessionUser): Promise<boolean> {
+  if (isAdmin(user) || isStaff(user)) return true;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("verification_delegates")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    return Boolean(data);
+  } catch {
+    return false;
+  }
+}
+
+export async function requireVerifier(): Promise<SessionUser> {
+  const user = await requireUser("/admin/members");
+  const allowed = await isVerifier(user);
+  if (!allowed) {
+    redirect("/home?error=forbidden");
+  }
+  return user;
+}
+

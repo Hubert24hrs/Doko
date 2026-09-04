@@ -11,6 +11,7 @@ export interface DirectoryEntry {
   bio: string | null;
   occupation: string | null;
   is_verified: boolean;
+  verification_type?: "blue" | "gold" | null;
   villageName: string | null;
   townName: string | null;
 }
@@ -84,7 +85,7 @@ export async function searchDirectory(
     let query = supabase
       .from("profiles")
       .select(
-        `id, username, full_name, avatar_path, bio, occupation, is_verified,
+        `id, username, full_name, avatar_path, bio, occupation, is_verified, verification_type,
          village:village_id ( name ), town:town_id ( name )`,
       )
       .is("deleted_at", null)
@@ -125,7 +126,7 @@ export async function searchDirectory(
 
     type Embedded = Pick<
       ProfileRow,
-      "id" | "username" | "full_name" | "avatar_path" | "bio" | "occupation" | "is_verified"
+      "id" | "username" | "full_name" | "avatar_path" | "bio" | "occupation" | "is_verified" | "verification_type"
     > & {
       village: { name: string } | null;
       town: { name: string } | null;
@@ -140,6 +141,7 @@ export async function searchDirectory(
       bio: r.bio,
       occupation: r.occupation,
       is_verified: r.is_verified,
+      verification_type: r.verification_type,
       villageName: r.village?.name ?? null,
       townName: r.town?.name ?? null,
     }));

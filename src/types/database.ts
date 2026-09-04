@@ -167,6 +167,29 @@ export type GeoEntityRow = {
   deleted_at: string | null;
 }
 
+export type VerificationType = "blue" | "gold";
+
+export type VerificationDelegateRow = {
+  user_id: string;
+  delegated_by: string | null;
+  delegated_at: string;
+  notes: string | null;
+};
+
+export type VerificationRequestRow = {
+  id: string;
+  user_id: string;
+  tier: VerificationType;
+  organization: string | null;
+  role_title: string | null;
+  notes: string | null;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  review_notes: string | null;
+};
+
 export type ProfileRow = {
   id: string;
   username: string;
@@ -185,6 +208,7 @@ export type ProfileRow = {
   visibility: ProfileVisibility;
   is_verified: boolean;
   verified_at: string | null;
+  verification_type: VerificationType | null;
   is_suspended: boolean;
   suspended_until: string | null;
   onboarded_at: string | null;
@@ -815,7 +839,22 @@ export interface Database {
         Update: Partial<ListingMediaRow>;
         Relationships: [];
       };
-      notifications: {
+              verification_delegates: {
+          Row: VerificationDelegateRow;
+          Insert: Insertable<VerificationDelegateRow, "delegated_by" | "delegated_at" | "notes">;
+          Update: Partial<VerificationDelegateRow>;
+          Relationships: [];
+        };
+        verification_requests: {
+          Row: VerificationRequestRow;
+          Insert: Insertable<
+            VerificationRequestRow,
+            "id" | "organization" | "role_title" | "notes" | "status" | "created_at" | "reviewed_by" | "reviewed_at" | "review_notes"
+          >;
+          Update: Partial<VerificationRequestRow>;
+          Relationships: [];
+        };
+        notifications: {
         Row: NotificationRow;
         Insert: Insertable<
           NotificationRow,

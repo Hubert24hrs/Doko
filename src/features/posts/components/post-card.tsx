@@ -76,7 +76,7 @@ export function PostCard({
               ) : (
                 <span className="font-medium text-foreground">Former member</span>
               )}
-              {author?.is_verified ? <VerifiedBadge /> : null}
+              {author?.is_verified ? <VerifiedBadge type={author.verification_type} /> : null}
               {author ? (
                 <Link
                   href={`/members/${author.username}`}

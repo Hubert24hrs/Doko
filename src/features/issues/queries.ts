@@ -12,6 +12,7 @@ export interface IssueSummary extends CommunityIssueRow {
     username: string;
     full_name: string;
     is_verified: boolean;
+    verification_type?: "blue" | "gold" | null;
   } | null;
   community: { name: string; slug: string } | null;
 }
@@ -35,7 +36,7 @@ const ISSUE_FIELDS = `
   id, title, description, category, geo_id, location_text, latitude, longitude,
   reporter_id, status, status_note, status_changed_by, status_changed_at,
   resolved_at, confirm_count, created_at, updated_at, edited_at, deleted_at,
-  reporter:reporter_id ( username, full_name, is_verified ),
+  reporter:reporter_id ( username, full_name, is_verified, verification_type ),
   community:geo_id ( name, slug )
 `;
 

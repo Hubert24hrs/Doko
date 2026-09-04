@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import type { AuditLogRow, ProfileRow, CommunityIssueRow } from "@/types/database";
+import type { AuditLogRow, ProfileRow, CommunityIssueRow, VerificationRequestRow } from "@/types/database";
 
 export interface AdminOverview {
   memberCount: number | null;
@@ -18,6 +18,15 @@ export interface AdminOverview {
 export interface AdminMemberItem extends ProfileRow {
   village?: { name: string } | null;
   roles?: { role: string }[];
+  is_delegate?: boolean;
+}
+
+export interface AdminVerificationRequestItem extends VerificationRequestRow {
+  profile?: {
+    username: string;
+    full_name: string;
+    avatar_path: string | null;
+  } | null;
 }
 
 export interface AdminIssueItem extends CommunityIssueRow {
@@ -136,7 +145,21 @@ export async function getAdminMembers(options?: {
       return [];
     }
 
-    return (data ?? []) as unknown as AdminMemberItem[];
+    const members = (data ?? []) as unknown as AdminMemberItem[];
+    if (members.length === 0) return [];
+
+    // Check which members are delegated verifiers
+    const memberIds = members.map((m) => m.id);
+    const { data: delegates } = await supabase
+      .from("verification_delegates")
+      .select("user_id")
+      .in("user_id", memberIds);
+
+    const delegateSet = new Set((delegates ?? []).map((d) => d.user_id));
+    return members.map((m) => ({
+      ...m,
+      is_delegate: delegateSet.has(m.id),
+    }));
   } catch (cause) {
     console.error("[admin.members] unavailable", cause);
     return [];
@@ -197,6 +220,37 @@ export async function getAdminAudits(limit = 50): Promise<AuditLogRow[]> {
     return data ?? [];
   } catch (cause) {
     console.error("[admin.audits] unavailable", cause);
+    return [];
+  }
+}
+
+export async function getAdminVerificationRequests(options?: {
+  status?: "pending" | "approved" | "rejected";
+  limit?: number;
+}): Promise<AdminVerificationRequestItem[]> {
+  try {
+    const supabase = await createClient();
+    const limit = options?.limit ?? 50;
+    const status = options?.status ?? "pending";
+
+    const { data, error } = await supabase
+      .from("verification_requests")
+      .select(`
+        *,
+        profile:user_id ( username, full_name, avatar_path )
+      `)
+      .eq("status", status)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("[admin.verification_requests] failed", error.message);
+      return [];
+    }
+
+    return (data ?? []) as unknown as AdminVerificationRequestItem[];
+  } catch (cause) {
+    console.error("[admin.verification_requests] unavailable", cause);
     return [];
   }
 }

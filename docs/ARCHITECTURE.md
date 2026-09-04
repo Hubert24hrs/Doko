@@ -446,3 +446,28 @@ Notifications keep community members informed of civic progress and social inter
 * **Database Triggers:** Automated triggers dispatch notifications when an issue is confirmed or its resolution status advances.
 * **Real-time Navigation Indicator:** `<NotificationsNavLink />` queries unread counts and surfaces badges in the main navigation and home dashboard.
 * **Bulk Mark-as-Read:** Server action updates all unread notifications in one query without page reload flicker.
+
+## Dual-Tier Verification & Admin Delegation Architecture
+
+### Golden vs Blue Verification Tiers
+
+To mirror authentic governance and community trust across Igbo-Eze North:
+* **Golden Verification (`gold`):**
+  * Target: Traditional rulers (Igwes), cabinet chiefs, elected councilors, LGA officials, town union patrons, and prominent elders.
+  * Visual Display: Golden ticker with verification mark (`VerifiedBadge type="gold"`). Uses amber gold palette (`--eo-gold-500`) with shining gold ring and accessible text.
+* **Blue Verification (`blue`):**
+  * Target: Active community members, resident youths, teachers, artisans, and local traders.
+  * Visual Display: Blue ticker with verification mark (`VerifiedBadge type="blue"`). Uses crisp sky blue with verification checkmark.
+
+### Administrative Authority & Delegation
+
+* **Privileged Guard:** Only platform administrators can delegate verification capability.
+* **Delegation Table (`verification_delegates`):** Records `user_id`, `delegated_by`, and `delegated_at`.
+* **Security Definer Function (`can_verify_members`):** Returns true if caller is admin or listed in `verification_delegates`.
+* **Scoped Guard Trigger:** `profiles_guard_privileged_columns()` allows delegated verifiers to mutate `is_verified` and `verification_type`, while strictly reserving `is_suspended` and `deleted_at` mutations to full admins.
+
+### Member "Get Verified" Flow & Requests Queue
+
+* **Unverified Prompt (`<GetVerifiedPrompt />`):** Renders banner on `/feed` and card on `/home` for registered unverified members, linking directly to `/verification`.
+* **Verification Portal (`/verification`):** Public/member guide explaining the two tiers with an application form allowing members to apply for their desired tier.
+* **Administrative Review Queue (`/admin/members`):** Dedicated tab for reviewing incoming applications with 1-click "Approve Gold", "Approve Blue", or "Decline" decisions.

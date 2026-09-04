@@ -10,6 +10,7 @@ export interface FeedComment extends CommentRow {
     full_name: string;
     avatar_path: string | null;
     is_verified: boolean;
+    verification_type?: "blue" | "gold" | null;
   } | null;
 }
 
@@ -22,7 +23,7 @@ export async function getPostById(postId: string): Promise<FeedPost | null> {
       .select(
         `id, author_id, body, geo_id, visibility, created_at, updated_at,
          edited_at, deleted_at, comment_count, reaction_count,
-         author:author_id ( username, full_name, avatar_path, is_verified ),
+         author:author_id ( username, full_name, avatar_path, is_verified, verification_type ),
          community:geo_id ( name, slug )`,
       )
       .eq("id", postId)
@@ -52,7 +53,7 @@ export async function getComments(postId: string): Promise<FeedComment[]> {
       .select(
         `id, post_id, author_id, body, created_at, updated_at, edited_at,
          deleted_at,
-         author:author_id ( username, full_name, avatar_path, is_verified )`,
+         author:author_id ( username, full_name, avatar_path, is_verified, verification_type )`,
       )
       .eq("post_id", postId)
       .is("deleted_at", null)

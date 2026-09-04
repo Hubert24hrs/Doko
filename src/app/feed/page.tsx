@@ -7,6 +7,7 @@ import { EmptyState, ErrorState } from "@/components/ui/states";
 import { Logo } from "@/components/brand/logo";
 import { requireUser, isStaff } from "@/features/auth/session";
 import { signOutAction } from "@/features/auth/actions";
+import { GetVerifiedPrompt } from "@/components/ui/get-verified-prompt";
 import { getVillageOptions } from "@/features/geo/queries";
 import { getFeedPage } from "@/features/posts/queries";
 import { getPostImages } from "@/features/posts/media-queries";
@@ -82,6 +83,12 @@ export default async function FeedPage({
               Groups
             </Link>
             <Link
+              href="/verification"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken"
+            >
+              Verification
+            </Link>
+            <Link
               href="/issues"
               className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken"
             >
@@ -127,6 +134,8 @@ export default async function FeedPage({
           />
           <VisibilityHint />
         </div>
+
+        <GetVerifiedPrompt variant="banner" isVerified={Boolean(user?.profile?.is_verified)} className="mt-6" />
 
         <nav aria-label="Feed view" className="mt-8 flex gap-1 border-b border-border">
           <Link

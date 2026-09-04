@@ -149,7 +149,7 @@ export default async function DirectoryPage({
                         >
                           {member.full_name}
                         </Link>
-                        {member.is_verified ? <VerifiedBadge /> : null}
+                        {member.is_verified ? <VerifiedBadge type={member.verification_type} /> : null}
                       </div>
                       <p className="text-xs text-muted-foreground">
                         @{member.username}

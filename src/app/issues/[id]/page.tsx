@@ -133,7 +133,7 @@ export default async function IssueDetailPage({
                 >
                   {issue.reporter.full_name}
                 </Link>
-                {issue.reporter.is_verified ? <VerifiedBadge /> : null}
+                {issue.reporter.is_verified ? <VerifiedBadge type={issue.reporter.verification_type} /> : null}
               </div>
             ) : null}
 

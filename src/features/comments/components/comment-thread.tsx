@@ -220,7 +220,7 @@ export function CommentList({
                       Former member
                     </span>
                   )}
-                  {comment.author?.is_verified ? <VerifiedBadge /> : null}
+                  {comment.author?.is_verified ? <VerifiedBadge type={comment.author.verification_type} /> : null}
                   <time
                     dateTime={comment.created_at}
                     title={when.toLocaleString("en-NG")}

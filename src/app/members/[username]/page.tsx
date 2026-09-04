@@ -122,7 +122,7 @@ export default async function MemberPage({
                   <h1 className="text-2xl font-bold tracking-tight text-foreground">
                     {profile.full_name}
                   </h1>
-                  {profile.is_verified ? <VerifiedBadge showLabel /> : null}
+                  {profile.is_verified ? <VerifiedBadge type={profile.verification_type} showLabel /> : null}
                 </div>
                 <p className="mt-0.5 text-sm text-muted-foreground">
                   @{profile.username}

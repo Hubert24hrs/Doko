@@ -13,6 +13,7 @@ import {
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge, VerifiedBadge } from "@/components/ui/badge";
+import { GetVerifiedPrompt } from "@/components/ui/get-verified-prompt";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
 import { requireUser, isStaff } from "@/features/auth/session";
@@ -67,11 +68,13 @@ export default async function HomePage({
       <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
         <AuthNotice error={error} className="mb-6" />
 
+        {!profile?.is_verified ? <GetVerifiedPrompt variant="card" isVerified={Boolean(profile?.is_verified)} className="mb-6" /> : null}
+
         <div className="mb-8 flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Welcome, {displayName}
           </h1>
-          {profile?.is_verified ? <VerifiedBadge showLabel /> : null}
+          {profile?.is_verified ? <VerifiedBadge type={profile.verification_type} showLabel /> : null}
           {profile?.username ? (
             <Link href={`/members/${profile.username}`} className="rounded-full">
               <Badge variant="neutral">@{profile.username}</Badge>

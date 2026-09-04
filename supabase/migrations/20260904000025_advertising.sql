@@ -137,7 +137,7 @@ as $$
     a.ends_at,
     a.created_at,
     p.full_name as advertiser_name,
-    p.avatar_url as advertiser_avatar,
+    p.avatar_path as advertiser_avatar,
     p.is_verified as advertiser_is_verified,
     p.verification_type as advertiser_verification_type
   from public.ad_campaigns a

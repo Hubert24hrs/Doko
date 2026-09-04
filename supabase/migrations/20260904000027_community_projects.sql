@@ -43,6 +43,7 @@ create index if not exists idx_projects_category on public.community_projects(ca
 alter table public.community_projects enable row level security;
 
 -- 3. Policies
+drop policy if exists community_projects_select on public.community_projects;
 create policy community_projects_select on public.community_projects
   for select
   using (
@@ -51,6 +52,7 @@ create policy community_projects_select on public.community_projects
     or public.is_staff()
   );
 
+drop policy if exists community_projects_insert_own on public.community_projects;
 create policy community_projects_insert_own on public.community_projects
   for insert
   with check (
@@ -59,6 +61,7 @@ create policy community_projects_insert_own on public.community_projects
     and public.is_active_member()
   );
 
+drop policy if exists community_projects_update on public.community_projects;
 create policy community_projects_update on public.community_projects
   for update
   using (creator_id = auth.uid() or public.is_staff())

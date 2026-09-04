@@ -27,6 +27,7 @@ alter table public.ad_campaigns enable row level security;
 
 -- 3. RLS Policies
 -- Public/Members can select active approved campaigns within valid date range
+drop policy if exists ad_campaigns_select_active on public.ad_campaigns;
 create policy ad_campaigns_select_active on public.ad_campaigns
   for select
   using (
@@ -36,6 +37,7 @@ create policy ad_campaigns_select_active on public.ad_campaigns
   );
 
 -- Members can create ad campaigns for themselves (starts as pending)
+drop policy if exists ad_campaigns_insert_own on public.ad_campaigns;
 create policy ad_campaigns_insert_own on public.ad_campaigns
   for insert
   with check (
@@ -45,12 +47,14 @@ create policy ad_campaigns_insert_own on public.ad_campaigns
   );
 
 -- Advertisers can update non-status fields or pause active ads; staff can update anything
+drop policy if exists ad_campaigns_update on public.ad_campaigns;
 create policy ad_campaigns_update on public.ad_campaigns
   for update
   using (advertiser_id = auth.uid() or public.is_staff())
   with check (advertiser_id = auth.uid() or public.is_staff());
 
 -- Staff or owner can delete campaigns
+drop policy if exists ad_campaigns_delete on public.ad_campaigns;
 create policy ad_campaigns_delete on public.ad_campaigns
   for delete
   using (advertiser_id = auth.uid() or public.is_staff());

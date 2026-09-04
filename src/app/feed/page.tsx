@@ -73,10 +73,22 @@ export default async function FeedPage({
               Jobs
             </Link>
             <Link
+              href="/projects"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken"
+            >
+              Projects
+            </Link>
+            <Link
               href="/marketplace"
               className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken"
             >
               Marketplace
+            </Link>
+            <Link
+              href="/ai"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-emerald-800 dark:text-emerald-400 hover:bg-surface-sunken"
+            >
+              Oba AI
             </Link>
             <Link
               href="/groups"

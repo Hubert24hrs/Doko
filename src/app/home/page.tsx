@@ -9,6 +9,8 @@ import {
   UsersRound,
   AlertTriangle,
   Bell,
+  HeartHandshake,
+  Bot,
 } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -111,6 +113,45 @@ export default async function HomePage({
         </Card>
 
         <div className="grid gap-4 sm:grid-cols-2">
+          <Card className="border-emerald-500/30 bg-linear-to-br from-emerald-500/5 to-transparent">
+            <CardHeader>
+              <div className="mb-1 text-emerald-700 dark:text-emerald-400">
+                <HeartHandshake className="size-5" aria-hidden="true" />
+              </div>
+              <CardTitle as="h2">Community Projects</CardTitle>
+              <CardDescription>
+                Fund roads, clean water boreholes, and solar streetlights across Igbo Eze North via Paystack.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link
+                href="/projects"
+                className="text-sm font-bold text-emerald-800 dark:text-emerald-400 hover:underline"
+              >
+                Browse & support projects
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="border-amber-500/30 bg-linear-to-br from-amber-500/5 to-transparent">
+            <CardHeader>
+              <div className="mb-1 text-amber-600 dark:text-amber-400">
+                <Bot className="size-5" aria-hidden="true" />
+              </div>
+              <CardTitle as="h2">Oba AI Assistant</CardTitle>
+              <CardDescription>
+                Your digital cultural guide for Igbo Eze North history, dialect, festivals, and civic inquiries.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link
+                href="/ai"
+                className="text-sm font-bold text-amber-700 dark:text-amber-400 hover:underline"
+              >
+                Ask Oba AI
+              </Link>
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader>
               <div className="mb-1 text-primary">

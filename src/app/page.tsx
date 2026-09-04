@@ -28,6 +28,18 @@ export default async function LandingPage() {
           </Link>
           <div className="flex items-center gap-2">
             <Link
+              href="/projects"
+              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken sm:inline-flex"
+            >
+              Projects
+            </Link>
+            <Link
+              href="/ai"
+              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:bg-surface-sunken sm:inline-flex"
+            >
+              Oba AI
+            </Link>
+            <Link
               href="/issues"
               className="hidden rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken sm:inline-flex"
             >
@@ -95,6 +107,80 @@ export default async function LandingPage() {
               >
                 Explore communities
               </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Platform Pillars ----------------------------------------------- */}
+        <section className="border-b border-border bg-surface-sunken/40 py-16">
+          <div className="mx-auto max-w-6xl px-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-primary mb-2">
+              Platform Features
+            </h2>
+            <p className="text-2xl sm:text-3xl font-black text-foreground tracking-tight mb-8">
+              Built for Community Development & Cultural Connection
+            </p>
+
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-3xl border border-border bg-card p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                  <span className="inline-block rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 p-3 text-emerald-800 dark:text-emerald-300 mb-4 font-bold text-xs">
+                    Civic Crowdfunding
+                  </span>
+                  <h3 className="text-lg font-bold text-foreground mb-2">Community Projects</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Collaboratively fund boreholes, solar lights, and road grading via Paystack.
+                  </p>
+                </div>
+                <Link href="/projects" className="mt-4 text-xs font-bold text-primary hover:underline">
+                  Browse projects &rarr;
+                </Link>
+              </div>
+
+              <div className="rounded-3xl border border-border bg-card p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                  <span className="inline-block rounded-2xl bg-amber-100 dark:bg-amber-950/80 p-3 text-amber-800 dark:text-amber-300 mb-4 font-bold text-xs">
+                    Civic Intelligence
+                  </span>
+                  <h3 className="text-lg font-bold text-foreground mb-2">Oba AI Assistant</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Your interactive guide for Igbo-Eze North culture, history, market days, and dialect.
+                  </p>
+                </div>
+                <Link href="/ai" className="mt-4 text-xs font-bold text-primary hover:underline">
+                  Ask Oba AI &rarr;
+                </Link>
+              </div>
+
+              <div className="rounded-3xl border border-border bg-card p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                  <span className="inline-block rounded-2xl bg-sky-100 dark:bg-sky-950/80 p-3 text-sky-800 dark:text-sky-300 mb-4 font-bold text-xs">
+                    Dual Verification
+                  </span>
+                  <h3 className="text-lg font-bold text-foreground mb-2">Verified Badges</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Golden badges for traditional leaders and elders; Blue badges for active citizens.
+                  </p>
+                </div>
+                <Link href="/verification" className="mt-4 text-xs font-bold text-primary hover:underline">
+                  Get verified &rarr;
+                </Link>
+              </div>
+
+              <div className="rounded-3xl border border-border bg-card p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                  <span className="inline-block rounded-2xl bg-purple-100 dark:bg-purple-950/80 p-3 text-purple-800 dark:text-purple-300 mb-4 font-bold text-xs">
+                    Trade & Opportunities
+                  </span>
+                  <h3 className="text-lg font-bold text-foreground mb-2">Market & Jobs</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Buy fresh agricultural produce, trade crafts, and discover verified local employment.
+                  </p>
+                </div>
+                <Link href="/marketplace" className="mt-4 text-xs font-bold text-primary hover:underline">
+                  Explore market &rarr;
+                </Link>
+              </div>
             </div>
           </div>
         </section>

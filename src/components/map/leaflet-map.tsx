@@ -163,7 +163,7 @@ export function LeafletMap({
       const categoryLabel = ISSUE_CATEGORY_LABEL[issue.category] ?? issue.category;
       const statusLabel = ISSUE_STATUS_LABEL[issue.status] ?? issue.status;
       const color = STATUS_COLORS[issue.status] ?? "#3b82f6";
-      const locationText = issue.location_text || issue.community?.name || "Igbo-Eze North";
+      const locationText = issue.location_text || issue.community?.name || "Igbo Eze North";
 
       const popupHtml = `
         <div style="font-family: inherit; font-size: 13px; line-height: 1.4; min-width: 200px; max-width: 260px; padding: 2px;">

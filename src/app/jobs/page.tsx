@@ -12,7 +12,7 @@ import { JOB_CATEGORY_LABEL, jobCategories } from "@/features/jobs/schemas";
 export const metadata: Metadata = {
   title: "Jobs",
   description:
-    "Work and vacancies across Igbo-Eze North: teaching, trades, farming, transport and more.",
+    "Work and vacancies across Igbo Eze North: teaching, trades, farming, transport and more.",
   alternates: { canonical: "/jobs" },
 };
 

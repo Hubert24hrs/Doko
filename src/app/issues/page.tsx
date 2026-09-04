@@ -25,7 +25,7 @@ import type { IssueCategory, IssueStatus } from "@/types/database";
 export const metadata: Metadata = {
   title: "Community Issues",
   description:
-    "Report and track broken infrastructure across Igbo-Eze North: boreholes, roads, transformers, clinics and schools.",
+    "Report and track broken infrastructure across Igbo Eze North: boreholes, roads, transformers, clinics and schools.",
   alternates: { canonical: "/issues" },
 };
 
@@ -128,7 +128,7 @@ export default async function IssuesPage({
               Community Issues
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Track and report broken infrastructure across Igbo-Eze North — boreholes,
+              Track and report broken infrastructure across Igbo Eze North — boreholes,
               washed-out roads, transformers, clinics and schools.
             </p>
           </div>

@@ -18,7 +18,7 @@ import { MarketplaceBannerAd } from "@/features/ads/components/marketplace-banne
 export const metadata: Metadata = {
   title: "Marketplace",
   description:
-    "Buy and sell between neighbours across Igbo-Eze North: household goods, tools, produce and more.",
+    "Buy and sell between neighbours across Igbo Eze North: household goods, tools, produce and more.",
   alternates: { canonical: "/marketplace" },
 };
 
@@ -83,7 +83,7 @@ export default async function MarketplacePage({
           Marketplace
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Buying and selling between neighbours across Igbo-Eze North.
+          Buying and selling between neighbours across Igbo Eze North.
         </p>
 
         {bannerAds.length > 0 && (
@@ -154,7 +154,7 @@ export default async function MarketplacePage({
             <EmptyState
               icon={<ShoppingBag className="size-6" />}
               title="Nothing for sale yet"
-              description="When somebody in Igbo-Eze North lists something, it will appear here."
+              description="When somebody in Igbo Eze North lists something, it will appear here."
             />
           ) : (
             page.listings.map((listing) => (

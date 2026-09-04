@@ -82,8 +82,8 @@ function getFallbackSponsoredAds(placement: AdPlacement): SponsoredAdItem[] {
       {
         id: "fallback-market-1",
         advertiser_id: "system-sponsor",
-        title: "Igbo-Eze North Farmers & Traders Cooperative",
-        description: "Buy fresh palm oil, yam, and cassava directly from local Enugu-Ezike farmers.",
+        title: "Igbo Eze North Farmers & Traders Cooperative",
+        description: "Buy fresh palm oil, yam, and cassava directly from local Enugu Ezike farmers.",
         target_url: "https://doko-delta.vercel.app/marketplace",
         image_url: null,
         placement: "marketplace_banner",
@@ -107,7 +107,7 @@ function getFallbackSponsoredAds(placement: AdPlacement): SponsoredAdItem[] {
     {
       id: "fallback-feed-1",
       advertiser_id: "system-sponsor",
-      title: "Promote Your Business Across Igbo-Eze North",
+      title: "Promote Your Business Across Igbo Eze North",
       description: "Reach thousands of verified community members, diaspora kin, and local customers on Ezike Oba.",
       target_url: "https://doko-delta.vercel.app/marketplace",
       image_url: null,

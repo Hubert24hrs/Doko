@@ -77,7 +77,7 @@ export function PulsePostModal({ member, onClose }: PulsePostModalProps) {
             </div>
 
             <p className="text-sm text-foreground leading-relaxed">
-              {member.fullName} is an authenticated verified member who has been active in Igbo-Eze North within the last 24 hours.
+              {member.fullName} is an authenticated verified member who has been active in Igbo Eze North within the last 24 hours.
             </p>
           </div>
 

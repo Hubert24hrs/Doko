@@ -44,8 +44,8 @@ export default async function WelcomePage() {
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
             Welcome to Ezike Oba. Your account is ready, and you are now part of
-            the digital home of Igbo-Eze North — alongside neighbours from
-            Enugu-Ezike, Ette and every village between them.
+            the digital home of Igbo Eze North — alongside neighbours from
+            Enugu Ezike, Ette and every village between them.
           </p>
 
           {profile?.username ? (

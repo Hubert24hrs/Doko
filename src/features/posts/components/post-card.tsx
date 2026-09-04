@@ -111,7 +111,7 @@ export function PostCard({
               ) : (
                 <span className="inline-flex items-center gap-1">
                   <MapPin className="size-3" aria-hidden="true" />
-                  Igbo-Eze North
+                  Igbo Eze North
                 </span>
               )}
 

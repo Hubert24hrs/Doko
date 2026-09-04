@@ -26,7 +26,7 @@ export const DEFAULT_MAP_ZOOM = 12;
 
 export const IGBO_EZE_NORTH_LANDMARKS: CommunityLandmark[] = [
   { name: "Ogrute (LGA HQ)", kind: "headquarters", latitude: 6.9833, longitude: 7.4500 },
-  { name: "Enugu-Ezike", kind: "town", latitude: 6.9800, longitude: 7.4450 },
+  { name: "Enugu Ezike", kind: "town", latitude: 6.9800, longitude: 7.4450 },
   { name: "Umuida", kind: "village", latitude: 6.9720, longitude: 7.4250 },
   { name: "Imufu", kind: "village", latitude: 7.0150, longitude: 7.4600 },
   { name: "Amalla", kind: "village", latitude: 6.9550, longitude: 7.4900 },

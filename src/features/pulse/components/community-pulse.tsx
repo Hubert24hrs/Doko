@@ -74,7 +74,7 @@ export function CommunityPulse({
               </span>
             </div>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Verified members active in Igbo-Eze North within the last 24 hours.
+              Verified members active in Igbo Eze North within the last 24 hours.
             </p>
           </div>
         </div>

@@ -209,7 +209,7 @@ export function CreateListingForm({ villages }: { villages: VillageOption[] }) {
       <Field error={errors.geoId}>
         <FieldLabel>Community</FieldLabel>
         <FieldSelect name="geoId" defaultValue="">
-          <option value="">Anywhere in Igbo-Eze North</option>
+          <option value="">Anywhere in Igbo Eze North</option>
           {villages.map((v) => (
             <option key={v.id} value={v.id}>
               {v.name}
@@ -269,7 +269,7 @@ export function CreateListingForm({ villages }: { villages: VillageOption[] }) {
         </FieldSelect>
         <FieldDescription>
           &ldquo;Only my community&rdquo; needs a community chosen above.
-          Without one it still reaches everybody in Igbo-Eze North.
+          Without one it still reaches everybody in Igbo Eze North.
         </FieldDescription>
       </Field>
 

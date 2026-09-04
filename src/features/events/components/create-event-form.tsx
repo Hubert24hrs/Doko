@@ -121,7 +121,7 @@ export function CreateEventForm({ villages }: { villages: VillageOption[] }) {
       <Field error={errors.geoId}>
         <FieldLabel>Community</FieldLabel>
         <FieldSelect name="geoId" defaultValue="">
-          <option value="">Anywhere in Igbo-Eze North</option>
+          <option value="">Anywhere in Igbo Eze North</option>
           {villages.map((village) => (
             <option key={village.id} value={village.id}>
               {village.name}
@@ -141,7 +141,7 @@ export function CreateEventForm({ villages }: { villages: VillageOption[] }) {
               member_of_geo(null) is TRUE by design -- an event with no
               community chosen belongs to the whole LGA, not to nobody. */}
           &ldquo;Only my community&rdquo; needs a community chosen above.
-          Without one it still reaches everybody in Igbo-Eze North.
+          Without one it still reaches everybody in Igbo Eze North.
         </FieldDescription>
       </Field>
 

@@ -70,16 +70,36 @@ export default async function HomePage({
 
         {!profile?.is_verified ? <GetVerifiedPrompt variant="card" isVerified={Boolean(profile?.is_verified)} className="mb-6" /> : null}
 
-        <div className="mb-8 flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Welcome, {displayName}
-          </h1>
-          {profile?.is_verified ? <VerifiedBadge type={profile.verification_type} showLabel /> : null}
-          {profile?.username ? (
-            <Link href={`/members/${profile.username}`} className="rounded-full">
-              <Badge variant="neutral">@{profile.username}</Badge>
-            </Link>
-          ) : null}
+        {/* Nano Banana African Hero Header Card */}
+        <div className="relative mb-8 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="relative h-48 w-full sm:h-64">
+            <img
+              src="/images/hero-banner.jpg"
+              alt="Igbo Eze North Civic Tech & Cultural Heritage Hub"
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+          </div>
+          <div className="relative -mt-16 px-6 pb-6 sm:px-8">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                    Nnọọ, {displayName}!
+                  </h1>
+                  {profile?.is_verified ? <VerifiedBadge type={profile.verification_type} showLabel /> : null}
+                  {profile?.username ? (
+                    <Link href={`/members/${profile.username}`} className="rounded-full">
+                      <Badge variant="neutral">@{profile.username}</Badge>
+                    </Link>
+                  ) : null}
+                </div>
+                <p className="mt-1.5 text-sm text-muted-foreground">
+                  Welcome to your Igbo Eze North civic hub — connecting citizens, traditional leaders, and the global diaspora.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <Card className="mb-6">
@@ -90,7 +110,7 @@ export default async function HomePage({
             <CardTitle as="h2">The community feed</CardTitle>
             <CardDescription>
               Share what is happening where you are, and read what neighbours
-              across Igbo-Eze North are posting.
+              across Igbo Eze North are posting.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -111,9 +131,6 @@ export default async function HomePage({
               </div>
               <CardTitle as="h2">Messages</CardTitle>
               <CardDescription>
-                {/* Null means the count could not be read. Saying "no unread
-                    messages" on a failed query would be a lie the member has
-                    no way to detect. */}
                 {unread === null
                   ? "Private conversations with other members."
                   : unread > 0
@@ -138,7 +155,7 @@ export default async function HomePage({
               <div className="mb-1 text-primary">
                 <Compass className="size-5" aria-hidden="true" />
               </div>
-              <CardTitle as="h2">Explore Igbo-Eze North</CardTitle>
+              <CardTitle as="h2">Explore Igbo Eze North</CardTitle>
               <CardDescription>
                 Browse every town, district and village in the directory.
               </CardDescription>
@@ -153,7 +170,7 @@ export default async function HomePage({
             </CardContent>
           </Card>
 
-                    <Card>
+          <Card>
             <CardHeader>
               <div className="mb-1 text-primary">
                 <Bell className="size-5" aria-hidden="true" />
@@ -193,7 +210,7 @@ export default async function HomePage({
             </CardContent>
           </Card>
 
-<Card>
+          <Card>
             <CardHeader>
               <div className="mb-1 text-primary">
                 <UsersRound className="size-5" aria-hidden="true" />

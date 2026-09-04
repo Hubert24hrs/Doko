@@ -70,15 +70,15 @@ export default async function LandingPage() {
           <div className="relative mx-auto max-w-6xl px-4 py-20 sm:py-28">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted-foreground">
               <MapPin className="size-3.5" aria-hidden="true" />
-              Igbo-Eze North, Enugu State
+              Igbo Eze North, Enugu State
             </p>
             <h1 className="max-w-3xl text-4xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-6xl">
               One digital home for the people of{" "}
-              <span className="text-primary">Igbo-Eze North</span>
+              <span className="text-primary">Igbo Eze North</span>
             </h1>
             <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
               Ezike Oba connects citizens, villages, towns, businesses and
-              opportunities across Enugu-Ezike and Ette — so the community can
+              opportunities across Enugu Ezike and Ette — so the community can
               find each other, share what matters and build together.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -134,7 +134,7 @@ export default async function LandingPage() {
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <Logo showWordmark />
-          <p>Built for the people of Igbo-Eze North.</p>
+          <p>Built for the people of Igbo Eze North.</p>
         </div>
       </footer>
     </>

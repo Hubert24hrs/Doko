@@ -50,7 +50,7 @@ export function CreateAdModal({ isOpen, onClose }: CreateAdModalProps) {
           <h2 className="text-xl font-bold">Promote Your Business</h2>
         </div>
         <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-5">
-          Showcase your local business, products, or service to thousands of members across Igbo-Eze North.
+          Showcase your local business, products, or service to thousands of members across Igbo Eze North.
         </p>
 
         {errorMsg && (
@@ -88,7 +88,7 @@ export function CreateAdModal({ isOpen, onClose }: CreateAdModalProps) {
               name="description"
               required
               rows={3}
-              placeholder="Describe your goods, service, location in Igbo-Eze North, or special offer..."
+              placeholder="Describe your goods, service, location in Igbo Eze North, or special offer..."
               className="w-full rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 py-2 text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-emerald-600"
             />
           </div>

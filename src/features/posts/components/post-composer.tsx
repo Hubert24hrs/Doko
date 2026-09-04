@@ -125,7 +125,7 @@ export function PostComposer({
                 defaultValue={defaultGeoId ?? ""}
                 className="h-9 w-auto text-xs"
               >
-                <option value="">All of Igbo-Eze North</option>
+                <option value="">All of Igbo Eze North</option>
                 {villages.map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.name}

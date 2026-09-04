@@ -21,26 +21,26 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Ezike Oba — the digital home of Igbo-Eze North",
+    default: "Ezike Oba — the digital home of Igbo Eze North",
     template: "%s · Ezike Oba",
   },
   description:
-    "Ezike Oba connects the people, villages, businesses and opportunities of Igbo-Eze North, Enugu State.",
+    "Ezike Oba connects the people, villages, businesses and opportunities of Igbo Eze North, Enugu State.",
   applicationName: "Ezike Oba",
   openGraph: {
     type: "website",
     siteName: "Ezike Oba",
     locale: "en_NG",
-    title: "Ezike Oba — the digital home of Igbo-Eze North",
+    title: "Ezike Oba — the digital home of Igbo Eze North",
     description:
-      "Connecting citizens, villages, towns, businesses and opportunities across Igbo-Eze North.",
+      "Connecting citizens, villages, towns, businesses and opportunities across Igbo Eze North.",
     url: siteUrl,
   },
   twitter: {
     card: "summary_large_image",
     title: "Ezike Oba",
     description:
-      "The digital home of Igbo-Eze North, Enugu State — communities, events, jobs and marketplace.",
+      "The digital home of Igbo Eze North, Enugu State — communities, events, jobs and marketplace.",
   },
   robots: { index: true, follow: true },
 };

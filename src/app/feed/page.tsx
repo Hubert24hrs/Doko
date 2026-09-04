@@ -191,7 +191,7 @@ export default async function FeedPage({
               description={
                 followingOnly
                   ? "Follow neighbours from their profile and their posts will appear here."
-                  : "Be the first to share something with Igbo-Eze North."
+                  : "Be the first to share something with Igbo Eze North."
               }
             />
           ) : (

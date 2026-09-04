@@ -43,19 +43,31 @@ export default async function VerificationPage() {
         </Link>
       </div>
 
-      {/* Hero Header */}
-      <div className="border-b border-border pb-8">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500/20 via-primary/20 to-sky-500/20 text-primary ring-1 ring-border">
-            <ShieldCheck className="size-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Community Verification
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Official identity verification and trust credentials for Igbo-Eze North LGA.
-            </p>
+      {/* Hero Header with Nano Banana African Banner */}
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm mb-8">
+        <div className="relative h-48 w-full sm:h-56">
+          <img
+            src="/images/verification-banner.jpg"
+            alt="Igbo Eze North Royal Verification Seal"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        </div>
+        <div className="relative -mt-16 px-6 pb-6 sm:px-8">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-14 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-500 ring-2 ring-amber-500/30 backdrop-blur-md shadow-lg">
+                <ShieldCheck className="size-7 text-amber-500" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                  Community Verification
+                </h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Official identity verification and trust credentials for Igbo Eze North LGA.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -183,7 +195,7 @@ export default async function VerificationPage() {
           Understanding the Verification Tiers
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Igbo-Eze North operates a two-tier verification standard ensuring clarity, accountability, and recognition.
+          Igbo Eze North operates a two-tier verification standard ensuring clarity, accountability, and recognition.
         </p>
 
         <div className="mt-6 grid gap-6 md:grid-cols-2">
@@ -242,7 +254,7 @@ export default async function VerificationPage() {
             <ul className="mt-4 space-y-2 text-xs text-muted-foreground">
               <li className="flex items-start gap-2">
                 <ShieldCheck className="size-3.5 shrink-0 text-sky-500 mt-0.5" />
-                <span>All registered residents and indigenes of Igbo-Eze North</span>
+                <span>All registered residents and indigenes of Igbo Eze North</span>
               </li>
               <li className="flex items-start gap-2">
                 <ShieldCheck className="size-3.5 shrink-0 text-sky-500 mt-0.5" />

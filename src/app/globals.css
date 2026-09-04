@@ -1,220 +1,178 @@
 @import "tailwindcss";
 
-/* ===========================================================================
-   Ezike Oba design tokens
-   ---------------------------------------------------------------------------
-   The palette is drawn from the region rather than from other social networks:
-   a deep palm green as the primary, harvest gold as the accent, and red-clay
-   terracotta for warmth. Deliberately not blue.
-
-   Every colour is defined here in the light block first, then overridden for
-   dark. Nothing gets its only definition inside a media query.
-   =========================================================================== */
+/* --------------------------------------------------------------------------
+   EZIKE OBA DESIGN SYSTEM — USA/European Ultra-Clean Modern Tech Palette
+   --------------------------------------------------------------------------
+   A refined, high-fidelity visual aesthetic inspired by Stripe, Vercel,
+   Linear, and Apple design standards:
+   - Deep rich slate/obsidian dark mode with subtle frosted glass blur
+   - Warm ivory/crisp light mode with high-contrast typography
+   - Deep Palm Emerald (#059669) & Heritage Gold (#d97706) accents
+   - Subtle 1px translucent borders, crisp drop-shadows, zero neon/AI slop
+   -------------------------------------------------------------------------- */
 
 :root {
-  /* Brand ------------------------------------------------------------------ */
-  --eo-green-50: #eef7f2;
-  --eo-green-100: #d3ebdf;
-  --eo-green-200: #a7d7bf;
-  --eo-green-300: #6fbc98;
-  --eo-green-400: #3f9c73;
-  --eo-green-500: #1f7d57;
-  --eo-green-600: #146045;
-  --eo-green-700: #0f4a36;
-  --eo-green-800: #0b3628;
-  --eo-green-900: #07241b;
+  /* Color Palette — Light Mode */
+  --background: #f8fafc;
+  --foreground: #0f172a;
 
-  --eo-gold-100: #fbf0d6;
-  --eo-gold-300: #ecc879;
-  --eo-gold-500: #d99a2b;
-  --eo-gold-700: #a86f14;
-
-  --eo-clay-300: #e0a184;
-  --eo-clay-500: #b4552d;
-  --eo-clay-700: #85391b;
-
-  /* Semantic --------------------------------------------------------------- */
-  --background: #fbfaf7;
-  --surface: #ffffff;
   --surface-raised: #ffffff;
-  --surface-sunken: #f4f2ed;
-  --foreground: #131a17;
-  --muted-foreground: #5c6b64;
-  --border: #e2e0d9;
-  --border-strong: #cbc8be;
+  --surface-sunken: #f1f5f9;
 
-  --primary: var(--eo-green-600);
-  --primary-hover: var(--eo-green-700);
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  --primary: #059669;
+  --primary-hover: #047857;
   --primary-foreground: #ffffff;
-  --accent: var(--eo-gold-500);
-  --accent-foreground: #2a1d05;
 
-  --success: #15803d;
-  --warning: var(--eo-gold-700);
-  --danger: #b42318;
-  --danger-foreground: #ffffff;
+  --accent: #d97706;
+  --accent-hover: #b45309;
+  --accent-foreground: #ffffff;
 
-  --ring: var(--eo-green-400);
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
 
-  /* Elevation -------------------------------------------------------------- */
-  --shadow-sm: 0 1px 2px rgb(7 36 27 / 0.06);
-  --shadow-md: 0 4px 12px -2px rgb(7 36 27 / 0.10);
-  --shadow-lg: 0 16px 40px -12px rgb(7 36 27 / 0.18);
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
 
-  --radius-card: 0.875rem;
-}
+  /* Custom Palm & Gold Tokens */
+  --eo-green-50: #ecfdf5;
+  --eo-green-100: #d1fae5;
+  --eo-green-600: #059669;
+  --eo-green-700: #047857;
+  --eo-green-800: #065f46;
 
-:root:not([data-theme="light"]) {
-  color-scheme: light;
+  --eo-gold-50: #fffbeb;
+  --eo-gold-100: #fef3c7;
+  --eo-gold-600: #d97706;
+  --eo-gold-700: #b45309;
+
+  /* Glassmorphism & Shadow Tokens */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(226, 232, 240, 0.8);
+  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
+  :root {
+    /* Color Palette — Dark Mode (Deep Obsidian & Slate) */
+    --background: #090d16;
+    --foreground: #f8fafc;
 
-    --background: #0a1310;
-    --surface: #0f1b17;
-    --surface-raised: #142320;
-    --surface-sunken: #081410;
-    --foreground: #e8f0eb;
-    --muted-foreground: #93a69c;
-    --border: #1e302a;
-    --border-strong: #2c443b;
+    --surface-raised: #111827;
+    --surface-sunken: #0b101d;
 
-    --primary: var(--eo-green-400);
-    --primary-hover: var(--eo-green-300);
-    --primary-foreground: #04150f;
-    --accent: var(--eo-gold-300);
-    --accent-foreground: #23190a;
+    --border: #1e293b;
+    --border-strong: #334155;
 
-    --success: #4ade80;
-    --danger: #f87171;
-    --danger-foreground: #1a0606;
+    --primary: #10b981;
+    --primary-hover: #059669;
+    --primary-foreground: #022c22;
 
-    --ring: var(--eo-green-300);
+    --accent: #f59e0b;
+    --accent-hover: #d97706;
+    --accent-foreground: #451a03;
 
-    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
-    --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.5);
-    --shadow-lg: 0 16px 40px -12px rgb(0 0 0 / 0.6);
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+
+    --eo-green-50: #064e3b;
+    --eo-green-100: #047857;
+    --eo-green-600: #10b981;
+    --eo-green-700: #34d399;
+
+    --eo-gold-50: #78350f;
+    --eo-gold-100: #b45309;
+    --eo-gold-600: #f59e0b;
+    --eo-gold-700: #fbbf24;
+
+    --glass-bg: rgba(17, 24, 39, 0.85);
+    --glass-border: rgba(30, 41, 59, 0.8);
+    --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
   }
 }
 
-:root[data-theme="dark"] {
-  color-scheme: dark;
-
-  --background: #0a1310;
-  --surface: #0f1b17;
-  --surface-raised: #142320;
-  --surface-sunken: #081410;
-  --foreground: #e8f0eb;
-  --muted-foreground: #93a69c;
-  --border: #1e302a;
-  --border-strong: #2c443b;
-
-  --primary: var(--eo-green-400);
-  --primary-hover: var(--eo-green-300);
-  --primary-foreground: #04150f;
-  --accent: var(--eo-gold-300);
-  --accent-foreground: #23190a;
-
-  --success: #4ade80;
-  --danger: #f87171;
-  --danger-foreground: #1a0606;
-
-  --ring: var(--eo-green-300);
-
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.5);
-  --shadow-lg: 0 16px 40px -12px rgb(0 0 0 / 0.6);
+[data-theme="light"] {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f1f5f9;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --primary: #059669;
+  --primary-hover: #047857;
+  --primary-foreground: #ffffff;
+  --accent: #d97706;
+  --accent-hover: #b45309;
+  --accent-foreground: #ffffff;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(226, 232, 240, 0.8);
 }
 
-/* Expose the tokens to Tailwind's utility generator. */
-@theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-surface-raised: var(--surface-raised);
-  --color-surface-sunken: var(--surface-sunken);
-  --color-foreground: var(--foreground);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-border: var(--border);
-  --color-border-strong: var(--border-strong);
-
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-danger: var(--danger);
-  --color-danger-foreground: var(--danger-foreground);
-
-  --color-eo-green-50: var(--eo-green-50);
-  --color-eo-green-100: var(--eo-green-100);
-  --color-eo-green-500: var(--eo-green-500);
-  --color-eo-green-600: var(--eo-green-600);
-  --color-eo-green-900: var(--eo-green-900);
-  --color-eo-gold-100: var(--eo-gold-100);
-  --color-eo-gold-500: var(--eo-gold-500);
-  --color-eo-clay-500: var(--eo-clay-500);
-
-  /* Platform UI stack: no downloaded font bytes, no CDN dependency, no
-     layout shift. See the note in app/layout.tsx. */
-  --font-sans:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji";
-  --font-mono:
-    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-    "Liberation Mono", monospace;
-
-  --radius-card: var(--radius-card);
+[data-theme="dark"] {
+  --background: #090d16;
+  --foreground: #f8fafc;
+  --surface-raised: #111827;
+  --surface-sunken: #0b101d;
+  --border: #1e293b;
+  --border-strong: #334155;
+  --primary: #10b981;
+  --primary-hover: #059669;
+  --primary-foreground: #022c22;
+  --accent: #f59e0b;
+  --accent-hover: #d97706;
+  --accent-foreground: #451a03;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --glass-bg: rgba(17, 24, 39, 0.85);
+  --glass-border: rgba(30, 41, 59, 0.8);
 }
 
-@layer base {
-  * {
-    border-color: var(--border);
-  }
-
-  body {
-    background-color: var(--background);
-    color: var(--foreground);
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* A single, consistent focus treatment everywhere. */
-  :focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-    border-radius: 0.25rem;
-  }
-
-  /* Respect the reader's motion preference across the whole app. */
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
-  }
+/* 4K Typography & Surface Utilities */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@layer utilities {
-  /* Screen-reader-only text that still receives focus when tabbed to. */
-  .sr-only-focusable:not(:focus):not(:focus-within) {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border-width: 0;
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-card);
+}
+
+.glass-nav {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+/* Focus Treatment */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

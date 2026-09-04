@@ -134,7 +134,7 @@ export function VerificationApplicationForm() {
         <FieldInput
           id="organization"
           name="organization"
-          placeholder="e.g. Igbo-Eze North LGA Council, Enugu-Ezike Youth Association"
+          placeholder="e.g. Igbo Eze North LGA Council, Enugu Ezike Youth Association"
           maxLength={120}
         />
       </Field>
@@ -169,7 +169,7 @@ export function VerificationApplicationForm() {
       {/* Notice regarding future requirements */}
       <div className="rounded-lg border border-border bg-surface-sunken p-3 text-xs text-muted-foreground">
         <p>
-          <strong>Note:</strong> Detailed verification requirements and credential uploads will be published here soon. Submitting this form registers your application with the Igbo-Eze North administration for preliminary verification.
+          <strong>Note:</strong> Detailed verification requirements and credential uploads will be published here soon. Submitting this form registers your application with the Igbo Eze North administration for preliminary verification.
         </p>
       </div>
 

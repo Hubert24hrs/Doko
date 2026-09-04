@@ -19,7 +19,9 @@ find opportunities, trade, attend events and report community issues.
 * **Live: <https://doko-delta.vercel.app>** (Vercel, deploys from `main`)
 * Database: hosted Supabase project `ezike-oba`
 * Local path: `C:\EzikeObaWebsite`
-* Target platforms: responsive web (now), Android + iOS (later)
+* **Mobile App Companion:** `C:\EzikeObaMobileApp` (<https://github.com/Hubert24hrs/EzikeObaMobileApp>) — Built with React Native & Expo SDK 57, sharing the exact same Supabase database, RLS policies, storage buckets, and auth system. Features Community Pulse, Dual-Tier Verification, Diaspora Crowdfunding, Oba AI Assistant, Realtime Chat, and full commerce/civic modules.
+
+* Target platforms: responsive web (live at https://doko-delta.vercel.app), native Android + iOS mobile companion app (live repository: https://github.com/Hubert24hrs/EzikeObaMobileApp with 100% feature parity)
 
 **Product rules that constrain the design:**
 

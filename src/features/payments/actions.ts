@@ -1,7 +1,7 @@
 ﻿"use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/features/auth/session";
 import {
   verifyPaymentSchema,
@@ -90,10 +90,35 @@ export async function verifyPaymentAction(reference: string) {
     }
 
     const supabase = await createClient();
+
+    // A signed-out caller has no business asking the platform to confirm a
+    // payment. Deliberately not requireUser(): its redirect works by throwing,
+    // and the catch below would swallow that into a generic failure message.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, error: "Sign in to confirm this payment." };
+    }
+
     const verifyResult = await verifyPaystackTransaction(reference);
 
+    // The confirming RPCs are SECURITY DEFINER and, since migration 028, are
+    // callable only by the service role. That is deliberate: they mark money
+    // as received, and the database cannot tell whether Paystack was actually
+    // consulted -- so the only caller allowed to say so is the platform
+    // itself, after verifyPaystackTransaction() above has said it.
+    //
+    // If the service-role key is not configured this throws, and the catch
+    // below reports the payment as unconfirmed rather than confirming it on a
+    // member's own authority.
+    const privileged = createAdminClient();
+
     if (verifyResult.status !== "success") {
-      await supabase
+      // Privileged too: payments_update requires is_staff(), so this ran as a
+      // member and quietly affected zero rows -- a failed payment stayed
+      // 'pending' for ever, and nothing said so.
+      await privileged
         .from("payments")
         .update({ status: verifyResult.status, updated_at: new Date().toISOString() })
         .eq("reference", reference);
@@ -104,7 +129,7 @@ export async function verifyPaymentAction(reference: string) {
       };
     }
 
-    const { error: rpcError } = await supabase.rpc("confirm_ad_payment", {
+    const { error: rpcError } = await privileged.rpc("confirm_ad_payment", {
       p_payment_reference: reference,
       p_paystack_ref: verifyResult.reference,
       p_channel: verifyResult.channel,
@@ -112,7 +137,7 @@ export async function verifyPaymentAction(reference: string) {
     });
 
     if (rpcError) {
-      const { data: pmt } = await supabase
+      const { data: pmt } = await privileged
         .from("payments")
         .update({
           status: "success",
@@ -126,13 +151,13 @@ export async function verifyPaymentAction(reference: string) {
         .single();
 
       if (pmt?.target_id && pmt.purpose === "ad_campaign") {
-        await supabase
+        await privileged
           .from("ad_campaigns")
           .update({ payment_status: "paid", updated_at: new Date().toISOString() })
           .eq("id", pmt.target_id);
       } else if (pmt?.target_id && pmt.purpose === "donation") {
         const donationNaira = Math.round(verifyResult.amountKobo / 100);
-        await supabase.rpc("confirm_project_donation", {
+        await privileged.rpc("confirm_project_donation", {
           p_payment_reference: reference,
           p_project_id: pmt.target_id,
           p_amount_naira: donationNaira,

@@ -70,10 +70,11 @@ is listed under "Not yet done" and is honest about being open.
   four reactions, trigger-maintained engagement counts, and a public
   `/posts/[id]` page. Verified against the hosted project with real data,
   including the author embed and the generated SEO metadata for public posts.
-* **374 database assertions passing** against the live project: 38 schema,
+* **474 database assertions passing** against the live project: 38 schema,
   29 RLS, 9 seed, 22 posts, 18 comments/reactions, 19 media, 16 follows,
   13 followers-only posts, 27 groups, 38 messages, 29 group conversations,
-  14 presence, 35 events, 35 jobs, 32 marketplace.
+  14 presence, 35 events, 35 jobs, 32 marketplace, 26 payments,
+  25 verification, 25 advertising, 24 community projects.
 * **Followers-only posts verified**, including that replies and images inherit
   the tier without those tables having been modified.
 * **Phase 2 slice 7 (groups) verified against the live database.** 27
@@ -178,7 +179,31 @@ is listed under "Not yet done" and is honest about being open.
   - Community Pulse: 3D Fibonacci sphere featuring 24h active verified members.
   - Interactive Leaflet Map for Igbo Eze North community issue reporting.
   - Global display text hyphen cleanup across all pages (`Igbo Eze North`, `Enugu Ezike`, `Sign in`).
-  - **274 unit tests passing** across 21 test files with 0 TypeScript compilation errors.
+  - **293 unit tests passing** across 24 test files with 0 TypeScript compilation errors.
+* **Audited 2026-09-08 (Phase 5 money-and-trust tables).** Writing the four
+  missing pgTAP suites (16-19) found **five real defects**, all the same
+  shape: migrations 023-027 wrote their rules as COMMENTS and never as
+  mechanisms. Migrations 028-032 close them; every one is recorded in
+  docs/SECURITY.md:
+  1. `confirm_ad_payment` and `confirm_project_donation` were executable by
+     **anyone** -- Postgres grants EXECUTE to PUBLIC by default and neither
+     migration revoked it. Free adverts, and donations that never arrived.
+  2. `confirm_project_donation` credited its `p_amount_naira` PARAMETER
+     rather than the payment, so a caller typed the fundraising total in.
+  3. Verification delegation did not work AT ALL: `profiles_update` admitted
+     only self or admin, so every badge a delegate granted was filtered away
+     by RLS and reported to them as success.
+  4. An advertiser could set `status = 'active'` on their own campaign,
+     walking past both the moderation queue and the payment gate.
+  5. A project creator could approve their own appeal and fabricate its
+     raised total -- the most persuasive number on a crowdfunding page.
+
+  The guards written for 4 and 5 then broke the paths they protected, on a
+  false assumption worth remembering: **`SECURITY DEFINER` changes the
+  executing role, NOT `auth.uid()`.** The webhook's service-role JWT carries
+  no `sub`, so `auth.uid()` is NULL, `is_staff()` is false, and both guards
+  restored what the payment had just written. Migration 032 admits a NULL
+  uid, which grants nothing RLS has not already allowed.
 * **Audited 2026-09-01**, 15/15 live routes healthy. Three real defects found
   and fixed, all recorded in docs/SECURITY.md:
   1. Post and reply editing was unreachable -- policies, guard triggers and the
@@ -683,3 +708,11 @@ If a local database is ever wanted, install Docker Desktop, then
 | Teaching `in_conversation()` about groups was the whole slice | every message policy asks it, so reading, writing and withdrawing picked up their group rules without one of them being edited -- the same inheritance that gave comments and reactions the followers-only tier for free |
 | Sponsored ads enter `pending` status by default | preserves community trust; staff and admins review and approve campaigns via `/admin/ads` before going live |
 | Ad impression/click counter RPCs | security definer functions `increment_ad_impressions` and `increment_ad_clicks` safely update analytics without exposing direct update permissions |
+| A `SECURITY DEFINER` function is NOT protected by default | Postgres grants EXECUTE to `PUBLIC` on every new function. A definer function with no `revoke` is a privileged operation offered to anybody with a session -- which is exactly what `confirm_ad_payment` and `confirm_project_donation` were until migration 028 |
+| The `revoke` goes AFTER the `create or replace` | replacing a function resets its privileges, so a revoke written above the definition is undone by the definition below it. This is easy to write in the wrong order and impossible to notice afterwards |
+| A confirming RPC derives the amount from the payment, never from its caller | `confirm_project_donation` added its `p_amount_naira` parameter to the running total without ever comparing it to the payment it named. The database cannot tell whether Paystack was consulted, so the only figure it may trust is the one already recorded in `payments` |
+| Every Phase 5 table with a self-owned UPDATE policy needs a guard trigger | `advertiser_id = auth.uid()` and `creator_id = auth.uid()` grant the whole ROW, not the fields the migration's comment had in mind. Posts, events, jobs and listings all learned this in Phase 2-4; advertising and community projects were written as though they had not |
+| `SECURITY DEFINER` changes the executing role, NOT `auth.uid()` | `auth.uid()` reads the JWT claim off the session, and the service role's JWT carries no `sub` -- so inside a definer function called by the webhook it is NULL, not staff. Guards that branch on `is_staff()` alone silently restore what the platform just wrote. Migration 032 admits a NULL uid, which grants nothing RLS has not already allowed, because an anon caller satisfies neither table's UPDATE policy |
+| A delegated verifier needed a POLICY, not just a role | `can_verify_members()` existed and was consulted nowhere RLS could see it, so delegation reported success while writing nothing. A capability that only the application knows about is not a capability |
+| A test fixture must drop a privilege COMPLETELY | `reset role` restores the role and leaves `set local request.jwt.claims` in place, so `auth.uid()` keeps answering with whoever was last impersonated. Suites 16-19 use `pg_temp.become_platform()`, which clears both. A fixture that half-drops a privilege tests the wrong branch and says nothing about it |
+| Every "X cannot" assertion needs its "but the platform can" twin | `18_advertising` asserted an advertiser could not mark their own advert paid and never that `confirm_ad_payment` could. The migration that broke the real payment path passed the suite cleanly. A negative assertion alone cannot tell a closed hole from a broken feature |

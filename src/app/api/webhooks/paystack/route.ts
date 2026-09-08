@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from "next/server";
-import { createAdminClient, createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { validatePaystackWebhookSignature } from "@/features/payments/paystack";
 import { paystackWebhookPayloadSchema } from "@/features/payments/schemas";
 
@@ -28,11 +28,24 @@ export async function POST(req: Request) {
     const { event, data } = parsed.data;
 
     if (event === "charge.success" && data.status === "success") {
+      // No fallback to the request client any more. A webhook has no user
+      // session, so that fallback was an ANON client -- which cannot update
+      // payments (payments_update asks is_staff()) and, since migration 028,
+      // cannot call the confirming RPCs either. It therefore did nothing while
+      // returning 200 to Paystack, which reads as "handled" and stops it
+      // retrying.
+      //
+      // Failing loudly instead: Paystack retries a non-2xx, so a missing
+      // service-role key becomes a delayed payment rather than a lost one.
       let supabase;
       try {
         supabase = createAdminClient();
-      } catch {
-        supabase = await createClient();
+      } catch (cause) {
+        console.error("[paystack.webhook] service role key unavailable", cause);
+        return NextResponse.json(
+          { error: "Payment processing is not configured" },
+          { status: 503 },
+        );
       }
 
       const reference = data.reference;

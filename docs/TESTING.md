@@ -10,11 +10,11 @@ npm run verify        # typecheck + lint + test
 
 ## Current state -- honest
 
-**216 unit tests, 15 files, all passing.** Typecheck clean, lint clean,
+**293 unit tests, 24 files, all passing.** Typecheck clean, lint clean,
 production build clean.
 
-**374 database assertions pass against the live hosted project**, across
-fifteen pgTAP suites. They are run by pasting each file into the Supabase SQL Editor,
+**474 database assertions pass against the live hosted project**, across
+nineteen pgTAP suites. They are run by pasting each file into the Supabase SQL Editor,
 not by `supabase test db` -- there is no Docker here. See "Database tests"
 below.
 
@@ -68,9 +68,10 @@ database.
 
 ### Database tests -- RUN AND PASSING against the hosted project
 
-**All 374 assertions pass** against the live project, 01-09 as of 2026-09-01
-and the messaging, presence, events, jobs and marketplace suites as of
-2026-09-02/03:
+**All 474 assertions pass** against the live project: 01-09 as of 2026-09-01,
+the messaging, presence, events, jobs and marketplace suites as of
+2026-09-02/03, and the Phase 5 money-and-trust suites (16-19) as of
+2026-09-08:
 
 | Suite | Assertions | Covers |
 |---|---|---|
@@ -89,22 +90,22 @@ and the messaging, presence, events, jobs and marketplace suites as of
 | `13_events.test.sql` | 35 | the filled WAT end date; a moderator may cancel but **not move** an event |
 | `14_jobs.test.sql` | 35 | a signed-out reader sees the job and not the phone number; nobody but the applicant and the employer reads an application |
 | `15_marketplace.test.sql` | 32 | a private group listing is invisible despite `visibility='public'`; contact details are optional and still not public when given |
+| `16_payments.test.sql` | 26 | the confirming RPCs are **not executable by a member**; a donation is credited the amount the payment actually carried, not the amount its caller claimed; a replayed webhook does not pay twice |
+| `17_verification.test.sql` | 25 | a delegated verifier can actually grant a badge; a member cannot verify themselves; the dual-tier CHECK refuses a badge with no timestamp |
+| `18_advertising.test.sql` | 25 | an advertiser cannot approve, pay for, or type in the view count of their own advert -- **and the platform still can** mark it paid |
+| `19_community_projects.test.sql` | 24 | a creator cannot approve their own appeal or fabricate its total; the target cannot move once money is in |
 
 With a linked local database they would run as `supabase test db`; here each
 file is pasted into the SQL Editor instead.
 
-The 38 assertions in `10_messages` are WRITTEN AND NOT YET RUN. Until they
-have passed against the hosted project, direct messages must not be described
-as working, and `/messages` will in fact fail at runtime because migration 015
-has not been applied.
-
-Two of them are the reason the suite exists. The first is that **a moderator
-and an admin can both read exactly nothing**: `messages` is the one table in
-this schema with no staff read policy, and a test is the only thing that will
-notice the day somebody adds one "for moderation". The second is the canonical
-pair key -- Bob opening a conversation with Alice must land in *Alice's*
-conversation, because without the least/greatest ordering the two of them get
-one conversation each and half the history apiece, with no error anywhere.
+Two assertions in `10_messages` are the reason that suite exists. The first is
+that **a moderator and an admin can both read exactly nothing**: `messages` is
+the one table in this schema with no staff read policy, and a test is the only
+thing that will notice the day somebody adds one "for moderation". The second
+is the canonical pair key -- Bob opening a conversation with Alice must land in
+*Alice's* conversation, because without the least/greatest ordering the two of
+them get one conversation each and half the history apiece, with no error
+anywhere.
 
 The assertion that most earned its place so far is in `09_groups`: a post inside a
 **private** group, left at the column default `visibility = 'public'`, must be

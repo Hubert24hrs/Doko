@@ -464,3 +464,106 @@ The order matters, because getting it wrong produces a button that fails:
 The Vercel variable is what actually shows the button, and it is separate from
 `.env.example`, so committing a change to that file does not enable anything in
 production.
+
+---
+
+## Audit: the Phase 5 money-and-trust tables (found 2026-09-08)
+
+Migrations 023-027 added verification, advertising, payments and community
+projects. Writing pgTAP suites for them found **five real defects**, and they
+were all the same shape: **the rule was written as a COMMENT and never as a
+mechanism.**
+
+Migrations 001-021 do not have this problem. Every intent there is paired with
+a policy, a CHECK or a guard trigger. Somewhere in Phase 5 the habit slipped,
+and the comments kept reading as though it had not.
+
+### 1. Anyone could confirm their own payment (migration 028)
+
+`confirm_ad_payment()` and `confirm_project_donation()` are `SECURITY DEFINER`.
+**PostgreSQL grants EXECUTE on a new function to `PUBLIC` by default**, and
+neither migration revoked it. Any signed-in member could call either one over
+PostgREST and mark their own advert paid, or credit a donation that never
+arrived. Free advertising, and a fundraising total that meant nothing.
+
+Closed by revoking EXECUTE from `public`, `anon` and `authenticated`, and
+granting it to `service_role` alone.
+
+**The revoke must come AFTER the `create or replace`.** Replacing a function
+resets its privileges, so a revoke written above the definition is undone by
+the definition below it.
+
+### 2. A donation credited its PARAMETER, not the payment (migration 028)
+
+`confirm_project_donation(p_amount_naira, ...)` added the caller's number to
+`raised_amount_naira` without ever comparing it to the payment it named. With
+defect 1, that is a member typing any figure they like onto a public progress
+bar. It now derives the amount from the `payments` row and refuses a mismatch,
+and refuses a payment whose `target_id` is a different project.
+
+### 3. Verification delegation did not work at all (migration 029)
+
+`profiles_update` admitted only `id = auth.uid()` or `is_admin()`. A delegated
+verifier is neither, so every badge they granted was **silently filtered away
+by RLS and reported to them as success** -- the failure mode already recorded
+under "RLS refuses by filtering, not by raising" above, repeated in a feature
+built after it was written down.
+
+Two fixes, because either alone is insufficient: a `profiles_update_verifier`
+policy so the write can land, and `.select("id")` plus a row-count check in
+`src/features/admin/actions.ts` so a refusal is never reported as success.
+
+### 4. An advertiser could approve their own advert (migration 030)
+
+`ad_campaigns_update` admits `advertiser_id = auth.uid()` and nothing narrowed
+what that could set. An advertiser could PATCH `status = 'active'` straight
+past the `/admin/ads` moderation queue and the payment gate, and type in their
+own impression and click counts. Closed with a guard trigger in the same
+restore-rather-than-raise style as posts, events, jobs and listings. Pausing
+and resuming are kept, because that was the documented intent and neither is
+self-promotion.
+
+### 5. A project creator could fabricate a fundraising total (migration 031)
+
+The same hole on `community_projects`, and the worst of the five. A progress
+bar reading "4,800,000 naira raised by 190 donors" is the single most
+persuasive thing on a crowdfunding page. A creator who can type that number in
+can raise real money on it.
+
+### The defect the fix introduced: SECURITY DEFINER does not change auth.uid()
+
+Migrations 030 and 031 both branched on `if public.is_staff() then return new`,
+on the stated assumption that the confirming RPCs "run as the definer and are
+therefore not subject to this branch."
+
+**That is wrong, and it is worth remembering.** `SECURITY DEFINER` changes the
+EXECUTING ROLE. It does not change `auth.uid()`, which reads the JWT claim off
+the session. The Paystack webhook uses the service role, whose JWT carries no
+`sub`, so `auth.uid()` is NULL, `is_staff()` is false, and both guards took
+their member branch and restored exactly the columns the payment had just
+written. The guards broke the two paths they existed to protect.
+
+Migration 032 adds `auth.uid() is null or public.is_staff()`. A NULL uid means
+no member is acting -- service role, definer function, or migration -- and it
+grants nothing RLS has not already allowed, because an anon caller satisfies
+neither table's UPDATE policy in the first place.
+
+`19_community_projects` caught the donation half. **Nothing caught the
+advertising half**, because `18_advertising` asserted only that an advertiser
+COULD NOT set `payment_status` and never that the platform COULD -- a rule with
+no test, which is the exact failure this audit exists to find. That assertion
+now exists.
+
+### And the defect in the test that hid it
+
+The first run of the corrected `18_advertising` still failed, and the migration
+was not at fault. **`reset role` restores the role and nothing else.** A
+`set local request.jwt.claims` survives it, so after `pg_temp.become(somebody)`
+every later statement in the transaction still has that somebody's `auth.uid()`
+even once the role is back. The suites were calling the platform's RPCs through
+the guard's member branch while reading as though they tested the platform one.
+
+Suites 16, 18 and 19 now use a `pg_temp.become_platform()` helper that clears
+`request.jwt.claims` as well as the role, reproducing what the service role
+actually looks like. **A test fixture that only half-drops a privilege proves
+nothing, and does it quietly.**

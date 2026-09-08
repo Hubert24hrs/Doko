@@ -43,18 +43,32 @@ export async function toggleVerificationAction(
   // Profiles check constraint requires:
   // (is_verified = false and verified_at is null and verification_type is null) or
   // (is_verified = true and verified_at is not null and verification_type is not null)
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("profiles")
     .update({
       is_verified: isVerifying,
       verified_at: isVerifying ? new Date().toISOString() : null,
       verification_type: tier,
     })
-    .eq("id", parsed.data.memberId);
+    .eq("id", parsed.data.memberId)
+    .select("id");
 
   if (error) {
     console.error("[admin.verify] failed", error.message);
     return { ok: false, formError: "Could not update verification status." };
+  }
+
+  // RLS refuses an UPDATE by FILTERING, not by raising, so `error` being null
+  // does not mean anything changed. Without this check a verifier whose policy
+  // does not admit them was told the badge was granted while the row sat
+  // untouched -- which is how the missing profiles_update_verifier policy went
+  // unnoticed until migration 029.
+  if (!data || data.length === 0) {
+    console.error("[admin.verify] refused for", parsed.data.memberId);
+    return {
+      ok: false,
+      formError: "You do not have permission to change that member's verification.",
+    };
   }
 
   // If there's an open pending request, mark it resolved
@@ -195,18 +209,31 @@ export async function reviewVerificationRequestAction(
 
   // 3. If approved, update member profile
   if (isApproved) {
-    const { error: profileError } = await supabase
+    const { data: updated, error: profileError } = await supabase
       .from("profiles")
       .update({
         is_verified: true,
         verified_at: new Date().toISOString(),
         verification_type: tier,
       })
-      .eq("id", request.user_id);
+      .eq("id", request.user_id)
+      .select("id");
 
     if (profileError) {
       console.error("[admin.review_request.profile] failed", profileError.message);
       return { ok: false, formError: "Request status updated, but profile could not be marked verified." };
+    }
+
+    // Counted, not assumed: a filtered UPDATE is silent, and approving the
+    // request while the badge never lands is the worst of both outcomes --
+    // the queue says handled and the member is still unverified.
+    if (!updated || updated.length === 0) {
+      console.error("[admin.review_request.profile] refused for", request.user_id);
+      return {
+        ok: false,
+        formError:
+          "The request was marked approved, but you do not have permission to grant the badge.",
+      };
     }
   }
 

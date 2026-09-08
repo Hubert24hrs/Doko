@@ -14,20 +14,26 @@ export const getActiveSponsoredAds = cache(
         p_limit: limit,
       });
 
+      // No fabricated adverts. This used to fall back to two invented
+      // campaigns whenever the query failed OR simply returned nothing --
+      // attributed to organisations that do not exist ("Ezike Oba
+      // Agricultural Board"), and each one carrying
+      // advertiser_verification_type: "gold".
+      //
+      // Gold is this platform's highest trust signal, reserved for office
+      // holders, Igwes and elders and granted only through the moderated
+      // queue that migrations 023 and 029 exist to protect. Awarding one in
+      // a TypeScript literal walks past all of it. An empty feed slot is the
+      // correct rendering when nobody has bought an advert.
       if (error || !data) {
         console.warn("Failed to fetch active sponsored ads RPC:", error?.message);
-        return getFallbackSponsoredAds(placement);
+        return [];
       }
 
-      const items = data as SponsoredAdItem[];
-      if (items.length === 0) {
-        return getFallbackSponsoredAds(placement);
-      }
-
-      return items;
+      return data as SponsoredAdItem[];
     } catch (err) {
       console.error("Error in getActiveSponsoredAds:", err);
-      return getFallbackSponsoredAds(placement);
+      return [];
     }
   }
 );
@@ -76,55 +82,3 @@ export const getPendingAdCampaigns = cache(
     }
   }
 );
-
-function getFallbackSponsoredAds(placement: AdPlacement): SponsoredAdItem[] {
-  if (placement === "marketplace_banner") {
-    return [
-      {
-        id: "fallback-market-1",
-        advertiser_id: "system-sponsor",
-        title: "Igbo Eze North Farmers & Traders Cooperative",
-        description: "Buy fresh palm oil, yam, and cassava directly from local Enugu Ezike farmers.",
-        target_url: "https://doko-delta.vercel.app/marketplace",
-        image_url: null,
-        placement: "marketplace_banner",
-        status: "active",
-        target_village_id: null,
-        budget_naira: 0,
-        impressions_count: 100,
-        clicks_count: 12,
-        starts_at: new Date().toISOString(),
-        ends_at: new Date(Date.now() + 30 * 86400000).toISOString(),
-        created_at: new Date().toISOString(),
-        advertiser_name: "Ezike Oba Agricultural Board",
-        advertiser_avatar: null,
-        advertiser_is_verified: true,
-        advertiser_verification_type: "gold",
-      },
-    ];
-  }
-
-  return [
-    {
-      id: "fallback-feed-1",
-      advertiser_id: "system-sponsor",
-      title: "Promote Your Business Across Igbo Eze North",
-      description: "Reach thousands of verified community members, diaspora kin, and local customers on Ezike Oba.",
-      target_url: "https://doko-delta.vercel.app/marketplace",
-      image_url: null,
-      placement: "feed_sponsored",
-      status: "active",
-      target_village_id: null,
-      budget_naira: 0,
-      impressions_count: 250,
-      clicks_count: 35,
-      starts_at: new Date().toISOString(),
-      ends_at: new Date(Date.now() + 30 * 86400000).toISOString(),
-      created_at: new Date().toISOString(),
-      advertiser_name: "Ezike Oba Commerce Hub",
-      advertiser_avatar: null,
-      advertiser_is_verified: true,
-      advertiser_verification_type: "gold",
-    },
-  ];
-}

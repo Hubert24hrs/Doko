@@ -70,12 +70,12 @@ is listed under "Not yet done" and is honest about being open.
   four reactions, trigger-maintained engagement counts, and a public
   `/posts/[id]` page. Verified against the hosted project with real data,
   including the author embed and the generated SEO metadata for public posts.
-* **537 database assertions passing** against the live project, one suite per
+* **552 database assertions passing** against the live project, one suite per
   migration: 38 schema, 29 RLS, 9 seed, 22 posts, 18 comments/reactions,
   19 media, 16 follows, 13 followers-only posts, 27 groups, 38 messages,
   29 group conversations, 14 presence, 35 events, 35 jobs, 32 marketplace,
   26 payments, 25 verification, 25 advertising, 24 community projects,
-  26 issues, 23 notifications, 14 pulse.
+  26 issues, 23 notifications, 14 pulse, 15 notification triggers.
 * **Followers-only posts verified**, including that replies and images inherit
   the tier without those tables having been modified.
 * **Phase 2 slice 7 (groups) verified against the live database.** 27
@@ -740,3 +740,7 @@ If a local database is ever wanted, install Docker Desktop, then
 | A delegated verifier needed a POLICY, not just a role | `can_verify_members()` existed and was consulted nowhere RLS could see it, so delegation reported success while writing nothing. A capability that only the application knows about is not a capability |
 | A test fixture must drop a privilege COMPLETELY | `reset role` restores the role and leaves `set local request.jwt.claims` in place, so `auth.uid()` keeps answering with whoever was last impersonated. Suites 16-19 use `pg_temp.become_platform()`, which clears both. A fixture that half-drops a privilege tests the wrong branch and says nothing about it |
 | Every "X cannot" assertion needs its "but the platform can" twin | `18_advertising` asserted an advertiser could not mark their own advert paid and never that `confirm_ad_payment` could. The migration that broke the real payment path passed the suite cleanly. A negative assertion alone cannot tell a closed hole from a broken feature |
+| A notification about a private message carries no word of it | `messages` is the one table with no staff read policy, and withdrawing a message BLANKS ITS BODY in the database so that no stale copy survives anywhere. A notification quoting it would be exactly such a copy, and nothing would ever blank it. So it says a message arrived and who from. Comments and issues quote freely -- a post is public speech |
+| A group message notifies members of the GROUP, never holders of a read marker | `conversation_members` rows survive somebody leaving, and telling a departed member there is a new message tells them the group is still talking. The same rule migration 016 turned on, which a notification would otherwise reintroduce by the back door |
+| One unread message notification per conversation, not one per message | a thread of two hundred messages must not put two hundred rows in a tray. The previous unread one is DELETED and re-inserted rather than updated, because `auth.uid()` inside the trigger is the SENDER -- definer changes the role, not the uid -- so `notifications_guard` would silently revert an update |
+| Migration 022's promised "reply to their comment" notification does not exist | `comments` has no `parent_id` and the feature has no reply concept; comments are flat. The branch would have failed at runtime on every comment, since plpgsql resolves `new.<field>` only when the trigger fires |

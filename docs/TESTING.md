@@ -13,8 +13,8 @@ npm run verify        # typecheck + lint + test
 **293 unit tests, 24 files, all passing.** Typecheck clean, lint clean,
 production build clean.
 
-**537 database assertions pass against the live hosted project**, across
-twenty-two pgTAP suites -- one for every migration. They are run by pasting
+**552 database assertions pass against the live hosted project**, across
+twenty-three pgTAP suites -- one for every migration. They are run by pasting
 each file into the Supabase SQL Editor, not by `supabase test db`: there is no
 Docker here. See "Database tests" below.
 
@@ -28,7 +28,7 @@ run; nothing here is aspirational.
 | Auth schemas | `tests/unit/auth-schemas.test.ts` | 22 | username rules, reserved names, email normalisation, Nigerian phone -> E.164, password policy, optional village, password match, consent |
 | Group schemas | `tests/unit/group-schemas.test.ts` | 21 | slug derivation incl. Igbo diacritics, the empty-slug fallback the action depends on, bounds mirroring the CHECK constraints, end-state membership intent |
 | Media | `tests/unit/media.test.ts` | 18 | storage path shape, accepted types, per-post limit, aspect ratio |
-| Comment schemas | `tests/unit/comment-schemas.test.ts` | 15 | body bounds, trimming, parent id, edit payload |
+| Comment schemas | `tests/unit/comment-schemas.test.ts` | 15 | body bounds, trimming, the four reaction kinds, that an edit cannot blank a reply, and that an author id is never accepted from the client |
 | Post schemas | `tests/unit/post-schemas.test.ts` | 14 | body bounds, optional community -> null, visibility enum |
 | Profile schema | `tests/unit/profile-schemas.test.ts` | 12 | blank optionals -> null, optional village, phone normalisation, http(s)-only website, bio length, visibility enum, privileged fields stripped |
 | Redirect guard | `tests/unit/redirect.test.ts` | 12 | open-redirect defence incl. protocol-relative, backslash, control chars |
@@ -68,9 +68,9 @@ database.
 
 ### Database tests -- RUN AND PASSING against the hosted project
 
-**All 537 assertions pass** against the live project: 01-09 as of 2026-09-01,
+**All 552 assertions pass** against the live project: 01-09 as of 2026-09-01,
 the messaging, presence, events, jobs and marketplace suites as of
-2026-09-02/03, and the Phase 5 suites (16-22) as of 2026-09-08:
+2026-09-02/03, and the Phase 5 suites (16-23) as of 2026-09-08:
 
 | Suite | Assertions | Covers |
 |---|---|---|
@@ -96,6 +96,7 @@ the messaging, presence, events, jobs and marketplace suites as of
 | `20_issues.test.sql` | 26 | **the `administers_geo()` ancestor walk** -- an admin scoped to a TOWN can act on an issue in a village beneath it, and an admin of another town cannot; the reporter owns the problem and the administrator owns the verdict |
 | `21_notifications.test.sql` | 23 | a member cannot plant a notification in anybody's tray, their own included, **and the triggers still deliver**; a moderator reads nothing; `read_at` is the only column a member may change |
 | `22_pulse.test.sql` | 14 | the definer function does not publish a private profile, does not hand out the id of a post inside a private group, and cannot be run signed out |
+| `23_notification_triggers.test.sql` | 15 | comments, reactions, follows and messages actually notify somebody; **a message notification carries no word of the message**; **a group message tells nobody who left the group** |
 
 With a linked local database they would run as `supabase test db`; here each
 file is pasted into the SQL Editor instead.

@@ -86,9 +86,12 @@ function GeoBranch({ node, depth }: { node: GeoNode; depth: number }) {
   if (depth >= 2 && isLeafLevel) {
     return (
       <li className="inline-flex">
-        <span className="rounded-full border border-border bg-surface px-3 py-1 text-sm text-foreground">
+        <Link
+          href={`/communities/${node.slug}`}
+          className="rounded-full border border-border bg-surface px-3 py-1 text-sm text-foreground transition-colors hover:border-primary hover:text-primary"
+        >
           {node.name}
-        </span>
+        </Link>
       </li>
     );
   }
@@ -100,7 +103,12 @@ function GeoBranch({ node, depth }: { node: GeoNode; depth: number }) {
       <CardContent className="pt-5">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <HeadingTag className="text-lg font-semibold tracking-tight text-foreground">
-            {node.name}
+            <Link
+              href={`/communities/${node.slug}`}
+              className="hover:text-primary hover:underline"
+            >
+              {node.name}
+            </Link>
           </HeadingTag>
           <Badge variant="primary">{KIND_LABEL[node.kind] ?? node.kind}</Badge>
           {node.aliases.length > 0 ? (

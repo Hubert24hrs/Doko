@@ -51,7 +51,7 @@ const EVENT_FIELDS = `
  */
 export async function getUpcomingEvents(
   cursor?: string,
-  options?: { geoId?: string; kind?: EventKind; groupId?: string },
+  options?: { geoId?: string; geoIds?: string[]; kind?: EventKind; groupId?: string },
 ): Promise<EventPage> {
   try {
     const supabase = await createClient();
@@ -66,6 +66,12 @@ export async function getUpcomingEvents(
 
     if (cursor) query = query.gt("starts_at", cursor);
     if (options?.geoId) query = query.eq("geo_id", options.geoId);
+    // `geoIds` is the subtree form, used by a community page: a town page must
+    // include its villages, because that is where things are actually tagged.
+    // `geoId` above stays exact-match for the callers that mean one place.
+    if (options?.geoIds && options.geoIds.length > 0) {
+      query = query.in("geo_id", options.geoIds);
+    }
     if (options?.kind) query = query.eq("kind", options.kind);
     if (options?.groupId) query = query.eq("group_id", options.groupId);
 

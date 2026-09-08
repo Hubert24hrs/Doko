@@ -53,7 +53,7 @@ const LISTING_FIELDS = `
  */
 export async function getListings(
   cursor?: string,
-  options?: { category?: ListingCategory; status?: ListingStatus },
+  options?: { category?: ListingCategory; status?: ListingStatus; geoIds?: string[] },
 ): Promise<ListingPage> {
   try {
     const supabase = await createClient();
@@ -68,6 +68,14 @@ export async function getListings(
     if (cursor) query = query.lt("created_at", cursor);
     if (options?.category) query = query.eq("category", options.category);
     if (options?.status) query = query.eq("status", options.status);
+    // A community page passes the ids of the place AND everything beneath it:
+    // almost nothing is tagged at town level, so `= town.id` would show an
+    // empty town containing thirty busy villages. An EMPTY array is never
+    // passed -- getGeoDescendantIds always includes the entity itself -- so
+    // this cannot silently mean "no filter".
+    if (options?.geoIds && options.geoIds.length > 0) {
+      query = query.in("geo_id", options.geoIds);
+    }
 
     const { data, error } = await query;
     if (error) {

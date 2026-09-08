@@ -58,7 +58,7 @@ const JOB_FIELDS = `
  */
 export async function getOpenJobs(
   cursor?: string,
-  options?: { category?: JobCategory },
+  options?: { category?: JobCategory; geoIds?: string[] },
 ): Promise<JobPage> {
   try {
     const supabase = await createClient();
@@ -74,6 +74,14 @@ export async function getOpenJobs(
 
     if (cursor) query = query.lt("created_at", cursor);
     if (options?.category) query = query.eq("category", options.category);
+    // A community page passes the ids of the place AND everything beneath it:
+    // almost nothing is tagged at town level, so `= town.id` would show an
+    // empty town containing thirty busy villages. An EMPTY array is never
+    // passed -- getGeoDescendantIds always includes the entity itself -- so
+    // this cannot silently mean "no filter".
+    if (options?.geoIds && options.geoIds.length > 0) {
+      query = query.in("geo_id", options.geoIds);
+    }
 
     const { data, error } = await query;
     if (error) {

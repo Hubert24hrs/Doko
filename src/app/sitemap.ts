@@ -79,6 +79,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       return staticEntries;
     }
 
+    // Every community now has its own page, and they are the most durable URLs
+    // on the platform — a village outlives any post in it. Not capped: there
+    // are 56 of them and the tree is reference data, not user content.
+    const { data: places, error: placeError } = await supabase
+      .from("geo_entities")
+      .select("slug, updated_at")
+      .is("deleted_at", null)
+      .eq("status", "active");
+
+    if (placeError) {
+      console.error("[sitemap] community query failed", placeError.message);
+    }
+
     // Profiles too. Same anonymous client, so RLS returns only the ones a
     // signed-out crawler could actually read.
     const { data: profiles, error: profileError } = await supabase
@@ -95,6 +108,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return [
       ...staticEntries,
+      ...(places ?? []).map((place) => ({
+        url: `${siteUrl}/communities/${place.slug}`,
+        lastModified: new Date(place.updated_at),
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      })),
       ...(data ?? []).map((post) => ({
         url: `${siteUrl}/posts/${post.id}`,
         lastModified: new Date(post.updated_at ?? post.created_at),

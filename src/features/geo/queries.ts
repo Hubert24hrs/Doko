@@ -128,6 +128,21 @@ export const getVillageOptions = cache(async (): Promise<VillageOption[]> => {
   }
 });
 
+/**
+ * Resolve a slug to exactly one community.
+ *
+ * Deliberately NO `.limit(1)`. Migration 002's uniqueness index is scoped to
+ * the parent, which is right for a tree and useless for a URL -- and the seed
+ * shipped a collision on it: `Ezzodo` is both a district of Enugu-Ezike and an
+ * INEC ward. With `.limit(1)` this returned whichever row came back first, so
+ * /communities/ezzodo could have shown a different place on a different day
+ * with no error anywhere.
+ *
+ * Migration 036 makes the slug globally unique. `maybeSingle()` without a limit
+ * is how this code REFUSES to paper over it again: if a duplicate ever exists,
+ * PostgREST raises rather than guessing, and the page 404s loudly instead of
+ * lying quietly.
+ */
 export const getGeoEntityBySlug = cache(
   async (slug: string): Promise<GeoEntityRow | null> => {
     const supabase = await createClient();
@@ -136,7 +151,6 @@ export const getGeoEntityBySlug = cache(
       .select("*")
       .eq("slug", slug)
       .is("deleted_at", null)
-      .limit(1)
       .maybeSingle();
 
     if (error) {
@@ -160,3 +174,54 @@ export async function getGeoAncestors(entityId: string) {
   }
   return data ?? [];
 }
+
+/**
+ * Every entity at or beneath `entityId`, as ids.
+ *
+ * A community page has to show what happened IN that place, and almost nothing
+ * is tagged at town level: a post about the Nkwo market carries the village's
+ * geo_id, not Enugu-Ezike's. Filtering a town page on `geo_id = town.id` would
+ * therefore show an empty town containing thirty busy villages.
+ *
+ * The result always includes `entityId` itself, so the caller can pass it
+ * straight to `.in("geo_id", ids)`.
+ */
+export const getGeoDescendantIds = cache(
+  async (entityId: string): Promise<string[]> => {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("geo_descendants", {
+      entity_id: entityId,
+    });
+
+    if (error) {
+      console.error("[geo.getGeoDescendantIds] rpc failed", error.message);
+      // Narrowing to the entity itself is the safe failure: the page shows
+      // less than it should rather than everything on the platform.
+      return [entityId];
+    }
+
+    const ids = (data ?? []).map((row: { id: string }) => row.id);
+    return ids.length > 0 ? ids : [entityId];
+  },
+);
+
+/** The immediate children of an entity, in the order admins arranged them. */
+export const getGeoChildren = cache(
+  async (entityId: string): Promise<GeoEntityRow[]> => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("geo_entities")
+      .select("*")
+      .eq("parent_id", entityId)
+      .is("deleted_at", null)
+      .eq("status", "active")
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error("[geo.getGeoChildren] query failed", error.message);
+      return [];
+    }
+    return data ?? [];
+  },
+);

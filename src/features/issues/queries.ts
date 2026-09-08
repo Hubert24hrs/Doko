@@ -49,7 +49,7 @@ const ISSUE_FIELDS = `
  */
 export async function getIssues(
   cursor?: string,
-  options?: { category?: IssueCategory; status?: IssueStatus; geoId?: string },
+  options?: { category?: IssueCategory; status?: IssueStatus; geoId?: string; geoIds?: string[] },
 ): Promise<IssuePage> {
   try {
     const supabase = await createClient();
@@ -65,6 +65,12 @@ export async function getIssues(
     if (options?.category) query = query.eq("category", options.category);
     if (options?.status) query = query.eq("status", options.status);
     if (options?.geoId) query = query.eq("geo_id", options.geoId);
+    // `geoIds` is the subtree form, used by a community page: a town page must
+    // include its villages, because that is where things are actually tagged.
+    // `geoId` above stays exact-match for the callers that mean one place.
+    if (options?.geoIds && options.geoIds.length > 0) {
+      query = query.in("geo_id", options.geoIds);
+    }
 
     const { data, error } = await query;
     if (error) {

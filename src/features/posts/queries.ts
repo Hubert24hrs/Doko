@@ -50,6 +50,11 @@ export async function getFeedPage(
    * everything on the platform.
    */
   authorIds?: string[],
+  /**
+   * Restrict to posts tagged to these communities. Used by a community
+   * page, which passes the place and every place beneath it.
+   */
+  geoIds?: string[],
 ): Promise<FeedPage> {
   try {
     if (authorIds && authorIds.length === 0) {
@@ -71,6 +76,12 @@ export async function getFeedPage(
       .limit(FEED_PAGE_SIZE);
 
     if (authorIds) query = query.in("author_id", authorIds);
+    // A community page passes the ids of the place AND everything beneath it:
+    // almost nothing is tagged at town level, so `= town.id` would show an
+    // empty town containing thirty busy villages. An EMPTY array is never
+    // passed -- getGeoDescendantIds always includes the entity itself -- so
+    // this cannot silently mean "no filter".
+    if (geoIds && geoIds.length > 0) query = query.in("geo_id", geoIds);
     if (cursor) query = query.lt("created_at", cursor);
 
     const { data, error } = await query;

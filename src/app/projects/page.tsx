@@ -8,6 +8,13 @@ export const metadata = {
   description: "Fund roads, solar lights, water boreholes, and community infrastructure in Igbo Eze North via Paystack.",
 };
 
+// Every other data page carries this; /projects was missing it and was being
+// prerendered as static. The totals below are the whole point of the page, and
+// a build-time snapshot of them means a donation never moves the progress bar
+// until the next deploy -- on the one screen where the number is what persuades
+// the next person to give.
+export const dynamic = "force-dynamic";
+
 export default async function ProjectsPage() {
   const projects = await getCommunityProjects();
 

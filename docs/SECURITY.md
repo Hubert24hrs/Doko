@@ -567,3 +567,95 @@ Suites 16, 18 and 19 now use a `pg_temp.become_platform()` helper that clears
 `request.jwt.claims` as well as the role, reproducing what the service role
 actually looks like. **A test fixture that only half-drops a privilege proves
 nothing, and does it quietly.**
+
+---
+
+## Audit: notifications and the Community Pulse (found 2026-09-08)
+
+The three migrations with no test coverage left after the money-and-trust
+audit -- 021 `community_issues`, 022 `notifications`, 024 `community_pulse` --
+turned up two more defects of exactly the same shape. Migration 021 turned out
+clean: it is Phase 4 work and pairs every rule with a guard trigger, a CHECK or
+a policy, which is why `20_issues` found nothing to fix.
+
+### 6. Anyone could plant a notification in anyone's tray (migration 033)
+
+Migration 022 shipped this, under the comment "Triggers or system functions
+can insert":
+
+```sql
+create policy notifications_insert_authenticated
+  on public.notifications for insert
+  to authenticated
+  with check (public.is_active_member());
+```
+
+The check constrains the INSERTER. It says nothing at all about `user_id`, so
+any signed-in member could write a row into ANY member's notification tray and
+choose its `title`, its `body`, its `actor_id` and its `link`. A notification
+is the one thing on this platform that arrives unasked and reads as coming
+from the platform itself, so that is a phishing surface with a mailing list
+attached: loop over the profile ids and it is a broadcast channel nobody
+granted. `link` was unconstrained text, so it could carry an absolute URL that
+the notification list renders as a link the member has every reason to trust.
+
+The policy was not merely too wide -- **it was never needed**. Both
+notification triggers are `SECURITY DEFINER` and bypass RLS entirely, and the
+application never inserts one: `src/features/notifications` only selects and
+marks read. The policy permitted something that did not require permission and
+granted forgery as the price.
+
+Migration 033 drops it and revokes INSERT, the way `audit_logs` (migration
+004) and `conversations` (migration 015) already handle rows written on
+somebody else's behalf. It also adds the guard `notifications_update_own` never
+had -- `read_at` is now the only column a member may change -- and constrains
+`link` to a path inside this app.
+
+### 7. The Community Pulse published what RLS hides (migration 034)
+
+`get_community_pulse()` is `SECURITY DEFINER`, so every table it reads is read
+with row level security switched off. **A definer function is a hole in RLS
+that somebody has promised to fill by hand**, and migration 024 did not fill
+it:
+
+* it returned `username`, `full_name` and `avatar_path` for any verified
+  member, ignoring `profiles.visibility` -- so a member who set their profile
+  to `private` or `community` was still drawn on the feed, by name and
+  photograph, for anybody;
+* `latest_post_id` came from `posts` with no visibility predicate at all, so
+  the id it handed out could belong to a followers-only post or to one inside
+  a private group. The post page still refuses to render it, but this schema
+  is deliberate that an invisible post 404s rather than 403s **precisely so
+  that its existence is not confirmed** -- and handing out its id confirms it;
+* comments and reactions inside private groups counted as "activity", so the
+  sphere reported that somebody had been busy somewhere the reader was not
+  entitled to know about;
+* and its EXECUTE was left at the PostgreSQL default of PUBLIC -- the same
+  default that made `confirm_ad_payment()` callable by anybody until migration
+  028.
+
+Migration 034 writes the bypassed rules into the function explicitly,
+mirroring `profiles_select_visible` and `posts_select_public`, and restricts
+EXECUTE to `authenticated` and `service_role`. It stays `SECURITY DEFINER`:
+it aggregates across four tables and running it under RLS would re-plan every
+one of those policies per row.
+
+**The general rule this pair establishes: every `SECURITY DEFINER` function
+needs two things written down and tested -- who may EXECUTE it, and which
+rules it is bypassing on purpose.** Four of the five definer functions added
+in Phase 5 were wrong about the first, and this one was wrong about both.
+
+### And a third defect in a test, again
+
+`20_issues` first failed on "nobody but the reporter can add one to their
+report". The migration was correct; the assertion was aimed at an issue that
+already had four photographs, so `issue_media_enforce_limit` -- a BEFORE
+INSERT trigger -- raised `23514` before RLS evaluated the policy's WITH CHECK
+at all. The assertion named authorisation and measured the photo limit.
+
+This is the third time in one session that an assertion was refused by an
+earlier mechanism than the one it named: `14_jobs` expected `23505` from a
+unique constraint the policy refuses first, `10_messages` had an
+`INSERT ... SELECT` over an RLS-hidden table that fed on zero rows and threw
+nothing, and now this. **Test each rule where it can actually fire**, and when
+two mechanisms can refuse the same statement, know which one goes first.

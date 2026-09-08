@@ -70,11 +70,12 @@ is listed under "Not yet done" and is honest about being open.
   four reactions, trigger-maintained engagement counts, and a public
   `/posts/[id]` page. Verified against the hosted project with real data,
   including the author embed and the generated SEO metadata for public posts.
-* **474 database assertions passing** against the live project: 38 schema,
-  29 RLS, 9 seed, 22 posts, 18 comments/reactions, 19 media, 16 follows,
-  13 followers-only posts, 27 groups, 38 messages, 29 group conversations,
-  14 presence, 35 events, 35 jobs, 32 marketplace, 26 payments,
-  25 verification, 25 advertising, 24 community projects.
+* **537 database assertions passing** against the live project, one suite per
+  migration: 38 schema, 29 RLS, 9 seed, 22 posts, 18 comments/reactions,
+  19 media, 16 follows, 13 followers-only posts, 27 groups, 38 messages,
+  29 group conversations, 14 presence, 35 events, 35 jobs, 32 marketplace,
+  26 payments, 25 verification, 25 advertising, 24 community projects,
+  26 issues, 23 notifications, 14 pulse.
 * **Followers-only posts verified**, including that replies and images inherit
   the tier without those tables having been modified.
 * **Phase 2 slice 7 (groups) verified against the live database.** 27
@@ -204,6 +205,24 @@ is listed under "Not yet done" and is honest about being open.
   no `sub`, so `auth.uid()` is NULL, `is_staff()` is false, and both guards
   restored what the payment had just written. Migration 032 admits a NULL
   uid, which grants nothing RLS has not already allowed.
+* **Audited 2026-09-08 (the last three uncovered migrations).** Suites 20-22
+  cover `community_issues` (021), `notifications` (022) and `community_pulse`
+  (024). 021 came back CLEAN -- it is Phase 4 work and pairs every rule with a
+  mechanism, which is the difference. The other two did not:
+  6. `notifications` had a member-facing INSERT policy checking only that the
+     INSERTER was an active member, never constraining `user_id`. Anybody
+     could write into anybody's tray, choosing the title, the apparent sender
+     and the link. It was never needed: both notification triggers are
+     `SECURITY DEFINER`. Migration 033.
+  7. `get_community_pulse()` is `SECURITY DEFINER` and restated none of the
+     rules it was bypassing, so it published private and community-only
+     profiles by name and handed out the ids of posts inside private groups.
+     Its EXECUTE was PUBLIC too. Migration 034.
+
+  `20_issues` also finally exercises `administers_geo()`: an admin scoped to a
+  TOWN acting on an issue in a village beneath it. The helper has existed
+  since migration 003 and nothing had used it -- issues are the first feature
+  whose authority is geographic rather than platform-wide.
 * **Audited 2026-09-01**, 15/15 live routes healthy. Three real defects found
   and fixed, all recorded in docs/SECURITY.md:
   1. Post and reply editing was unreachable -- policies, guard triggers and the
@@ -674,8 +693,13 @@ If a local database is ever wanted, install Docker Desktop, then
 | Issue coordinates must be strictly paired | a single coordinate puts a marker in the Gulf of Guinea (0,0); a database CHECK enforces both or neither |
 | Community confirmations recount by trigger | confirming an issue is a statement of fact, not speech; withdrawing hard-deletes to keep the priority count accurate |
 | Notifications are private to the recipient | `notifications` has no staff read policy; a member reads only their own alerts, keeping user activity private |
+| Notifications have NO member-facing INSERT policy | migration 022 had one, checking only that the INSERTER was an active member and never constraining `user_id`, so anybody could write into anybody's tray with any title, sender and link. It was never needed either: both notification triggers are `SECURITY DEFINER` and bypass RLS. Closed in migration 033, the same way `audit_logs` and `conversations` were already handled |
+| A notification's `link` is CHECKed to a relative path | it is rendered as a link the member has every reason to trust, so an absolute URL in it is a phishing surface. Same discipline as the http(s) CHECK on `profile_social_links` |
 | Community Pulse 3D sphere | `SphereImageGrid` renders verified members active in last 24h; node badges overlay Gold vs Blue badges; images only (no text inside sphere); clicking opens post detail modal |
-| Community Pulse 24h aggregation | RPC `get_community_pulse(limit)` aggregates activity across posts, comments, reactions for verified non-suspended members; groups by user for 1 entry per member |
+| Community Pulse 24h aggregation | RPC `get_community_pulse(limit)` aggregates activity across posts, comments and reactions for verified non-suspended members; groups by user for one entry per member |
+| The pulse RPC restates `profiles_select_visible` and `posts_select_public` | it is `SECURITY DEFINER`, so it reads every table with RLS off. Migration 024 restated nothing and therefore published private profiles by name and handed out ids of posts inside private groups -- and an invisible post 404s rather than 403s precisely so its existence is not confirmed. Migration 034 writes the bypassed rules in. It stays definer because aggregating four tables under RLS re-plans every policy per row |
+| Every `SECURITY DEFINER` function needs BOTH things written down and tested | who may EXECUTE it, and which rules it is deliberately bypassing. Four of the five definer functions added in Phase 5 were wrong about the first; `get_community_pulse` was wrong about both |
+| Test each rule where it can actually fire | three assertions this session were refused by an earlier mechanism than the one they named: a unique constraint the policy beats to it (`14_jobs`), an `INSERT ... SELECT` over an RLS-hidden table that fed on zero rows (`10_messages`), and an authorisation check aimed at a row a BEFORE INSERT trigger rejected first (`20_issues`). When two mechanisms can refuse the same statement, know which goes first |
 | Two verification tiers: Golden & Blue | office holders, traditional leaders (Igwes, elders, councilors) receive a golden ticker with verification mark; regular citizens and active members receive a blue ticker with verification mark |
 | Verification delegation is admin-only | only super_admin/admin can delegate verification authority via `verification_delegates`; delegated verifiers can grant/revoke badges but cannot suspend users or delete accounts |
 | Verification requests queue | registered members can submit requests from `/verification`; admins and delegates review requests in `/admin/members` |

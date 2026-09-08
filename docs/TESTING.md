@@ -13,10 +13,10 @@ npm run verify        # typecheck + lint + test
 **293 unit tests, 24 files, all passing.** Typecheck clean, lint clean,
 production build clean.
 
-**474 database assertions pass against the live hosted project**, across
-nineteen pgTAP suites. They are run by pasting each file into the Supabase SQL Editor,
-not by `supabase test db` -- there is no Docker here. See "Database tests"
-below.
+**537 database assertions pass against the live hosted project**, across
+twenty-two pgTAP suites -- one for every migration. They are run by pasting
+each file into the Supabase SQL Editor, not by `supabase test db`: there is no
+Docker here. See "Database tests" below.
 
 No end-to-end (browser) tests exist yet. Everything else below has actually
 run; nothing here is aspirational.
@@ -68,10 +68,9 @@ database.
 
 ### Database tests -- RUN AND PASSING against the hosted project
 
-**All 474 assertions pass** against the live project: 01-09 as of 2026-09-01,
+**All 537 assertions pass** against the live project: 01-09 as of 2026-09-01,
 the messaging, presence, events, jobs and marketplace suites as of
-2026-09-02/03, and the Phase 5 money-and-trust suites (16-19) as of
-2026-09-08:
+2026-09-02/03, and the Phase 5 suites (16-22) as of 2026-09-08:
 
 | Suite | Assertions | Covers |
 |---|---|---|
@@ -94,6 +93,9 @@ the messaging, presence, events, jobs and marketplace suites as of
 | `17_verification.test.sql` | 25 | a delegated verifier can actually grant a badge; a member cannot verify themselves; the dual-tier CHECK refuses a badge with no timestamp |
 | `18_advertising.test.sql` | 25 | an advertiser cannot approve, pay for, or type in the view count of their own advert -- **and the platform still can** mark it paid |
 | `19_community_projects.test.sql` | 24 | a creator cannot approve their own appeal or fabricate its total; the target cannot move once money is in |
+| `20_issues.test.sql` | 26 | **the `administers_geo()` ancestor walk** -- an admin scoped to a TOWN can act on an issue in a village beneath it, and an admin of another town cannot; the reporter owns the problem and the administrator owns the verdict |
+| `21_notifications.test.sql` | 23 | a member cannot plant a notification in anybody's tray, their own included, **and the triggers still deliver**; a moderator reads nothing; `read_at` is the only column a member may change |
+| `22_pulse.test.sql` | 14 | the definer function does not publish a private profile, does not hand out the id of a post inside a private group, and cannot be run signed out |
 
 With a linked local database they would run as `supabase test db`; here each
 file is pasted into the SQL Editor instead.
@@ -172,7 +174,9 @@ role` and a forged JWT claim, exactly as PostgREST does:
 12. anonymous visitors see only public profiles
 13. `consume_rate_limit` allows up to the limit and refuses beyond it, per bucket
 
-Still to write: `community_admin` subtree scoping, and migration idempotency.
+`community_admin` subtree scoping is now covered by `20_issues` -- see the
+note there about why it took until Phase 4 to have a feature that needed
+it. Still to write: migration idempotency.
 
 ### Migration tests
 

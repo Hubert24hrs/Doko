@@ -70,13 +70,13 @@ is listed under "Not yet done" and is honest about being open.
   four reactions, trigger-maintained engagement counts, and a public
   `/posts/[id]` page. Verified against the hosted project with real data,
   including the author embed and the generated SEO metadata for public posts.
-* **564 database assertions passing** against the live project, one suite per
+* **581 database assertions passing** against the live project, one suite per
   migration: 38 schema, 29 RLS, 9 seed, 22 posts, 18 comments/reactions,
   19 media, 16 follows, 13 followers-only posts, 27 groups, 38 messages,
   29 group conversations, 14 presence, 35 events, 35 jobs, 32 marketplace,
   26 payments, 25 verification, 25 advertising, 24 community projects,
   26 issues, 23 notifications, 14 pulse, 15 notification triggers,
-  12 geo slugs.
+  12 geo slugs, 17 geo admin.
 * **Followers-only posts verified**, including that replies and images inherit
   the tier without those tables having been modified.
 * **Phase 2 slice 7 (groups) verified against the live database.** 27
@@ -224,6 +224,21 @@ is listed under "Not yet done" and is honest about being open.
   TOWN acting on an issue in a village beneath it. The helper has existed
   since migration 003 and nothing had used it -- issues are the first feature
   whose authority is geographic rather than platform-wide.
+* **The community directory is now editable in-app (2026-09-09).** Every
+  community has a page at `/communities/[slug]` showing its posts, events,
+  jobs, listings and issues scoped to its whole subtree; a platform admin
+  adds communities from `/admin/communities`; a community_admin corrects
+  the details of their own from that community's page, because they are
+  not staff and cannot reach the admin console.
+
+  The `geo_entities` INSERT/UPDATE/DELETE policies had existed since
+  migration 005 with NOTHING in the application using them -- not one write
+  anywhere in the codebase -- while both pages told people the directory
+  could be corrected. Building it found the UPDATE policy was wider than
+  its own comment: `administers_geo(id)` grants the whole ROW, so a
+  community_admin could reparent their village or promote it to a second
+  Local Government Area at the root. Migration 037 adds the guard, and a
+  trigger enforcing that exactly one LGA exists.
 * **Audited 2026-09-01**, 15/15 live routes healthy. Three real defects found
   and fixed, all recorded in docs/SECURITY.md:
   1. Post and reply editing was unreachable -- policies, guard triggers and the
@@ -343,7 +358,7 @@ src/
   features/                 feature-owned logic
     admin/queries.ts
     auth/{actions,schemas,session}.ts, components/
-    geo/{queries,snapshot}.ts
+    geo/{queries,actions,schemas,snapshot}.ts, components/
     profile/{actions,queries,schemas}.ts, components/
     posts/{actions,queries,schemas}.ts, components/
     comments/{actions,queries,schemas}.ts, components/
@@ -364,7 +379,7 @@ src/
 supabase/
   migrations/               numbered, idempotent
   seed.sql                  real Igbo-Eze North data
-supabase/tests/             pgTAP suites 01-15, portable SQL
+supabase/tests/             pgTAP suites 01-25, portable SQL
 tests/unit/                 vitest suites
 docs/                       ARCHITECTURE, DEVELOPMENT, TESTING, SECURITY, DEPLOYMENT
 ```

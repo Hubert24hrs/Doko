@@ -13,8 +13,8 @@ npm run verify        # typecheck + lint + test
 **293 unit tests, 24 files, all passing.** Typecheck clean, lint clean,
 production build clean.
 
-**564 database assertions pass against the live hosted project**, across
-twenty-four pgTAP suites -- one for every migration. They are run by pasting
+**581 database assertions pass against the live hosted project**, across
+twenty-five pgTAP suites -- one for every migration. They are run by pasting
 each file into the Supabase SQL Editor, not by `supabase test db`: there is no
 Docker here. See "Database tests" below.
 
@@ -68,10 +68,10 @@ database.
 
 ### Database tests -- RUN AND PASSING against the hosted project
 
-**All 564 assertions pass** against the live project: 01-09 as of 2026-09-01,
+**All 581 assertions pass** against the live project: 01-09 as of 2026-09-01,
 the messaging, presence, events, jobs and marketplace suites as of
 2026-09-02/03, the Phase 5 suites (16-23) as of 2026-09-08, and the
-community-slug suite (24) as of 2026-09-09:
+community suites (24-25) as of 2026-09-09:
 
 | Suite | Assertions | Covers |
 |---|---|---|
@@ -99,6 +99,7 @@ community-slug suite (24) as of 2026-09-09:
 | `22_pulse.test.sql` | 14 | the definer function does not publish a private profile, does not hand out the id of a post inside a private group, and cannot be run signed out |
 | `23_notification_triggers.test.sql` | 15 | comments, reactions, follows and messages actually notify somebody; **a message notification carries no word of the message**; **a group message tells nobody who left the group** |
 | `24_geo_slugs.test.sql` | 12 | **asks the LIVE directory** whether any two communities share a slug, not a fixture; the index refuses a collision even under a different parent; a withdrawn community does not hold its slug against a live one |
+| `25_geo_admin.test.sql` | 17 | a community admin can fix a misspelling in their own village **and cannot move it, re-address it, merge it away or delete it**; a platform admin can move one, which is what the role is for; nobody can create a second Local Government Area |
 
 With a linked local database they would run as `supabase test db`; here each
 file is pasted into the SQL Editor instead.

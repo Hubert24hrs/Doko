@@ -33,12 +33,12 @@ function Choice({
       value={status}
       disabled={pending}
       aria-pressed={active}
-      className={cn(
+      className={cn("tap-target", cn(
         "rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-60",
         active
           ? "border-primary bg-primary text-primary-foreground"
           : "border-border-strong text-foreground hover:bg-surface-sunken",
-      )}
+      ))}
     >
       {label}
     </button>
@@ -78,7 +78,7 @@ export function ApplicationDecision({
 
   return (
     <div>
-      <form action={formAction} className="flex flex-wrap gap-1.5">
+      <form action={formAction} className="flex flex-wrap gap-2">
         <input type="hidden" name="applicationId" value={applicationId} />
         <input type="hidden" name="jobId" value={jobId} />
         {CHOICES.map((choice) => (

@@ -211,7 +211,7 @@ export default async function CommunityPage({
                     <li key={child.id}>
                       <Link
                         href={`/communities/${child.slug}`}
-                        className="inline-flex rounded-full border border-border bg-surface px-3 py-1 text-sm text-foreground transition-colors hover:border-primary hover:text-primary"
+                        className="tap-target inline-flex rounded-full border border-border bg-surface px-3 py-1 text-sm text-foreground transition-colors hover:border-primary hover:text-primary"
                       >
                         {child.name}
                       </Link>

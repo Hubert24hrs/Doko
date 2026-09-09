@@ -52,13 +52,13 @@ function ReactionButton({
       // what it is: pressing your current reaction takes it back.
       aria-pressed={active}
       title={active ? `${label} — press again to undo` : label}
-      className={cn(
+      className={cn("tap-target", cn(
         "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
         "transition-colors disabled:opacity-60",
         active
           ? "border-primary/40 bg-eo-green-50 text-primary"
           : "border-border bg-surface text-muted-foreground hover:border-border-strong hover:text-foreground",
-      )}
+      ))}
     >
       <Icon className="size-3.5" aria-hidden="true" />
       {label}
@@ -85,7 +85,7 @@ export function ReactionBar({
         </p>
       ) : null}
 
-      <form action={formAction} className="flex flex-wrap items-center gap-1.5">
+      <form action={formAction} className="flex flex-wrap items-center gap-2">
         <input type="hidden" name="postId" value={postId} />
 
         {REACTIONS.map(({ kind, label, icon: Icon }) => (

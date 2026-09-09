@@ -176,3 +176,63 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Skip link
+
+   The markup in layout.tsx has always carried `sr-only-focusable`, and that
+   class was never defined -- not by Tailwind, not here. So the skip link had no
+   hiding rule at all and rendered as a visible pill at left-4 top-4, on top of
+   the logo, on every page. Reported from a phone where it overlapped the
+   wordmark.
+
+   Visually hidden until it takes focus, which is the whole point of a skip
+   link: invisible to a mouse, the first thing a keyboard reaches.
+   --------------------------------------------------------------------------- */
+.sr-only-focusable:not(:focus):not(:focus-within) {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Touch targets
+
+   Apple HIG asks for 44pt and Material for 48dp. The filter chips on /events
+   and /issues were `px-3 py-1 text-xs` (about 28px) and the issue category row
+   was `px-2.5 py-0.5` (about 22px), set 6px apart -- so on a phone a thumb
+   landed in the gap and nothing happened. Reported as "it doesn't select when
+   clicked", which it did not.
+
+   This raises the CONTROL to 44px rather than growing the pill with padding,
+   so the chips look as designed and simply become hittable. Applied to the
+   control itself, so it works the same on a Link, a button or an anchor.
+   --------------------------------------------------------------------------- */
+.tap-target {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem; /* 44px */
+}
+
+/* A chip row needs room between rows too: two 44px targets 6px apart still
+   leaves a thumb able to land between them. */
+.tap-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem; /* 8px */
+}
+
+/* Pointer-precise input does not need the enlarged target, and on a dense
+   admin table it costs vertical space. Coarse pointers keep it. */
+@media (pointer: fine) {
+  .tap-target {
+    min-height: 2rem; /* 32px */
+  }
+}

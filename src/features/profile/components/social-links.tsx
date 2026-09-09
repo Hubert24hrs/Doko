@@ -44,11 +44,11 @@ export function SocialLinks({
             href={link.url}
             target="_blank"
             rel="noopener noreferrer nofollow ugc"
-            className={cn(
+            className={cn("tap-target", cn(
               "inline-flex items-center gap-1.5 rounded-full border border-border",
               "bg-surface px-3 py-1 text-xs font-medium text-foreground",
               "transition-colors hover:border-border-strong hover:text-primary",
-            )}
+            ))}
           >
             {link.platform === "website" ? (
               <Globe className="size-3.5" aria-hidden="true" />

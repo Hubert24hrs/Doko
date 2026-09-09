@@ -55,7 +55,7 @@ export default async function AdminIssuesPage({
 
         <Link
           href="/issues?view=map"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border-strong px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-sunken"
+          className="tap-target inline-flex items-center gap-1.5 rounded-lg border border-border-strong px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-sunken"
         >
           <MapPin className="size-3.5" aria-hidden="true" />
           View public map
@@ -64,10 +64,10 @@ export default async function AdminIssuesPage({
 
       {/* Filters */}
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
           <Link
             href="/admin/issues"
-            className={`rounded-full px-3 py-1 font-medium transition-colors ${
+            className={`tap-target rounded-full px-3 py-1 font-medium transition-colors ${
               !status
                 ? "bg-primary text-primary-foreground"
                 : "bg-surface border border-border text-muted-foreground hover:bg-surface-sunken"
@@ -79,7 +79,7 @@ export default async function AdminIssuesPage({
             <Link
               key={s}
               href={`/admin/issues?status=${s}`}
-              className={`rounded-full px-3 py-1 font-medium transition-colors ${
+              className={`tap-target rounded-full px-3 py-1 font-medium transition-colors ${
                 status === s
                   ? "bg-primary text-primary-foreground"
                   : "bg-surface border border-border text-muted-foreground hover:bg-surface-sunken"

@@ -250,7 +250,7 @@ export function MessageThread({
               <div className="flex justify-center pb-2">
                 <Link
                   href={`/messages/${conversationId}?before=${encodeURIComponent(olderCursor)}`}
-                  className="rounded-lg border border-border-strong px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-sunken"
+                  className="tap-target rounded-lg border border-border-strong px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-sunken"
                 >
                   Show earlier messages
                 </Link>

@@ -14,6 +14,7 @@ import {
 } from "@/features/marketplace/schemas";
 import { getActiveSponsoredAds } from "@/features/ads/queries";
 import { MarketplaceBannerAd } from "@/features/ads/components/marketplace-banner-ad";
+import { cn } from "@/lib/utils/cn";
 
 export const metadata: Metadata = {
   title: "Marketplace",
@@ -92,14 +93,14 @@ export default async function MarketplacePage({
           </div>
         )}
 
-        <div className="mt-6 flex flex-wrap gap-1.5">
+        <div className="mt-6 flex flex-wrap gap-2">
           <Link
             href="/marketplace"
-            className={
+            className={cn("tap-target", 
               validCategory
                 ? "rounded-full border border-border-strong px-3 py-1 text-xs font-medium text-foreground hover:bg-surface-sunken"
                 : "rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
-            }
+            )}
           >
             All
           </Link>
@@ -107,11 +108,11 @@ export default async function MarketplacePage({
             <Link
               key={c}
               href={`/marketplace?category=${c}`}
-              className={
+              className={cn("tap-target", 
                 validCategory === c
                   ? "rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
                   : "rounded-full border border-border-strong px-3 py-1 text-xs font-medium text-foreground hover:bg-surface-sunken"
-              }
+              )}
             >
               {LISTING_CATEGORY_LABEL[c]}
             </Link>

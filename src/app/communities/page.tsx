@@ -88,7 +88,7 @@ function GeoBranch({ node, depth }: { node: GeoNode; depth: number }) {
       <li className="inline-flex">
         <Link
           href={`/communities/${node.slug}`}
-          className="rounded-full border border-border bg-surface px-3 py-1 text-sm text-foreground transition-colors hover:border-primary hover:text-primary"
+          className="tap-target rounded-full border border-border bg-surface px-3 py-1 text-sm text-foreground transition-colors hover:border-primary hover:text-primary"
         >
           {node.name}
         </Link>

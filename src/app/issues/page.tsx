@@ -137,7 +137,7 @@ export default async function IssuesPage({
           <div className="flex items-center rounded-lg border border-border p-1 bg-surface-sunken">
             <Link
               href={`/issues${buildQuery({ view: undefined })}`}
-              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`tap-target inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 !isMapView
                   ? "bg-surface text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -148,7 +148,7 @@ export default async function IssuesPage({
             </Link>
             <Link
               href={`/issues${buildQuery({ view: "map" })}`}
-              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`tap-target inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 isMapView
                   ? "bg-surface text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -161,10 +161,10 @@ export default async function IssuesPage({
         </div>
 
         {/* Status Filters */}
-        <div className="mt-6 flex flex-wrap items-center gap-1.5 text-xs">
+        <div className="mt-6 flex flex-wrap items-center gap-2 text-xs">
           <Link
             href={`/issues${buildQuery({ status: undefined, before: undefined })}`}
-            className={`rounded-full px-3 py-1 font-medium transition-colors ${
+            className={`tap-target rounded-full px-3 py-1 font-medium transition-colors ${
               !validStatus
                 ? "bg-primary text-primary-foreground"
                 : "bg-surface border border-border text-muted-foreground hover:bg-surface-sunken"
@@ -179,7 +179,7 @@ export default async function IssuesPage({
               <Link
                 key={s}
                 href={`/issues${buildQuery({ status: s, before: undefined })}`}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium transition-colors ${
+                className={`tap-target inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium transition-colors ${
                   active
                     ? "bg-primary text-primary-foreground"
                     : "bg-surface border border-border text-muted-foreground hover:bg-surface-sunken"
@@ -199,11 +199,11 @@ export default async function IssuesPage({
         </div>
 
         {/* Category Filters */}
-        <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs border-b border-border pb-4">
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs border-b border-border pb-4">
           <span className="text-xs font-semibold text-muted-foreground mr-1">Category:</span>
           <Link
             href={`/issues${buildQuery({ category: undefined, before: undefined })}`}
-            className={`rounded-full px-2.5 py-0.5 font-medium transition-colors ${
+            className={`tap-target rounded-full px-2.5 py-0.5 font-medium transition-colors ${
               !validCategory
                 ? "bg-foreground text-background"
                 : "bg-surface-sunken text-muted-foreground hover:text-foreground"
@@ -217,7 +217,7 @@ export default async function IssuesPage({
               <Link
                 key={c}
                 href={`/issues${buildQuery({ category: c, before: undefined })}`}
-                className={`rounded-full px-2.5 py-0.5 font-medium transition-colors ${
+                className={`tap-target rounded-full px-2.5 py-0.5 font-medium transition-colors ${
                   active
                     ? "bg-foreground text-background"
                     : "bg-surface-sunken text-muted-foreground hover:text-foreground"

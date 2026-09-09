@@ -31,12 +31,12 @@ function StatusOption({
       value={status}
       disabled={pending || active}
       aria-pressed={active}
-      className={cn(
+      className={cn("tap-target", cn(
         "rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-default",
         active
           ? "border-primary bg-primary text-primary-foreground"
           : "border-border-strong text-foreground hover:bg-surface-sunken disabled:opacity-60",
-      )}
+      ))}
     >
       {LISTING_STATUS_LABEL[status]}
     </button>

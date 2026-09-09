@@ -8,6 +8,7 @@ import { getSessionUser } from "@/features/auth/session";
 import { getMyJobs, getOpenJobs } from "@/features/jobs/queries";
 import { JobCard } from "@/features/jobs/components/job-card";
 import { JOB_CATEGORY_LABEL, jobCategories } from "@/features/jobs/schemas";
+import { cn } from "@/lib/utils/cn";
 
 export const metadata: Metadata = {
   title: "Jobs",
@@ -77,14 +78,14 @@ export default async function JobsPage({
           members only.
         </p>
 
-        <div className="mt-6 flex flex-wrap gap-1.5">
+        <div className="mt-6 flex flex-wrap gap-2">
           <Link
             href="/jobs"
-            className={
+            className={cn("tap-target", 
               validCategory
                 ? "rounded-full border border-border-strong px-3 py-1 text-xs font-medium text-foreground hover:bg-surface-sunken"
                 : "rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
-            }
+            )}
           >
             All
           </Link>
@@ -92,11 +93,11 @@ export default async function JobsPage({
             <Link
               key={c}
               href={`/jobs?category=${c}`}
-              className={
+              className={cn("tap-target", 
                 validCategory === c
                   ? "rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
                   : "rounded-full border border-border-strong px-3 py-1 text-xs font-medium text-foreground hover:bg-surface-sunken"
-              }
+              )}
             >
               {JOB_CATEGORY_LABEL[c]}
             </Link>

@@ -94,7 +94,7 @@ export default async function EventPage({
               <h1 className="text-2xl font-bold tracking-tight text-foreground">
                 {event.title}
               </h1>
-              <div className="flex flex-wrap items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-2">
                 {now ? <Badge>Happening now</Badge> : null}
                 <Badge variant="neutral">{EVENT_KIND_LABEL[event.kind]}</Badge>
               </div>
@@ -211,7 +211,7 @@ export default async function EventPage({
                 <li key={attendee.user_id}>
                   <Link
                     href={`/members/${attendee.profile?.username ?? ""}`}
-                    className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs text-foreground hover:bg-surface-sunken"
+                    className="tap-target inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs text-foreground hover:bg-surface-sunken"
                   >
                     {attendee.profile?.full_name ?? "A member"}
                     {attendee.status === "interested" ? (

@@ -233,10 +233,10 @@ export default async function AdminMembersPage({
               <Button type="submit" size="sm" variant="outline">Search</Button>
             </form>
 
-            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
               <Link
                 href="/admin/members?tab=members"
-                className={`rounded-full px-3 py-1 font-medium transition-colors ${
+                className={`tap-target rounded-full px-3 py-1 font-medium transition-colors ${
                   !status
                     ? "bg-primary text-primary-foreground"
                     : "bg-surface border border-border text-muted-foreground hover:bg-surface-sunken"
@@ -246,7 +246,7 @@ export default async function AdminMembersPage({
               </Link>
               <Link
                 href="/admin/members?tab=members&status=verified"
-                className={`rounded-full px-3 py-1 font-medium transition-colors ${
+                className={`tap-target rounded-full px-3 py-1 font-medium transition-colors ${
                   status === "verified"
                     ? "bg-primary text-primary-foreground"
                     : "bg-surface border border-border text-muted-foreground hover:bg-surface-sunken"
@@ -256,7 +256,7 @@ export default async function AdminMembersPage({
               </Link>
               <Link
                 href="/admin/members?tab=members&status=unverified"
-                className={`rounded-full px-3 py-1 font-medium transition-colors ${
+                className={`tap-target rounded-full px-3 py-1 font-medium transition-colors ${
                   status === "unverified"
                     ? "bg-primary text-primary-foreground"
                     : "bg-surface border border-border text-muted-foreground hover:bg-surface-sunken"
@@ -266,7 +266,7 @@ export default async function AdminMembersPage({
               </Link>
               <Link
                 href="/admin/members?tab=members&status=suspended"
-                className={`rounded-full px-3 py-1 font-medium transition-colors ${
+                className={`tap-target rounded-full px-3 py-1 font-medium transition-colors ${
                   status === "suspended"
                     ? "bg-danger text-white"
                     : "bg-surface border border-border text-muted-foreground hover:bg-surface-sunken"

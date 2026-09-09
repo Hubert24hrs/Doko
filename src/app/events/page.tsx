@@ -8,6 +8,7 @@ import { getSessionUser } from "@/features/auth/session";
 import { getPastEvents, getUpcomingEvents } from "@/features/events/queries";
 import { EventCard } from "@/features/events/components/event-card";
 import { EVENT_KIND_LABEL, eventKinds } from "@/features/events/schemas";
+import { cn } from "@/lib/utils/cn";
 
 export const metadata: Metadata = {
   title: "Events",
@@ -103,14 +104,14 @@ export default async function EventsPage({
         </nav>
 
         {!past ? (
-          <div className="mt-4 flex flex-wrap gap-1.5">
+          <div className="mt-4 flex flex-wrap gap-2">
             <Link
               href="/events"
-              className={
+              className={cn("tap-target", 
                 validKind
                   ? "rounded-full border border-border-strong px-3 py-1 text-xs font-medium text-foreground hover:bg-surface-sunken"
                   : "rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
-              }
+              )}
             >
               All
             </Link>
@@ -118,11 +119,11 @@ export default async function EventsPage({
               <Link
                 key={k}
                 href={`/events?kind=${k}`}
-                className={
+                className={cn("tap-target", 
                   validKind === k
                     ? "rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
                     : "rounded-full border border-border-strong px-3 py-1 text-xs font-medium text-foreground hover:bg-surface-sunken"
-                }
+                )}
               >
                 {EVENT_KIND_LABEL[k]}
               </Link>

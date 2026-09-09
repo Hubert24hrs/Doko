@@ -225,3 +225,33 @@ export const getGeoChildren = cache(
     return data ?? [];
   },
 );
+
+/**
+ * May the current viewer correct this community's details?
+ *
+ * Asks the same two things geo_entities_update_admin asks, so the control is
+ * offered exactly when the write would land. Getting this wrong in the
+ * permissive direction shows a button that silently does nothing -- the
+ * failure mode migration 029 was written for.
+ *
+ * A `community_admin` is NOT staff (is_staff is super_admin, admin, moderator),
+ * so they cannot reach /admin at all. Their editing surface is the community's
+ * own page, which is where they are standing when they notice the misspelling.
+ */
+export const canEditCommunity = cache(
+  async (entityId: string): Promise<boolean> => {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    const [{ data: admin }, { data: administers }] = await Promise.all([
+      supabase.rpc("is_admin", {}),
+      supabase.rpc("administers_geo", { entity_id: entityId }),
+    ]);
+
+    return admin === true || administers === true;
+  },
+);

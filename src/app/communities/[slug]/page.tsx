@@ -6,11 +6,13 @@ import { CalendarDays, Briefcase, ShoppingBag, TriangleAlert, MapPin } from "luc
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/states";
 import {
+  canEditCommunity,
   getGeoAncestors,
   getGeoChildren,
   getGeoDescendantIds,
   getGeoEntityBySlug,
 } from "@/features/geo/queries";
+import { EditCommunityForm } from "@/features/geo/components/edit-community-form";
 import { getFeedPage } from "@/features/posts/queries";
 import { getUpcomingEvents } from "@/features/events/queries";
 import { getOpenJobs } from "@/features/jobs/queries";
@@ -99,11 +101,12 @@ export default async function CommunityPage({
     if (target) redirect(`/communities/${target.slug}`);
   }
 
-  const [ancestors, children, geoIds, user] = await Promise.all([
+  const [ancestors, children, geoIds, user, canEdit] = await Promise.all([
     getGeoAncestors(place.id),
     getGeoChildren(place.id),
     getGeoDescendantIds(place.id),
     getSessionUser(),
+    canEditCommunity(place.id),
   ]);
 
   // Everything below is scoped to the place AND everything beneath it. A post
@@ -185,6 +188,12 @@ export default async function CommunityPage({
       {place.description ? (
         <p className="mt-3 max-w-2xl text-muted-foreground">{place.description}</p>
       ) : null}
+
+      {/* Offered only where the write would actually land. A community admin
+          is not staff and cannot reach /admin, so this page is their editing
+          surface — which is also where they are standing when they notice the
+          misspelling. */}
+      {canEdit ? <EditCommunityForm place={place} /> : null}
 
       {childGroups.length > 0 ? (
         <section className="mt-8" aria-labelledby="within">

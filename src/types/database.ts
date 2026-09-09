@@ -1210,6 +1210,11 @@ export interface Database {
         Args: { entity_id: string; check_user_id?: string };
         Returns: boolean;
       };
+      /** Migration 036. Returns a slug not already taken by a live community. */
+      geo_free_slug: {
+        Args: { desired_name: string; self_id?: string };
+        Returns: string;
+      };
       shares_community_with: {
         Args: { target_profile_id: string };
         Returns: boolean;

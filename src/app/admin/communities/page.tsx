@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/states";
 import { requireAdmin } from "@/features/auth/session";
 import { getGeoTree, type GeoNode } from "@/features/geo/queries";
+import { CreateCommunityForm } from "@/features/geo/components/create-community-form";
 
 export const metadata: Metadata = {
   title: "Communities · Admin",
@@ -51,9 +52,14 @@ export default async function AdminCommunitiesPage() {
       </h1>
       <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
         The full geographic tree for Igbo-Eze North. {rows.length} entities.
-        Editing, moving and merging are enforced by database policy — a
-        community admin can only change their own subtree.
+        Adding one, and moving or merging it, is a platform admin&rsquo;s job. A
+        community admin corrects the DETAILS of their own community from that
+        community&rsquo;s page — they are not staff and cannot reach this console.
       </p>
+
+      <CreateCommunityForm
+        parents={rows.map(({ node, path }) => ({ id: node.id, label: path }))}
+      />
 
       {rows.length === 0 ? (
         <EmptyState
@@ -92,7 +98,12 @@ export default async function AdminCommunitiesPage() {
                       <Badge variant="neutral">{node.kind}</Badge>
                     </td>
                     <td className="px-5 py-2.5 font-mono text-xs text-muted-foreground">
-                      {node.slug}
+                      <Link
+                        href={`/communities/${node.slug}`}
+                        className="hover:text-primary hover:underline"
+                      >
+                        {node.slug}
+                      </Link>
                     </td>
                     <td className="px-5 py-2.5 text-muted-foreground">
                       {node.status}

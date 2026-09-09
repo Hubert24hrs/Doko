@@ -70,12 +70,13 @@ is listed under "Not yet done" and is honest about being open.
   four reactions, trigger-maintained engagement counts, and a public
   `/posts/[id]` page. Verified against the hosted project with real data,
   including the author embed and the generated SEO metadata for public posts.
-* **552 database assertions passing** against the live project, one suite per
+* **564 database assertions passing** against the live project, one suite per
   migration: 38 schema, 29 RLS, 9 seed, 22 posts, 18 comments/reactions,
   19 media, 16 follows, 13 followers-only posts, 27 groups, 38 messages,
   29 group conversations, 14 presence, 35 events, 35 jobs, 32 marketplace,
   26 payments, 25 verification, 25 advertising, 24 community projects,
-  26 issues, 23 notifications, 14 pulse, 15 notification triggers.
+  26 issues, 23 notifications, 14 pulse, 15 notification triggers,
+  12 geo slugs.
 * **Followers-only posts verified**, including that replies and images inherit
   the tier without those tables having been modified.
 * **Phase 2 slice 7 (groups) verified against the live database.** 27
@@ -744,3 +745,10 @@ If a local database is ever wanted, install Docker Desktop, then
 | A group message notifies members of the GROUP, never holders of a read marker | `conversation_members` rows survive somebody leaving, and telling a departed member there is a new message tells them the group is still talking. The same rule migration 016 turned on, which a notification would otherwise reintroduce by the back door |
 | One unread message notification per conversation, not one per message | a thread of two hundred messages must not put two hundred rows in a tray. The previous unread one is DELETED and re-inserted rather than updated, because `auth.uid()` inside the trigger is the SENDER -- definer changes the role, not the uid -- so `notifications_guard` would silently revert an update |
 | Migration 022's promised "reply to their comment" notification does not exist | `comments` has no `parent_id` and the feature has no reply concept; comments are flat. The branch would have failed at runtime on every comment, since plpgsql resolves `new.<field>` only when the trigger fires |
+| Every community has its own page at `/communities/[slug]` | "Anyone may explore any community" is a founding product rule, and until this existed the directory rendered the whole hierarchy with not one entry as a link -- a read-only list. The page shows a place and everything tagged to it |
+| A community page is scoped to the SUBTREE, not the entity | almost nothing is tagged at town level: a post about the Nkwo market carries the village's `geo_id`. Filtering Enugu-Ezike on `geo_id = town.id` renders an empty town containing thirty busy villages. `geo_descendants()` had existed since migration 002 with nothing using it |
+| A slug identifies a community GLOBALLY, not per parent | migration 002's index is scoped to the parent, which is right for a tree and useless for a URL: two entities under different parents may legally share a slug. Migration 036 makes it structural. Until then the guarantee was held by a naming convention in seed.sql -- ward slugs prefixed `ward-` -- arrived at through a bug in which `Ezzodo` the district and `Ezzodo` the ward collided and 19 wards loaded instead of 20 |
+| A flat slug, not a nested path | `/communities/enugu-ezike/umuozzi/ogrute` would also be unambiguous and BREAKS whenever an admin moves a village to another parent -- which migration 002 exists to make cheap. A flat slug survives the move |
+| `getGeoEntityBySlug` has no `.limit(1)` | with `maybeSingle()` alone a duplicate raises instead of silently serving whichever row came back first. Refusing to paper over the ambiguity is the point |
+| A community page groups its children by kind | Enugu-Ezike's children are four traditional districts AND twenty INEC council wards, several sharing a name. Listed flat, "Ezzodo" appeared twice with nothing to say which was which. Wards are an electoral overlay on the traditional hierarchy, not a level of it |
+| A merged community redirects rather than 404s | `merged_into_id` exists precisely so historical references stay resolvable; honouring it costs one query and keeps a link somebody wrote down two years ago working |

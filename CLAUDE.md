@@ -224,6 +224,13 @@ is listed under "Not yet done" and is honest about being open.
   TOWN acting on an issue in a village beneath it. The helper has existed
   since migration 003 and nothing had used it -- issues are the first feature
   whose authority is geographic rather than platform-wide.
+* **Comment, reaction and follow notifications verified end to end through
+  the live app (2026-09-10).** Two real accounts; `VERIFY_WALKTHROUGH.sql`
+  confirmed each of one comment, one reaction and one follow produced exactly
+  the notification it should, and that all six notification triggers are
+  installed. Message, issue-confirmation and community-edit paths were NOT
+  exercised in that run -- their rules passed vacuously and remain unproven
+  through the UI. Realtime message delivery has still never been observed.
 * **The community directory is now editable in-app (2026-09-09).** Every
   community has a page at `/communities/[slug]` showing its posts, events,
   jobs, listings and issues scoped to its whole subtree; a platform admin

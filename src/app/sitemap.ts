@@ -81,7 +81,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // Every community now has its own page, and they are the most durable URLs
     // on the platform — a village outlives any post in it. Not capped: there
-    // are 56 of them and the tree is reference data, not user content.
+    // are 58 of them and the tree is reference data, not user content.
     const { data: places, error: placeError } = await supabase
       .from("geo_entities")
       .select("slug, updated_at")

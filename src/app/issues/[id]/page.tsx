@@ -17,6 +17,7 @@ import { ConfirmButton } from "@/features/issues/components/confirm-button";
 import { StatusControl } from "@/features/issues/components/status-control";
 import { ReporterControls } from "@/features/issues/components/reporter-controls";
 import { MiniMap, type MappedIssueItem } from "@/components/map";
+import { watDate } from "@/lib/format/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -139,7 +140,7 @@ export default async function IssueDetailPage({
 
             <span className="inline-flex items-center gap-1">
               <Calendar className="size-3.5" aria-hidden="true" />
-              {new Date(issue.created_at).toLocaleDateString("en-NG", {
+              {watDate(issue.created_at, {
                 year: "numeric",
                 month: "short",
                 day: "numeric",

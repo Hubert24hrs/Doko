@@ -121,7 +121,8 @@ is listed under "Not yet done" and is honest about being open.
   expression: it must return NULL and never raise for a topic that is not a
   conversation topic, since an error inside a policy is not a refusal.
 * **Phase 3 is complete**: direct messages, group conversations, presence and
-  typing. Realtime DELIVERY remains the one unverified thing.
+  typing. Realtime delivery, presence and typing were all OBSERVED working on
+  the live site on 2026-09-11 -- see the walkthrough entry below.
 * **Phase 4 slice 1 (events) verified against the live database.** Migration
   018 is applied and 35 assertions pass. They cover the WAT end-of-day fill
   (including an event just after midnight, which a UTC-based fill would end a
@@ -224,13 +225,28 @@ is listed under "Not yet done" and is honest about being open.
   TOWN acting on an issue in a village beneath it. The helper has existed
   since migration 003 and nothing had used it -- issues are the first feature
   whose authority is geographic rather than platform-wide.
-* **Comment, reaction and follow notifications verified end to end through
-  the live app (2026-09-10).** Two real accounts; `VERIFY_WALKTHROUGH.sql`
-  confirmed each of one comment, one reaction and one follow produced exactly
-  the notification it should, and that all six notification triggers are
-  installed. Message, issue-confirmation and community-edit paths were NOT
-  exercised in that run -- their rules passed vacuously and remain unproven
-  through the UI. Realtime message delivery has still never been observed.
+* **The signed-in surface verified end to end on the live site (2026-09-10/11).**
+  Three real accounts, driven partly by hand and partly through the
+  member's own already-signed-in Chrome session (no credential was ever
+  entered by an agent). Confirmed through the real UI, not only in pgTAP:
+  - comment, reaction and follow notifications each fire exactly once
+    (`VERIFY_WALKTHROUGH.sql` FIRING checks, all six triggers installed);
+  - **realtime message delivery** -- two messages appeared in an open thread
+    on the other account with no reload (a page-level recorder survived,
+    which a reload would have erased); presence ("is here now") and the
+    typing indicator both appeared too;
+  - three messages produced ONE unread notification, carrying who wrote and
+    not what they wrote;
+  - reporting an issue, a neighbour confirming it, and the reporter being
+    notified; then withdrawing it, after which the public page 404s;
+  - correcting a community's details through the new form, twice (made and
+    reverted), both writes landing.
+
+  It found three defects, fixed the same day: every server-rendered
+  timestamp was in UTC (see the `watString` decision below); both community
+  forms stayed open after saving with no confirmation; and the inbox does
+  not update live, which is recorded as a known gap rather than fixed.
+  All test content was withdrawn or reverted afterwards.
 * **The community directory is now editable in-app (2026-09-09).** Every
   community has a page at `/communities/[slug]` showing its posts, events,
   jobs, listings and issues scoped to its whole subtree; a platform admin
@@ -781,3 +797,6 @@ If a local database is ever wanted, install Docker Desktop, then
 | The create form has no slug field | the address is derived by `geo_free_slug()`, which returns one not already taken -- the same de-duplication `handle_new_user` does for usernames. Letting somebody type a slug invites a collision the unique index would refuse with a raw constraint error |
 | Every interactive control is at least 44px tall on a touch screen | Apple HIG asks 44pt, Material 48dp. The filter chips on `/events` and `/issues` were `px-3 py-1 text-xs` (~28px) and the issue category row `px-2.5 py-0.5` (~22px), 6px apart -- so on a phone a thumb landed in the gap and nothing happened. Reported from a real device as "it doesn't select when clicked", which it did not. The `.tap-target` utility raises the CONTROL to 44px rather than growing the pill with padding, so chips look as designed and simply become hittable; `@media (pointer: fine)` relaxes it to 32px so dense admin tables keep their density |
 | A class name that is not defined does nothing, silently | `layout.tsx` carried `sr-only-focusable` on the skip link from the beginning. It is not a Tailwind class and was never defined in `globals.css`, so the link had NO hiding rule and rendered as a visible pill over the wordmark on every page, on every device. Nothing errors, nothing warns -- Tailwind simply emits no rule for a class it does not know. The same failure mode as a rule written in a comment |
+| Every timestamp renders in `Africa/Lagos`, through `src/lib/format/datetime.ts` | found on the live walkthrough: `/notifications` said a message arrived "10 Sept, 23:15" while its own thread said "12:15 am", and in Nigeria it was already the 11th. Server-rendered pages run on Vercel in UTC, so any date formatted there without an explicit zone came out an hour behind -- and on the WRONG DAY for the hour after midnight. Client-rendered pages used the reader's clock and only looked right because the tester was in Nigeria. The events feature had already solved this; 18 other date renders in 13 files had not. They now all go through `watString` / `watDate` / `watTime`, and "is this today?" goes through `watDaysAgo`, because `getDate()` answers in the zone of whatever machine runs it |
+| A form closes itself when its save succeeds | found on the live walkthrough: after "Save corrections" the community form stayed open with no confirmation, because the "Saved" line only rendered once closed and nothing closed it. The close happens inside the `useActionState` action rather than an effect -- the save completing IS the event, and React's lint rightly refuses setState in an effect |
+| The inbox does NOT update live; only an open thread does | observed on the live walkthrough: a new conversation appeared in `/messages` only after a refresh. Only `message-thread.tsx` subscribes to Realtime. Recorded as a known gap, not a regression -- a live inbox would need its own subscription, and the thread is where delivery matters most |

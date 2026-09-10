@@ -10,13 +10,14 @@ import { PostActions } from "./post-actions";
 import { PostBody } from "./post-body";
 import { PostImages } from "./post-images";
 import type { PostImage } from "../media-queries";
+import { watDate, watString } from "@/lib/format/datetime";
 
 /** Relative time, in words, without pulling in a date library for one string. */
 function timeAgo(iso: string): { label: string; exact: string } {
   const then = new Date(iso);
   const seconds = Math.max(0, Math.floor((Date.now() - then.getTime()) / 1000));
 
-  const exact = then.toLocaleString("en-NG", {
+  const exact = watString(then, {
     dateStyle: "medium",
     timeStyle: "short",
   });
@@ -30,7 +31,7 @@ function timeAgo(iso: string): { label: string; exact: string } {
   if (days < 7) return { label: `${days}d ago`, exact };
 
   return {
-    label: then.toLocaleDateString("en-NG", { day: "numeric", month: "short" }),
+    label: watDate(then, { day: "numeric", month: "short" }),
     exact,
   };
 }
@@ -93,7 +94,7 @@ export function PostCard({
               </time>
 
               {post.edited_at ? (
-                <span title={`Edited ${new Date(post.edited_at).toLocaleString("en-NG")}`}>
+                <span title={`Edited ${watString(post.edited_at)}`}>
                   · edited
                 </span>
               ) : null}

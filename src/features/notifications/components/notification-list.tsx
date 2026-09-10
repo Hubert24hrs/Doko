@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils/cn";
 import type { NotificationItem } from "../queries";
 import { markNotificationReadAction } from "../actions";
+import { watString } from "@/lib/format/datetime";
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
   issue_confirmed: <Eye className="size-4 text-amber-600" aria-hidden="true" />,
@@ -71,7 +72,7 @@ export function NotificationList({
 
                     <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-muted-foreground">
                       <time dateTime={item.created_at}>
-                        {new Date(item.created_at).toLocaleString("en-NG", {
+                        {watString(item.created_at, {
                           month: "short",
                           day: "numeric",
                           hour: "2-digit",

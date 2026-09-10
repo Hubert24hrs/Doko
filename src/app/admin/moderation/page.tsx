@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import { requireStaff } from "@/features/auth/session";
 import { getAdminAudits } from "@/features/admin/queries";
+import { watString } from "@/lib/format/datetime";
 
 export const metadata: Metadata = {
   title: "Moderation & Audit — Admin",
@@ -80,7 +81,7 @@ export default async function AdminModerationPage() {
 
                     <td className="px-5 py-3 text-xs text-muted-foreground">
                       <time dateTime={entry.created_at}>
-                        {new Date(entry.created_at).toLocaleString("en-NG", {
+                        {watString(entry.created_at, {
                           year: "numeric",
                           month: "short",
                           day: "numeric",

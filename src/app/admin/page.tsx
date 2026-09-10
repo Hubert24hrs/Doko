@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/brand/logo";
 import { requireStaff } from "@/features/auth/session";
 import { getAdminOverview } from "@/features/admin/queries";
+import { watString } from "@/lib/format/datetime";
 
 export const metadata: Metadata = {
   title: "Admin",
@@ -202,7 +203,7 @@ export default async function AdminPage() {
                         </td>
                         <td className="px-5 py-3 text-muted-foreground">
                           <time dateTime={entry.created_at}>
-                            {new Date(entry.created_at).toLocaleString("en-NG")}
+                            {watString(entry.created_at)}
                           </time>
                         </td>
                       </tr>

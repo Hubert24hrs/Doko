@@ -9,6 +9,7 @@ import { Logo } from "@/components/brand/logo";
 import { requireUser } from "@/features/auth/session";
 import { getInbox } from "@/features/messages/queries";
 import type { ConversationSummary } from "@/features/messages/queries";
+import { watDate, watDaysAgo, watTime, watYear } from "@/lib/format/datetime";
 
 export const metadata: Metadata = {
   title: "Messages",
@@ -17,27 +18,20 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-/** Short, absolute-when-old timestamp. An inbox is scanned, not read. */
+/**
+ * Short, absolute-when-old timestamp. An inbox is scanned, not read.
+ *
+ * "Today" is decided in West Africa Time. This page renders on the server,
+ * which runs in UTC, so comparing getDate() here made a message sent at
+ * 12:15 am in Nigeria read as yesterday's for an hour every night.
+ */
 function whenLabel(iso: string | null): string {
   if (!iso) return "";
-  const then = new Date(iso);
-  const now = new Date();
-  const sameDay =
-    then.getFullYear() === now.getFullYear() &&
-    then.getMonth() === now.getMonth() &&
-    then.getDate() === now.getDate();
-
-  if (sameDay) {
-    return then.toLocaleTimeString("en-NG", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  }
-  return then.toLocaleDateString("en-NG", {
+  if (watDaysAgo(iso) === 0) return watTime(iso);
+  return watDate(iso, {
     day: "numeric",
     month: "short",
-    year: then.getFullYear() === now.getFullYear() ? undefined : "numeric",
+    year: watYear(iso) === watYear(Date.now()) ? undefined : "numeric",
   });
 }
 

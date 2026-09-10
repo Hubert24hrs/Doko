@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldLabel, FieldTextarea } from "@/components/ui/field";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { createClient } from "@/lib/supabase/client";
+import { watDate, watDaysAgo, watTime, watYear } from "@/lib/format/datetime";
 import { isSupabaseConfigured } from "@/lib/env";
 import { cn } from "@/lib/utils/cn";
 
@@ -26,34 +27,30 @@ import { typingLabel, usePresence } from "../use-presence";
 
 const INITIAL: MessageState = { ok: false };
 
+/**
+ * Day separators and clock times, both in West Africa Time.
+ *
+ * This component renders in the browser, so it used to take the READER's
+ * clock -- right for somebody in Enugu, an hour out for their brother in
+ * London, and out of step with every server-rendered page, which ran in UTC.
+ * The live walkthrough caught the thread saying 12:15 am while /notifications
+ * said 23:15 the previous day for the same message.
+ */
 function dayLabel(iso: string): string {
-  const then = new Date(iso);
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-
-  const sameDay = (a: Date, b: Date) =>
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate();
-
-  if (sameDay(then, today)) return "Today";
-  if (sameDay(then, yesterday)) return "Yesterday";
-  return then.toLocaleDateString("en-NG", {
+  const daysAgo = watDaysAgo(iso);
+  if (daysAgo === 0) return "Today";
+  if (daysAgo === 1) return "Yesterday";
+  return watDate(iso, {
     day: "numeric",
     month: "long",
-    year: then.getFullYear() === today.getFullYear() ? undefined : "numeric",
+    year: watYear(iso) === watYear(Date.now()) ? undefined : "numeric",
   });
 }
 
 function clockTime(iso: string): string {
   // hour12 stated, matching the events surface: the app should not speak
-  // 24-hour time in one place and 12-hour in another.
-  return new Date(iso).toLocaleTimeString("en-NG", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+  // 24-hour time in one place and 12-hour in another. watTime defaults to it.
+  return watTime(iso);
 }
 
 function WithdrawButton() {

@@ -19,6 +19,7 @@ import {
   type JobState,
 } from "../actions";
 import { APPLICATION_MESSAGE_MAX, APPLICATION_STATUS_LABEL } from "../schemas";
+import { watDate } from "@/lib/format/datetime";
 
 const INITIAL: JobState = { ok: false };
 
@@ -73,7 +74,7 @@ export function ApplyForm({
       <div className="space-y-3 rounded-lg border border-border p-4">
         <p className="text-sm text-foreground">
           You applied on{" "}
-          {new Date(existing.created_at).toLocaleDateString("en-NG", {
+          {watDate(existing.created_at, {
             day: "numeric",
             month: "long",
             year: "numeric",

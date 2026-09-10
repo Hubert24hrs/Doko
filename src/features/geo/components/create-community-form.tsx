@@ -36,16 +36,35 @@ export interface ParentOption {
  */
 export function CreateCommunityForm({ parents }: { parents: ParentOption[] }) {
   const [open, setOpen] = useState(false);
-  const [state, action, pending] = useActionState(createCommunityAction, initial);
+  // Whether the confirmation belongs to the save that just happened, so a
+  // Cancel after an earlier save does not bring the old one back.
+  const [justSaved, setJustSaved] = useState(false);
+
+  // Close on success, so the confirmation is actually seen. Found on the live
+  // walkthrough: after saving, the form stayed open with no sign anything had
+  // happened, because the confirmation only renders once the form is closed
+  // and nothing closed it. Done inside the action rather than in an effect --
+  // the save completing is the event, so this is where to respond to it.
+  const [state, action, pending] = useActionState(
+    async (prev: GeoActionState, formData: FormData) => {
+      const result = await createCommunityAction(prev, formData);
+      if (result.ok) {
+        setOpen(false);
+        setJustSaved(true);
+      }
+      return result;
+    },
+    initial,
+  );
 
   if (!open) {
     return (
       <div className="mt-6">
-        <Button onClick={() => setOpen(true)}>
+        <Button onClick={() => { setJustSaved(false); setOpen(true); }}>
           <Plus className="size-4" aria-hidden="true" />
           Add a community
         </Button>
-        {state.ok ? (
+        {justSaved ? (
           <p role="status" className="mt-2 text-sm text-primary">
             Added, at /communities/{state.slug}.
           </p>

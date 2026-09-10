@@ -20,6 +20,7 @@ import {
 } from "../actions";
 import { COMMENT_MAX_LENGTH } from "../schemas";
 import type { FeedComment } from "../queries";
+import { watDate, watString } from "@/lib/format/datetime";
 
 const INITIAL: CommentActionState = { ok: false };
 
@@ -223,10 +224,10 @@ export function CommentList({
                   {comment.author?.is_verified ? <VerifiedBadge type={comment.author.verification_type} /> : null}
                   <time
                     dateTime={comment.created_at}
-                    title={when.toLocaleString("en-NG")}
+                    title={watString(when)}
                     className="text-xs text-muted-foreground"
                   >
-                    {when.toLocaleDateString("en-NG", {
+                    {watDate(when, {
                       day: "numeric",
                       month: "short",
                     })}

@@ -11,6 +11,7 @@ import { requireUser } from "@/features/auth/session";
 import { getApplications, getJob } from "@/features/jobs/queries";
 import { APPLICATION_STATUS_LABEL } from "@/features/jobs/schemas";
 import { ApplicationDecision } from "@/features/jobs/components/application-decision";
+import { watDate } from "@/lib/format/datetime";
 
 export const metadata: Metadata = {
   title: "Applications",
@@ -91,8 +92,7 @@ export default async function ApplicationsPage({
 
                   <p className="mt-1 text-xs text-muted-foreground">
                     <time dateTime={application.created_at}>
-                      {new Date(application.created_at).toLocaleDateString(
-                        "en-NG",
+                      {watDate(application.created_at,
                         { day: "numeric", month: "long", year: "numeric" },
                       )}
                     </time>

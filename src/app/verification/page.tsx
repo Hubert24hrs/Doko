@@ -17,6 +17,7 @@ import { cancelVerificationRequestAction } from "@/features/verification/actions
 import { VerifiedBadge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { watDate } from "@/lib/format/datetime";
 
 export const metadata: Metadata = {
   title: "Verification Center — Ezike Oba",
@@ -87,7 +88,7 @@ export default async function VerificationPage() {
                   </p>
                   {status.verifiedAt && (
                     <p className="mt-3 text-xs text-muted-foreground">
-                      Verified on: {new Date(status.verifiedAt).toLocaleDateString("en-GB", {
+                      Verified on: {watDate(status.verifiedAt, {
                         day: "numeric",
                         month: "long",
                         year: "numeric",
@@ -135,7 +136,7 @@ export default async function VerificationPage() {
                       </button>
                     </form>
                     <span className="text-xs text-muted-foreground">
-                      Submitted on {new Date(status.pendingRequest.created_at).toLocaleDateString("en-GB")}
+                      Submitted on {watDate(status.pendingRequest.created_at)}
                     </span>
                   </div>
                 </div>

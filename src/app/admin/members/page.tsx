@@ -24,6 +24,7 @@ import {
   reviewVerificationRequestAction,
   toggleSuspensionAction,
 } from "@/features/admin/actions";
+import { watString } from "@/lib/format/datetime";
 
 export const metadata: Metadata = {
   title: "Members & Verification — Admin",
@@ -149,7 +150,7 @@ export default async function AdminMembersPage({
                       )}
 
                       <p className="mt-2 text-[11px] text-muted-foreground">
-                        Submitted: {new Date(req.created_at).toLocaleString("en-GB")}
+                        Submitted: {watString(req.created_at)}
                       </p>
                     </div>
 

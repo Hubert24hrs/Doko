@@ -22,7 +22,7 @@ export function IssueCard({ issue }: { issue: IssueSummary }) {
         <div className="flex flex-wrap items-start justify-between gap-2">
           <Link
             href={`/issues/${issue.id}`}
-            className="font-medium text-foreground hover:underline"
+            className="tap-target font-medium text-foreground hover:underline"
           >
             {issue.title}
           </Link>

@@ -107,3 +107,5 @@ next-env.d.ts
 /APPLY_TEST_24_GEO_SLUGS.sql
 /APPLY_MIGRATION_037.sql
 /APPLY_TEST_25_GEO_ADMIN.sql
+/test-results/
+/playwright-report/

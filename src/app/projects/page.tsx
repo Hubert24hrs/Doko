@@ -1,4 +1,7 @@
 ﻿import React from "react";
+import Link from "next/link";
+import { Logo } from "@/components/brand/logo";
+import { getSessionUser } from "@/features/auth/session";
 import { getCommunityProjects } from "@/features/projects/queries";
 import { ProjectCard } from "@/features/projects/components/project-card";
 import { ProjectsHeader } from "./projects-header";
@@ -16,7 +19,10 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
-  const { projects, unavailable } = await getCommunityProjects();
+  const [{ projects, unavailable }, viewer] = await Promise.all([
+    getCommunityProjects(),
+    getSessionUser(),
+  ]);
 
   const totalRaised = projects.reduce((acc, p) => acc + Number(p.raised_amount_naira || 0), 0);
   const totalDonors = projects.reduce((acc, p) => acc + Number(p.donors_count || 0), 0);
@@ -27,7 +33,30 @@ export default async function ProjectsPage() {
   const count = (n: number) => (unavailable ? "--" : String(n));
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <>
+      <header className="border-b border-border">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
+          <Link href={viewer ? "/home" : "/"} className="rounded-lg">
+            <Logo />
+          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/communities"
+              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken sm:inline-flex"
+            >
+              Communities
+            </Link>
+            <Link
+              href={viewer ? "/feed" : "/login?next=%2Fprojects"}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-sunken"
+            >
+              {viewer ? "Feed" : "Sign in"}
+            </Link>
+          </div>
+        </div>
+      </header>
+
+    <main id="main" className="container mx-auto px-4 py-8 max-w-6xl">
       <ProjectsHeader />
 
       {/* Metric Stats Banner */}
@@ -86,6 +115,7 @@ export default async function ProjectsPage() {
           ))}
         </div>
       )}
-    </div>
+    </main>
+    </>
   );
 }

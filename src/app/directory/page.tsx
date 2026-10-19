@@ -145,7 +145,7 @@ export default async function DirectoryPage({
                       <div className="flex items-center gap-1.5">
                         <Link
                           href={`/members/${member.username}`}
-                          className="font-medium text-foreground hover:underline"
+                          className="tap-target font-medium text-foreground hover:underline"
                         >
                           {member.full_name}
                         </Link>

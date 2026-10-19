@@ -236,3 +236,48 @@ body {
     min-height: 2rem; /* 32px */
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Touch targets, part two: the ones a class could not reach
+
+   The `.tap-target` utility fixed the controls it was put on. A rendered-page
+   test (tests/e2e/mobile-layout.spec.ts) then measured every page at 360x780
+   with touch emulation and found 13 more across 8 pages that nobody had
+   thought to put it on:
+
+     * the site logo (34px) and every header nav link (36px) -- and the header
+       is copy-pasted into some twenty page files, so a class on each would be
+       twenty edits and a twenty-first page later that forgets;
+     * `Button` and `<select>` at `h-10`, which is 40px;
+     * the landing page's "Get verified ->" links at 16px.
+
+   So: a floor, applied where a pointer is coarse. It raises nothing on a
+   mouse, because `min-height` only ever grows a box, and `h-10` already wins
+   there.
+
+   Links are deliberately NOT included wholesale -- a link inside a sentence
+   must stay the size of the sentence (WCAG 2.5.8's inline exception). Only
+   navigation chrome qualifies: header, nav and footer are rows of links, not
+   prose.
+   --------------------------------------------------------------------------- */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  select,
+  summary {
+    min-height: 2.75rem; /* 44px */
+  }
+
+  /* An icon-only button is small in BOTH directions; the floor has to be too. */
+  button:not(:has(> :not(svg):not(span[aria-hidden]))) {
+    min-width: 2.75rem;
+  }
+
+  header a,
+  nav a,
+  footer a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+}

@@ -117,8 +117,8 @@ export default async function IssuesPage({
       <main id="main" className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-6">
           <div>
-            <nav aria-label="Breadcrumb" className="mb-2 text-sm text-muted-foreground">
-              <Link href="/" className="hover:underline">
+            <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-x-1.5 mb-2 text-sm text-muted-foreground">
+              <Link href="/" className="tap-target hover:underline">
                 Ezike Oba
               </Link>
               <span aria-hidden="true"> / </span>

@@ -152,18 +152,18 @@ export default async function CommunityPage({
 
   return (
     <main id="main" className="mx-auto w-full max-w-4xl flex-1 px-4 py-12">
-      <nav aria-label="Breadcrumb" className="mb-4 text-sm text-muted-foreground">
-        <Link href="/" className="hover:underline">
+      <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-x-1.5 mb-4 text-sm text-muted-foreground">
+        <Link href="/" className="tap-target hover:underline">
           Ezike Oba
         </Link>
         <span aria-hidden="true"> / </span>
-        <Link href="/communities" className="hover:underline">
+        <Link href="/communities" className="tap-target hover:underline">
           Communities
         </Link>
         {trail.map((a) => (
-          <span key={a.id}>
+          <span key={a.id} className="inline-flex items-center gap-x-1.5">
             <span aria-hidden="true"> / </span>
-            <Link href={`/communities/${a.slug}`} className="hover:underline">
+            <Link href={`/communities/${a.slug}`} className="tap-target hover:underline">
               {a.name}
             </Link>
           </span>

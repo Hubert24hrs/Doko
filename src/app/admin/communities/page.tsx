@@ -39,8 +39,8 @@ export default async function AdminCommunitiesPage() {
 
   return (
     <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
-      <nav aria-label="Breadcrumb" className="mb-4 text-sm text-muted-foreground">
-        <Link href="/admin" className="hover:underline">
+      <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-x-1.5 mb-4 text-sm text-muted-foreground">
+        <Link href="/admin" className="tap-target hover:underline">
           Admin
         </Link>
         <span aria-hidden="true"> / </span>

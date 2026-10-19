@@ -43,8 +43,8 @@ export default async function CommunitiesPage() {
 
   return (
     <main id="main" className="mx-auto w-full max-w-4xl flex-1 px-4 py-12">
-      <nav aria-label="Breadcrumb" className="mb-4 text-sm text-muted-foreground">
-        <Link href="/" className="hover:underline">
+      <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-x-1.5 mb-4 text-sm text-muted-foreground">
+        <Link href="/" className="tap-target hover:underline">
           Ezike Oba
         </Link>
         <span aria-hidden="true"> / </span>
@@ -105,7 +105,7 @@ function GeoBranch({ node, depth }: { node: GeoNode; depth: number }) {
           <HeadingTag className="text-lg font-semibold tracking-tight text-foreground">
             <Link
               href={`/communities/${node.slug}`}
-              className="hover:text-primary hover:underline"
+              className="tap-target hover:text-primary hover:underline"
             >
               {node.name}
             </Link>

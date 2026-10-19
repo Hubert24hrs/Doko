@@ -7,6 +7,7 @@ import { VerifiedBadge } from "@/components/ui/badge";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { Logo } from "@/components/brand/logo";
 import { requireUser } from "@/features/auth/session";
+import { InboxLive } from "@/features/messages/components/inbox-live";
 import { getInbox } from "@/features/messages/queries";
 import type { ConversationSummary } from "@/features/messages/queries";
 import { watDate, watDaysAgo, watTime, watYear } from "@/lib/format/datetime";
@@ -112,7 +113,7 @@ function ConversationRow({ conversation }: { conversation: ConversationSummary }
 }
 
 export default async function MessagesPage() {
-  await requireUser("/messages");
+  const viewer = await requireUser("/messages");
   const inbox = await getInbox();
 
   return (
@@ -140,9 +141,12 @@ export default async function MessagesPage() {
       </header>
 
       <main id="main" className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Messages
-        </h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Messages
+          </h1>
+          <InboxLive viewerId={viewer.id} />
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Private conversations. Only the people in them can read them.
         </p>

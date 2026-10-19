@@ -38,12 +38,12 @@ export default async function NewIssuePage() {
       </header>
 
       <main id="main" className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
-        <nav aria-label="Breadcrumb" className="mb-3 text-sm text-muted-foreground">
-          <Link href="/" className="hover:underline">
+        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-x-1.5 mb-3 text-sm text-muted-foreground">
+          <Link href="/" className="tap-target hover:underline">
             Ezike Oba
           </Link>
           <span aria-hidden="true"> / </span>
-          <Link href="/issues" className="hover:underline">
+          <Link href="/issues" className="tap-target hover:underline">
             Issues
           </Link>
           <span aria-hidden="true"> / </span>

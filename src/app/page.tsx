@@ -132,7 +132,7 @@ export default async function LandingPage() {
                     Collaboratively fund boreholes, solar lights, and road grading via Paystack.
                   </p>
                 </div>
-                <Link href="/projects" className="mt-4 text-xs font-bold text-primary hover:underline">
+                <Link href="/projects" className="tap-target mt-4 text-xs font-bold text-primary hover:underline">
                   Browse projects &rarr;
                 </Link>
               </div>
@@ -147,7 +147,7 @@ export default async function LandingPage() {
                     Your interactive guide for Igbo-Eze North culture, history, market days, and dialect.
                   </p>
                 </div>
-                <Link href="/ai" className="mt-4 text-xs font-bold text-primary hover:underline">
+                <Link href="/ai" className="tap-target mt-4 text-xs font-bold text-primary hover:underline">
                   Ask Oba AI &rarr;
                 </Link>
               </div>
@@ -162,7 +162,7 @@ export default async function LandingPage() {
                     Golden badges for traditional leaders and elders; Blue badges for active citizens.
                   </p>
                 </div>
-                <Link href="/verification" className="mt-4 text-xs font-bold text-primary hover:underline">
+                <Link href="/verification" className="tap-target mt-4 text-xs font-bold text-primary hover:underline">
                   Get verified &rarr;
                 </Link>
               </div>
@@ -177,7 +177,7 @@ export default async function LandingPage() {
                     Buy fresh agricultural produce, trade crafts, and discover verified local employment.
                   </p>
                 </div>
-                <Link href="/marketplace" className="mt-4 text-xs font-bold text-primary hover:underline">
+                <Link href="/marketplace" className="tap-target mt-4 text-xs font-bold text-primary hover:underline">
                   Explore market &rarr;
                 </Link>
               </div>

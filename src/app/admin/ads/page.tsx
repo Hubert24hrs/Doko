@@ -16,7 +16,7 @@ export default async function AdminAdsPage() {
   const activeAds = campaigns.filter((c) => c.status === "active" || c.status === "approved");
 
   return (
-    <main className="container max-w-5xl py-8 px-4 sm:px-6">
+    <main id="main" className="container max-w-5xl py-8 px-4 sm:px-6">
       <div className="mb-8 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
           <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">

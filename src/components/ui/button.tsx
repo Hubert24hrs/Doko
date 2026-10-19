@@ -6,7 +6,12 @@ import { cn } from "@/lib/utils/cn";
 
 const buttonVariants = cva(
   [
-    "inline-flex items-center justify-center gap-2 whitespace-nowrap",
+    // tap-target: 44px on a touch screen, no change with a mouse. In the base
+    // rather than left to the CSS floor because buttonVariants is also applied
+    // to <Link>s styled as buttons, and the floor only reaches real <button>s --
+    // the rendered-page tests found "Create Account" and "Sign In to Apply" at
+    // 40px on /verification for exactly that reason.
+    "tap-target inline-flex items-center justify-center gap-2 whitespace-nowrap",
     "rounded-lg font-medium",
     "transition-[background-color,color,box-shadow,transform] duration-150",
     "active:scale-[0.98]",

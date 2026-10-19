@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SiteHeader } from "@/components/layout/site-header";
 import Link from "next/link";
 import {
   ShieldCheck,
@@ -20,7 +21,7 @@ import { Card } from "@/components/ui/card";
 import { watDate } from "@/lib/format/datetime";
 
 export const metadata: Metadata = {
-  title: "Verification Center — Ezike Oba",
+  title: "Verification Center",
   description:
     "Official Golden and Blue verification tiers for Igbo-Eze North citizens, office holders, and community leaders.",
 };
@@ -32,12 +33,14 @@ export default async function VerificationPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+    <>
+      <SiteHeader />
+      <main id="main" className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
       {/* Back Link */}
       <div className="mb-6">
         <Link
           href="/home"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          className="tap-target inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="size-3.5" />
           <span>Back to Dashboard</span>
@@ -261,6 +264,7 @@ export default async function VerificationPage() {
           </div>
         </div>
       </div>
-    </div>
+      </main>
+    </>
   );
 }

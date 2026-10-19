@@ -182,6 +182,7 @@ export function ObaAiWidget() {
             className="border-t border-zinc-200 dark:border-zinc-800 p-3 bg-zinc-50 dark:bg-zinc-950/80 flex items-center gap-2"
           >
             <input
+              aria-label="Ask Oba AI a question"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about culture, markets, verification, projects..."

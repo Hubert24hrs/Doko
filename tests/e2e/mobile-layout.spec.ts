@@ -29,6 +29,8 @@ const PAGES = [
   "/directory",
   "/login",
   "/register",
+  "/ai",
+  "/verification",
 ];
 
 /** Apple asks 44pt, Material 48dp. This project's `.tap-target` gives 44px. */
@@ -152,4 +154,72 @@ test("the issues map labels only places the directory contains", async ({ page, 
 
   const invented = labels.filter((name) => !directory.includes(`>${name}<`));
   expect(invented, `map labels with no community in the directory: ${invented.join(", ")}`).toEqual([]);
+});
+
+/**
+ * Found by a Playwright MCP sweep of production on 2026-10-19: three tab titles
+ * read "... | Ezike Oba · Ezike Oba", because the page put the site name in its
+ * own title and the root layout's template appends it again. Every other page
+ * relies on the template, which is the right way round.
+ */
+for (const path of PAGES) {
+  test(`${path} names the site in its title exactly once`, async ({ page }) => {
+    await page.goto(path, { waitUntil: "load" });
+    const title = await page.title();
+    expect((title.match(/Ezike Oba/g) ?? []).length, `title: "${title}"`).toBeLessThanOrEqual(1);
+  });
+
+  // A placeholder is not a label: it disappears as soon as somebody types, and
+  // screen readers do not reliably announce it. The Oba AI chat box had only a
+  // placeholder, so it was read out as an anonymous "edit text".
+  test(`${path} gives every form field an accessible name`, async ({ page }) => {
+    await page.goto(path, { waitUntil: "load" });
+    const unnamed = await page.evaluate(() =>
+      [...document.querySelectorAll(
+        "input:not([type=hidden]):not([type=submit]):not([type=button]), select, textarea",
+      )]
+        .filter((el) => {
+          if (el.getAttribute("aria-label") || el.getAttribute("aria-labelledby")) return false;
+          if (el.id && document.querySelector(`label[for="${CSS.escape(el.id)}"]`)) return false;
+          return !el.closest("label");
+        })
+        .map((el) => `<${el.tagName.toLowerCase()} name="${(el as HTMLInputElement).name}">`),
+    );
+    expect(unnamed, `fields with no label: ${unnamed.join(", ")}`).toEqual([]);
+  });
+}
+
+/**
+ * Every internal link on every public page resolves. 136 of them at the time
+ * of writing, none broken -- this is here so that stays true when a route is
+ * renamed or removed, which is when links break and nobody notices.
+ */
+test("no public page links to a page that does not exist", async ({ page, request }) => {
+  // Fourteen page loads and ~136 requests do not fit the 90s default. Its
+  // first run against production timed out -- which reads as a failure, and a
+  // check that fails for no reason teaches people to ignore it.
+  test.setTimeout(300_000);
+  const hrefs = new Map<string, string>();
+  for (const path of PAGES) {
+    await page.goto(path, { waitUntil: "load" });
+    for (const href of await page
+      .locator('a[href^="/"]')
+      .evaluateAll((els) => els.map((a) => (a.getAttribute("href") ?? "").split("#")[0]))) {
+      if (href && !hrefs.has(href)) hrefs.set(href, path);
+    }
+  }
+
+  // Ten at a time rather than one by one: still gentle on the server, and an
+  // order of magnitude faster than sequential round trips.
+  const broken: string[] = [];
+  const entries = [...hrefs];
+  for (let i = 0; i < entries.length; i += 10) {
+    await Promise.all(
+      entries.slice(i, i + 10).map(async ([href, foundOn]) => {
+        const res = await request.get(href, { maxRedirects: 0 });
+        if (res.status() >= 400) broken.push(`${res.status()} ${href} (linked from ${foundOn})`);
+      }),
+    );
+  }
+  expect(broken, `broken links:\n  ${broken.join("\n  ")}`).toEqual([]);
 });

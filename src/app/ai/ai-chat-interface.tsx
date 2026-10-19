@@ -146,6 +146,7 @@ export function AiChatInterface() {
         className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/70 flex items-center gap-3"
       >
         <input
+          aria-label="Ask Oba AI a question"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask a question about Igbo Eze North (e.g. Omabe, Onyishi, markets, verification)..."

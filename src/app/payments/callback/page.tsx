@@ -1,4 +1,5 @@
 ﻿import { Suspense } from "react";
+import { SiteHeader } from "@/components/layout/site-header";
 import { PaymentCallbackContent } from "./callback-content";
 import { Loader2 } from "lucide-react";
 
@@ -9,7 +10,9 @@ export const metadata = {
 
 export default function PaymentCallbackPage() {
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4 sm:p-6">
+    <>
+      <SiteHeader width="max-w-md" />
+      <main id="main" className="min-h-[80vh] flex items-center justify-center p-4 sm:p-6">
       <Suspense
         fallback={
           <div className="w-full max-w-md p-8 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center shadow-xl">
@@ -21,6 +24,7 @@ export default function PaymentCallbackPage() {
       >
         <PaymentCallbackContent />
       </Suspense>
-    </div>
+      </main>
+    </>
   );
 }

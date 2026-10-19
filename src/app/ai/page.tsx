@@ -1,15 +1,18 @@
 ﻿import React from "react";
+import { SiteHeader } from "@/components/layout/site-header";
 import { AiChatInterface } from "./ai-chat-interface";
 import { Sparkles, Compass, ShieldCheck, MapPin } from "lucide-react";
 
 export const metadata = {
-  title: "Oba AI • Civic Intelligence | Ezike Oba",
+  title: "Oba AI • Civic Intelligence",
   description: "Cultural guide and civic assistant grounded in Igbo Eze North history, traditions, and platform services.",
 };
 
 export default function ObaAiPage() {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <>
+      <SiteHeader />
+      <main id="main" className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Hero Header */}
       <div className="text-center mb-8">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 text-xs font-semibold mb-3 border border-emerald-200 dark:border-emerald-800">
@@ -25,6 +28,7 @@ export default function ObaAiPage() {
       </div>
 
       <AiChatInterface />
-    </div>
+      </main>
+    </>
   );
 }

@@ -130,3 +130,26 @@ for (const path of PAGES) {
     });
   });
 }
+
+/**
+ * The issues map labels places. Until 2026-10-19 it labelled ten from a
+ * constant hard-coded in a component -- "Ogrute (LGA HQ)" when the
+ * headquarters town is Enugu-Ezike, two places not in the directory at all,
+ * and a district called a village -- while ignoring the coordinates admins can
+ * now set on every community. Labels are read from `geo_entities` now; this
+ * holds them to the directory, so an invented place cannot quietly return.
+ */
+test("the issues map labels only places the directory contains", async ({ page, request }) => {
+  const directory = await (await request.get("/communities")).text();
+
+  await page.goto("/issues?view=map", { waitUntil: "load" });
+  await page.locator(".leaflet-container").waitFor({ timeout: 60_000 });
+  await page.waitForTimeout(1_500);
+
+  const labels = await page
+    .locator(".custom-landmark-marker")
+    .evaluateAll((els) => els.map((e) => (e.textContent ?? "").replace(/^\s*\S+\s+/, "").trim()));
+
+  const invented = labels.filter((name) => !directory.includes(`>${name}<`));
+  expect(invented, `map labels with no community in the directory: ${invented.join(", ")}`).toEqual([]);
+});

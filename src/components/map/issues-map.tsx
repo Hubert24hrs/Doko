@@ -9,6 +9,7 @@ import { LeafletMap } from "./leaflet-map";
 import {
   type MappedIssueItem,
   IGBO_EZE_NORTH_CENTER,
+  type CommunityLandmark,
   DEFAULT_MAP_ZOOM,
 } from "./map-types";
 import {
@@ -20,9 +21,12 @@ import {
 
 export function IssuesMap({
   issues,
+  landmarks,
   className = "h-[520px] w-full",
 }: {
   issues: MappedIssueItem[];
+  /** Communities with coordinates, read from the database by the page. */
+  landmarks?: CommunityLandmark[];
   className?: string;
 }) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -116,6 +120,7 @@ export function IssuesMap({
         center={IGBO_EZE_NORTH_CENTER}
         zoom={DEFAULT_MAP_ZOOM}
         showLandmarks={true}
+        landmarks={landmarks}
         className={className}
       />
 

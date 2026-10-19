@@ -255,3 +255,53 @@ export const canEditCommunity = cache(
     return admin === true || administers === true;
   },
 );
+
+/** A community that has a position, for labelling the map. */
+export type MappedPlace = {
+  name: string;
+  kind: string;
+  slug: string;
+  latitude: number;
+  longitude: number;
+};
+
+/**
+ * Every live community that has coordinates, for the issues map.
+ *
+ * The map used to label ten places from a constant hard-coded in a component
+ * -- which put "LGA HQ" on Ogrute (a village; the seed names Enugu-Ezike as the
+ * headquarters town), labelled two places that are not in the directory at all,
+ * called the Umuitodo district a village, and gave coordinates with no source.
+ * It also meant an admin correcting a village's position through the
+ * community page changed nothing on the map.
+ *
+ * Geography here is database rows edited in-app, never constants in a
+ * component; this is the map obeying that. A place with no coordinates yet is
+ * simply not labelled -- the map shows fewer names rather than invented ones.
+ */
+export const getMappedPlaces = cache(async (): Promise<MappedPlace[]> => {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("geo_entities")
+      .select("name, kind, slug, latitude, longitude")
+      .is("deleted_at", null)
+      .eq("status", "active")
+      .not("latitude", "is", null)
+      .not("longitude", "is", null);
+
+    if (error) {
+      console.error("[geo.getMappedPlaces] query failed", error.message);
+      return [];
+    }
+    // The query already excludes NULL coordinates; the map stays defensive.
+    return (data ?? []).flatMap((p) =>
+      typeof p.latitude === "number" && typeof p.longitude === "number"
+        ? [{ name: p.name, kind: p.kind, slug: String(p.slug), latitude: p.latitude, longitude: p.longitude }]
+        : [],
+    );
+  } catch (cause) {
+    console.error("[geo.getMappedPlaces] unavailable", cause);
+    return [];
+  }
+});

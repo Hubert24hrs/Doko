@@ -19,6 +19,7 @@ import {
   issueStatuses,
   ISSUE_STATUS_LABEL,
 } from "@/features/issues/schemas";
+import { getMappedPlaces } from "@/features/geo/queries";
 import { IssuesMap, type MappedIssueItem } from "@/components/map";
 import type { IssueCategory, IssueStatus } from "@/types/database";
 
@@ -49,10 +50,11 @@ export default async function IssuesPage({
   const validCategory = issueCategories.find((c) => c === category) as IssueCategory | undefined;
   const validStatus = issueStatuses.find((s) => s === status) as IssueStatus | undefined;
 
-  const [page, counts, mappedRaw] = await Promise.all([
+  const [page, counts, mappedRaw, places] = await Promise.all([
     getIssues(before, { category: validCategory, status: validStatus }),
     getIssueCounts(),
     isMapView ? getMappedIssues() : Promise.resolve([]),
+    isMapView ? getMappedPlaces() : Promise.resolve([]),
   ]);
 
   const mappedIssues: MappedIssueItem[] = mappedRaw
@@ -232,7 +234,7 @@ export default async function IssuesPage({
         {/* Main Content Area */}
         {isMapView ? (
           <div className="mt-6">
-            <IssuesMap issues={mappedIssues} />
+            <IssuesMap issues={mappedIssues} landmarks={places} />
           </div>
         ) : (
           <section aria-label="Issue reports" className="mt-6 space-y-4">

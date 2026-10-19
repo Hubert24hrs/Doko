@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 
 import {
   IGBO_EZE_NORTH_CENTER,
-  IGBO_EZE_NORTH_LANDMARKS,
+  type CommunityLandmark,
   type MappedIssueItem,
 } from "./map-types";
 import {
@@ -92,11 +92,17 @@ function createLandmarkIcon(name: string): L.DivIcon {
   });
 }
 
+// A stable empty default. `landmarks = []` would create a new array on every
+// render, and since it is an effect dependency the map would clear and redraw
+// its markers every time the parent re-rendered.
+const NO_LANDMARKS: CommunityLandmark[] = [];
+
 export function LeafletMap({
   issues,
   center = IGBO_EZE_NORTH_CENTER,
   zoom = 12,
   showLandmarks = true,
+  landmarks = NO_LANDMARKS,
   singleIssueId,
   className = "h-[450px] w-full",
 }: {
@@ -104,6 +110,8 @@ export function LeafletMap({
   center?: [number, number];
   zoom?: number;
   showLandmarks?: boolean;
+  /** Communities with coordinates, from getMappedPlaces(). */
+  landmarks?: CommunityLandmark[];
   singleIssueId?: string;
   className?: string;
 }) {
@@ -137,7 +145,7 @@ export function LeafletMap({
 
     // Add Community Landmarks
     if (showLandmarks && !singleIssueId) {
-      for (const landmark of IGBO_EZE_NORTH_LANDMARKS) {
+      for (const landmark of landmarks) {
         L.marker([landmark.latitude, landmark.longitude], {
           icon: createLandmarkIcon(landmark.name),
           interactive: false,
@@ -199,7 +207,7 @@ export function LeafletMap({
     return () => {
       markersLayer.clearLayers();
     };
-  }, [issues, center, zoom, showLandmarks, singleIssueId]);
+  }, [issues, center, zoom, showLandmarks, landmarks, singleIssueId]);
 
   // Clean up map instance on unmount
   useEffect(() => {

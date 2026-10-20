@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
@@ -144,7 +145,15 @@ export function RegisterForm({ villages }: { villages: VillageOption[] }) {
         <Checkbox
           name="acceptTerms"
           error={errors.acceptTerms}
-          label="I accept the Ezike Oba community guidelines."
+          label={
+            <>
+              I accept the Ezike Oba{" "}
+              <Link href="/terms" target="_blank" className="font-medium text-primary underline">
+                community guidelines
+              </Link>
+              .
+            </>
+          }
         />
       </div>
 
@@ -159,7 +168,7 @@ function Checkbox({
   error,
 }: {
   name: string;
-  label: string;
+  label: React.ReactNode;
   error?: string;
 }) {
   const errorId = `${name}-error`;

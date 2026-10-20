@@ -31,6 +31,8 @@ const PAGES = [
   "/register",
   "/ai",
   "/verification",
+  "/privacy",
+  "/terms",
 ];
 
 /** Apple asks 44pt, Material 48dp. This project's `.tap-target` gives 44px. */

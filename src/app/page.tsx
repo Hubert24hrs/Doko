@@ -221,6 +221,10 @@ export default async function LandingPage() {
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <Logo showWordmark />
           <p>Built for the people of Igbo Eze North.</p>
+          <nav aria-label="Legal" className="flex gap-4">
+            <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
+            <Link href="/terms" className="hover:text-foreground">Terms</Link>
+          </nav>
         </div>
       </footer>
     </>

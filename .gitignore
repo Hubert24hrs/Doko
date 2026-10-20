@@ -111,3 +111,6 @@ next-env.d.ts
 /playwright-report/
 /.playwright-mcp/
 /APPLY_GEO_COORDINATES.sql
+
+# Local tooling scratch
+.codex/

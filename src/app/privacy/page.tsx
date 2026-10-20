@@ -145,8 +145,15 @@ export default function PrivacyPage() {
               <Link href="/settings" className="font-medium text-primary underline">
                 settings
               </Link>
-              . For anything else, including deleting your account, message a platform
-              administrator on Ezike Oba and we will respond within 30 days.
+              . You can{" "}
+              <Link href="/delete-account" className="font-medium text-primary underline">
+                delete your account yourself
+              </Link>{" "}
+              from Settings in the Ezike Oba app — your personal details are erased and you can no
+              longer sign in, while what you wrote stays under &ldquo;Former member&rdquo; so that
+              conversations other people took part in do not fall apart around them. For anything
+              else, message a platform administrator on Ezike Oba and we will respond within 30
+              days.
             </p>
           </section>
 

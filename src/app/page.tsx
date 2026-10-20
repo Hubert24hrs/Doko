@@ -224,6 +224,7 @@ export default async function LandingPage() {
           <nav aria-label="Legal" className="flex gap-4">
             <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
             <Link href="/terms" className="hover:text-foreground">Terms</Link>
+            <Link href="/delete-account" className="hover:text-foreground">Delete account</Link>
           </nav>
         </div>
       </footer>

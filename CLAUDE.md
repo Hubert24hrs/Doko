@@ -291,10 +291,11 @@ is listed under "Not yet done" and is honest about being open.
   choosing the owner's Google account landed on `/messages` signed in as the EXISTING
   @hubert25 account -- Supabase links a Google identity to a confirmed account with the
   same email rather than creating a second one.
-* **The mobile app shows an EMPTY conversation** where the website shows its messages
-  (seen 2026-10-20 on the @igwebuike/@hubert25 thread, from @igwebuike's phone). Its query in
-  `C:\EzikeObaMobileApp\src\features\messages\api.ts` names the right columns, so the cause
-  is not obvious from the code; it belongs to the app repository, not this one.
+* **The mobile app's "empty conversation" was the keyboard, not the data** (2026-10-20).
+  On Android, edge-to-edge since Expo SDK 54, the keyboard is drawn over the screen, and
+  twelve app screens had switched `KeyboardAvoidingView` off on Android -- so in a short
+  thread the keyboard covered the input bar and every message. Fixed in the app repository
+  (`0a99211`); reaches phones only with the next APK build.
 * **"Confirm email" is ON in Supabase**, so a password registration proves its address
   before signing in; the app sends it to `/register/check-email`. The built-in Supabase
   mailer is rate-limited to a handful of emails an hour -- add custom SMTP before a launch

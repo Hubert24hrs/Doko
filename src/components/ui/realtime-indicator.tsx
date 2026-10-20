@@ -36,13 +36,56 @@ export function RealtimeIndicator({ isLive, className }: RealtimeIndicatorProps)
 }
 
 /**
- * Plays a pleasant synthetic chime via the Web Audio API without needing external MP3 files.
+ * ONE audio context for the whole page, reused by every chime.
+ *
+ * Until 2026-10-20 each chime constructed a new AudioContext and never closed
+ * it, so a busy thread leaked one per message. Worse, Chrome creates a context
+ * SUSPENDED -- silent -- unless the page has already had a click, tap or key
+ * press, and nothing ever resumed it. A member who opened their inbox and sat
+ * waiting for a reply, the one person the chime exists for, heard nothing, and
+ * the try/catch below made sure nobody found out.
+ *
+ * So the context is created or resumed on the first gesture (which Chrome
+ * allows), and resumed again before each chime in case the browser suspended
+ * it in a background tab. Before any gesture there is still no sound -- no web
+ * page may make one -- but the first click anywhere arms it for the rest of
+ * the visit.
+ */
+let sharedContext: AudioContext | null = null;
+
+function audioContext(): AudioContext | null {
+  if (sharedContext) return sharedContext;
+  const AudioCtx =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AudioCtx) return null;
+  sharedContext = new AudioCtx();
+  return sharedContext;
+}
+
+if (typeof window !== "undefined") {
+  const unlock = () => {
+    const ctx = audioContext();
+    if (ctx && ctx.state === "suspended") void ctx.resume();
+    if (ctx?.state === "running") {
+      for (const event of ["pointerdown", "keydown", "touchstart"] as const) {
+        window.removeEventListener(event, unlock, true);
+      }
+    }
+  };
+  for (const event of ["pointerdown", "keydown", "touchstart"] as const) {
+    window.addEventListener(event, unlock, { capture: true, passive: true });
+  }
+}
+
+/**
+ * Plays a short two-note chime through the shared context. No audio files.
  */
 export function playNotificationChime() {
   try {
-    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    const ctx = audioContext();
+    if (!ctx) return;
+    if (ctx.state === "suspended") void ctx.resume();
 
     // High note
     const osc1 = ctx.createOscillator();
@@ -68,6 +111,6 @@ export function playNotificationChime() {
     osc2.start(ctx.currentTime + 0.08);
     osc2.stop(ctx.currentTime + 0.45);
   } catch {
-    // Gracefully ignore if browser policies prevent audio
+    // Audio is a nicety; a browser that refuses it must not break delivery.
   }
 }

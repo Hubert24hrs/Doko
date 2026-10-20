@@ -284,8 +284,10 @@ is listed under "Not yet done" and is honest about being open.
   the client; the Google client lists `https://djeeeshlaedelyeqsqwz.supabase.co/auth/v1/callback`
   as its redirect URI (it was missing, and Google answered `redirect_uri_mismatch`);
   `NEXT_PUBLIC_OAUTH_PROVIDERS=google` is set in Vercel. "Continue with Google" on the live
-  `/login` reaches Google's real sign-in screen. Still to confirm: the Google app is
-  PUBLISHED, not in Testing (Testing admits only listed test users), and one account
+  `/login` reaches Google's real sign-in screen. The Google app was in Testing with NO
+  test users -- nobody could have signed in -- and could not be published until its
+  Branding page had a home page, privacy policy and terms link; `/privacy` and `/terms`
+  were written for that and it is now **In production**. Still to observe: one account
   completing the round trip.
 * **"Confirm email" is ON in Supabase**, so a password registration proves its address
   before signing in; the app sends it to `/register/check-email`. The built-in Supabase
@@ -307,8 +309,7 @@ is listed under "Not yet done" and is honest about being open.
 
 Recommended order, and why:
 
-1. **Confirm Google sign-in end to end.** Done except the last mile: check the
-   Google Auth Platform -> Audience page says "In production", then sign in once
+1. **Confirm Google sign-in end to end.** The app is published; sign in once
    with a Google account and land on /home.
 2. **Supabase Auth URL configuration -- verified 2026-10-20.** Site URL is
    https://doko-delta.vercel.app and /auth/callback is on the allow list.

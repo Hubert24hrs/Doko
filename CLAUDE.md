@@ -280,15 +280,21 @@ is listed under "Not yet done" and is honest about being open.
 
 * **Biometric sign-in (passkeys) is built but PARKED, not working.** Enrolment
   succeeds; sign-in has not been confirmed on real mobile hardware. See docs/SECURITY.md.
-* **Google sign-in is ON (2026-10-20), first real sign-in not yet observed.** Supabase holds
+* **Google sign-in is ON and verified end to end (2026-10-20).** Supabase holds
   the client; the Google client lists `https://djeeeshlaedelyeqsqwz.supabase.co/auth/v1/callback`
   as its redirect URI (it was missing, and Google answered `redirect_uri_mismatch`);
   `NEXT_PUBLIC_OAUTH_PROVIDERS=google` is set in Vercel. "Continue with Google" on the live
   `/login` reaches Google's real sign-in screen. The Google app was in Testing with NO
   test users -- nobody could have signed in -- and could not be published until its
   Branding page had a home page, privacy policy and terms link; `/privacy` and `/terms`
-  were written for that and it is now **In production**. Still to observe: one account
-  completing the round trip.
+  were written for that and it is now **In production**. The round trip was observed:
+  choosing the owner's Google account landed on `/messages` signed in as the EXISTING
+  @hubert25 account -- Supabase links a Google identity to a confirmed account with the
+  same email rather than creating a second one.
+* **The mobile app shows an EMPTY conversation** where the website shows its messages
+  (seen 2026-10-20 on the @igwebuike/@hubert25 thread, from @igwebuike's phone). Its query in
+  `C:\EzikeObaMobileApp\src\features\messages\api.ts` names the right columns, so the cause
+  is not obvious from the code; it belongs to the app repository, not this one.
 * **"Confirm email" is ON in Supabase**, so a password registration proves its address
   before signing in; the app sends it to `/register/check-email`. The built-in Supabase
   mailer is rate-limited to a handful of emails an hour -- add custom SMTP before a launch
@@ -309,8 +315,8 @@ is listed under "Not yet done" and is honest about being open.
 
 Recommended order, and why:
 
-1. **Confirm Google sign-in end to end.** The app is published; sign in once
-   with a Google account and land on /home.
+1. **Google sign-in -- verified 2026-10-20.** Published, and observed signing an
+   existing member in.
 2. **Supabase Auth URL configuration -- verified 2026-10-20.** Site URL is
    https://doko-delta.vercel.app and /auth/callback is on the allow list.
 3. **Add live Paystack keys & configure webhook.**
@@ -318,9 +324,8 @@ Recommended order, and why:
    and configure https://doko-delta.vercel.app/api/webhooks/paystack in Paystack Dashboard.
 4. **Add Gemini API Key in Vercel (Optional).**
    Set GEMINI_API_KEY to unlock multimodal/generative expansions for Oba AI.
-5. **Real-time thread verification across two browser windows.**
-   Open /messages in two windows or devices to test WebSocket delivery and
-   Web Audio API chimes live.
+5. **Live inbox -- verified 2026-10-20** after fixing the anon-join defect below. Still
+   unconfirmed by ear: the Web Audio chime.
 
 Operational notes that will otherwise be rediscovered painfully:
 
@@ -812,7 +817,9 @@ If a local database is ever wanted, install Docker Desktop, then
 | Touch targets have a FLOOR in CSS, not only a class | `.tap-target` fixes what it is put on; the header is copy-pasted into some twenty page files, so a class there is twenty edits and a twenty-first page that forgets. `@media (pointer: coarse)` sets `min-height: 2.75rem` on `button`, `[role=button]`, `select`, `summary` and on links inside `header`, `nav` and `footer`. It cannot shrink anything -- `min-height` only grows a box -- and a mouse is unaffected |
 | Links are NOT given a blanket floor | a link rendered `display: inline` is sized by the line-height of the text around it, and growing it would break that line. That is WCAG 2.5.8's inline exception, and it is also how the e2e spec decides what to skip -- an earlier version demanded a `<p>` ancestor and wrongly flagged the byline on an issue card, which is a sentence in a `<span>` |
 | `/projects` had no landmarks at all | no `<header>`, no `<main>`, no `id="main"` -- so the root layout's skip link pointed at nothing and the page offered no way to navigate away, on a URL that is in the sitemap. Found because the e2e spec waits for `<main>` and timed out. Every page needs the landmark, not just the ones somebody remembered |
-| The inbox subscribes to Realtime too, not only the open thread | observed on the walkthrough and now fixed: `InboxLive` subscribes to INSERTs on `messages` with no filter, because Supabase evaluates the table's RLS per subscriber -- so it delivers only conversations the reader is in. The payload is discarded and the server component re-runs, the same signal-not-data rule the thread uses, and refreshes are coalesced over 400ms so a burst does not re-run the inbox query once per message |
+| The inbox subscribes to Realtime too, not only the open thread | observed on the walkthrough and fixed in two steps (the second is the row below): `InboxLive` subscribes to INSERTs on `messages` with no filter, because Supabase evaluates the table's RLS per subscriber -- so it delivers only conversations the reader is in. The payload is discarded and the server component re-runs, the same signal-not-data rule the thread uses, and refreshes are coalesced over 400ms so a burst does not re-run the inbox query once per message |
+| Every realtime channel subscribes only after the session has loaded | the first inbox fix shipped and DID NOT WORK, and nothing said so: it showed "Live Delivery" and reported SUBSCRIBED. Each channel joined the moment its page mounted, before the browser client had read the session from its cookie, so it joined with the anon key -- and realtime evaluates RLS as whoever joined, so a table with no anon policy delivers nothing, silently. The session arriving a moment later does not re-authorise a joined channel. Proven on production side by side in one tab: a listener that called `getSession()` first received every message; an identical one that subscribed immediately, and the inbox itself, received none. `subscribeWhenAuthorised()` in `src/lib/supabase/realtime.ts` loads the session and calls `realtime.setAuth()` first; the inbox, the thread and presence all use it. A green "connected" indicator proves a socket, not that anything can arrive on it |
+| The Oba AI launcher is not drawn on conversation pages or on /ai | it is pinned bottom-right on every page, which is where a conversation pins Send. At phone width it sat ON TOP of Send, so tapping Send opened Oba AI and the message never went -- found when an automated tap on Send did exactly that. /ai is Oba AI already |
 | The issues map labels places from `geo_entities`, never from a constant | it used to draw ten labels from `IGBO_EZE_NORTH_LANDMARKS`, hard-coded in a component: "Ogrute (LGA HQ)" when the seed names Enugu-Ezike as the headquarters town, "Amalla" and "Igugu" which are not in the directory, "Uda" for Uda-Enugwu-Ezike, "Enugu Ezike" for Enugu-Ezike, the Umuitodo district called a village, and coordinates with no source. It also overruled the coordinates admins can set on a community page. Found with the Playwright MCP: the map showed 10 markers against 1 reported issue. A place with no coordinates is simply not labelled -- fewer names, never invented ones. The e2e spec holds every label to the directory |
 | Every page renders `<main id="main">`, and new pages use `SiteHeader` | `/projects`, `/ai`, `/verification` and the payment return page were built without a `<main>` or a header: the root layout's skip link pointed at nothing and a visitor arriving from the landing page or the sitemap could not navigate anywhere. `/admin/ads` had a `<main>` with no id. `tests/unit/page-landmarks.test.ts` reads every `page.tsx` -- signed-in ones too, which the browser tests cannot reach -- and fails on any without `<main id="main">`. `src/components/layout/site-header.tsx` is for pages with no natural back destination. The other twenty-odd inline headers are deliberately different -- each pairs the logo with a back link that belongs to its page -- so they stay inline |
 | `buttonVariants` carries `tap-target` in its base | it is applied to `<Link>`s styled as buttons as well as to `<button>`s, and the CSS touch floor only reaches real `<button>` elements. "Create Account" and "Sign In to Apply" were 40px on `/verification` for exactly that reason |

@@ -14,7 +14,7 @@ import {
   FieldTextarea,
 } from "@/components/ui/field";
 import type { VillageOption } from "@/features/geo/queries";
-import type { ProfileRow } from "@/types/database";
+import type { ReadableProfile } from "@/types/database";
 
 import { updateProfileAction, type ProfileActionState } from "../actions";
 
@@ -31,9 +31,15 @@ function SubmitButton() {
 
 export function ProfileForm({
   profile,
+  phone,
   villages,
 }: {
-  profile: ProfileRow;
+  profile: ReadableProfile;
+  /**
+   * The member's own phone, fetched separately via `ezo_my_contact()`.
+   * It is not on `profile` because the column is revoked from every role.
+   */
+  phone: string | null;
   villages: VillageOption[];
 }) {
   const [state, formAction] = useActionState(updateProfileAction, INITIAL);
@@ -120,7 +126,7 @@ export function ProfileForm({
         <FieldInput
           name="phone"
           type="tel"
-          defaultValue={profile.phone ?? ""}
+          defaultValue={phone ?? ""}
           autoComplete="tel"
           inputMode="tel"
           placeholder="08031234567"

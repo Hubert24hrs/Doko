@@ -4,12 +4,13 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
-import type { AppRole, ProfileRow } from "@/types/database";
+import type { AppRole, ReadableProfile } from "@/types/database";
+import { PROFILE_FIELDS } from "@/features/profile/fields";
 
 export interface SessionUser {
   id: string;
   email: string | null;
-  profile: ProfileRow | null;
+  profile: ReadableProfile | null;
   roles: AppRole[];
 }
 
@@ -37,7 +38,9 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
     if (error || !user) return null;
 
     const [{ data: profile }, { data: roleRows }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+      // Not select("*"): the contact columns are revoked, and selecting them
+      // would fail the whole query. The session's `email` comes from auth.
+      supabase.from("profiles").select(PROFILE_FIELDS).eq("id", user.id).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", user.id),
     ]);
 

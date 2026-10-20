@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand/logo";
 import { requireUser } from "@/features/auth/session";
 import { getVillageOptions } from "@/features/geo/queries";
 import { ProfileForm } from "@/features/profile/components/profile-form";
+import { getMyContact } from "@/features/profile/queries";
 import { PasskeyEnrollment } from "@/features/auth/components/passkey-enrollment";
 
 export const metadata: Metadata = {
@@ -18,7 +19,9 @@ export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const user = await requireUser("/settings");
-  const villages = await getVillageOptions();
+  // Fetched separately from the profile: the contact columns are revoked from
+  // every role, so a member reads their own through an RPC keyed on auth.uid().
+  const [villages, contact] = await Promise.all([getVillageOptions(), getMyContact()]);
 
   return (
     <>
@@ -47,7 +50,7 @@ export default async function SettingsPage() {
         <Card className="mt-6">
           <CardContent className="pt-6">
             {user.profile ? (
-              <ProfileForm profile={user.profile} villages={villages} />
+              <ProfileForm profile={user.profile} phone={contact.phone} villages={villages} />
             ) : (
               // Signed in, but the profile row is missing — the signup trigger
               // did not run. Say so plainly rather than rendering a form whose

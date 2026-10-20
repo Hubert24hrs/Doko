@@ -297,6 +297,19 @@ export type VerificationRequestRow = {
   review_notes: string | null;
 };
 
+/**
+ * A profile AS IT CAN BE READ.
+ *
+ * `email`, `phone` and `date_of_birth` are revoked from both `anon` and
+ * `authenticated` at column level, so they are absent here: RLS filters rows
+ * and not columns, and the row policies were handing over every field of every
+ * visible profile. Any holder of the publishable key could read every member's
+ * email without signing in.
+ *
+ * A member reads their OWN three through the `ezo_my_contact()` RPC.
+ */
+export type ReadableProfile = Omit<ProfileRow, "email" | "phone" | "date_of_birth">;
+
 export type ProfileRow = {
   id: string;
   username: string;
@@ -1312,6 +1325,16 @@ export interface Database {
           p_metadata?: Json | null;
         };
         Returns: number;
+      };
+      /**
+       * Added by the mobile repo's FIX_PROFILE_CONTACT_EXPOSURE_STEP1.sql.
+       * Returns the CALLER's own contact details, read from auth.uid() — it
+       * takes no parameter, because one accepting an id would reopen the hole
+       * the column revoke closes.
+       */
+      ezo_my_contact: {
+        Args: Record<string, never>;
+        Returns: { email: string | null; phone: string | null; date_of_birth: string | null }[];
       };
       slugify: { Args: { value: string }; Returns: string };
       consume_rate_limit: {

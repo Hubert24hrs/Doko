@@ -4,6 +4,7 @@ import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import type { ProfileRow, ProfileSocialLinkRow } from "@/types/database";
+import { PROFILE_FIELDS } from "./fields";
 
 export interface PublicProfile extends ProfileRow {
   socialLinks: ProfileSocialLinkRow[];
@@ -33,7 +34,7 @@ export const getProfileByUsername = cache(
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          `*,
+          `${PROFILE_FIELDS},
            village:village_id ( name ),
            town:town_id ( name )`,
         )
@@ -76,3 +77,38 @@ export const getProfileByUsername = cache(
     }
   },
 );
+
+/**
+ * The signed-in member's own contact details.
+ *
+ * Goes through `ezo_my_contact()`, which reads `auth.uid()` itself and takes
+ * no parameter — a function accepting an id would reopen the hole the column
+ * revoke closes. Returns nulls rather than throwing, so a missing function
+ * leaves the settings form blank instead of breaking the page.
+ */
+export async function getMyContact(): Promise<{
+  email: string | null;
+  phone: string | null;
+  date_of_birth: string | null;
+}> {
+  const empty = { email: null, phone: null, date_of_birth: null };
+
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("ezo_my_contact");
+
+    if (error) {
+      console.error("[profile.getMyContact] failed", error.message);
+      return empty;
+    }
+
+    const row = Array.isArray(data) ? data[0] : data;
+    return {
+      email: row?.email ?? null,
+      phone: row?.phone ?? null,
+      date_of_birth: row?.date_of_birth ?? null,
+    };
+  } catch {
+    return empty;
+  }
+}

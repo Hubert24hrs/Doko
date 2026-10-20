@@ -295,7 +295,9 @@ is listed under "Not yet done" and is honest about being open.
   On Android, edge-to-edge since Expo SDK 54, the keyboard is drawn over the screen, and
   twelve app screens had switched `KeyboardAvoidingView` off on Android -- so in a short
   thread the keyboard covered the input bar and every message. Fixed in the app repository
-  (`0a99211`); reaches phones only with the next APK build.
+  (`0a99211`) and CONFIRMED on a phone the same day (APK `feb2f94e`). That build also moved
+  the app's presence onto this site's private `presence:<id>` channel (`695b335`): an app
+  member and a website member saw each other online and typing, both directions.
 * **"Confirm email" is ON in Supabase**, so a password registration proves its address
   before signing in; the app sends it to `/register/check-email`. The built-in Supabase
   mailer is rate-limited to a handful of emails an hour -- add custom SMTP before a launch

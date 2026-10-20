@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { RealtimeIndicator, playNotificationChime } from "@/components/ui/realtime-indicator";
 import { createClient } from "@/lib/supabase/client";
+import { subscribeWhenAuthorised } from "@/lib/supabase/realtime";
 import { isSupabaseConfigured } from "@/lib/env";
 
 /**
@@ -47,25 +48,29 @@ export function InboxLive({ viewerId }: { viewerId: string }) {
       }, 400);
     };
 
-    const channel = supabase
-      .channel(`inbox:${viewerId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages" },
-        (payload: { new?: { author_id?: string } }) => {
-          // Somebody else's message is news; your own, sent from another tab,
-          // only needs the list re-sorted.
-          if (payload?.new?.author_id && payload.new.author_id !== viewerId) {
-            playNotificationChime();
-          }
-          refreshSoon();
-        },
-      )
-      .subscribe((status) => setLive(status === "SUBSCRIBED"));
+    const stop = subscribeWhenAuthorised(supabase, () => {
+      const channel = supabase
+        .channel(`inbox:${viewerId}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "messages" },
+          (payload: { new?: { author_id?: string } }) => {
+            // Somebody else's message is news; your own, sent from another
+            // tab, only needs the list re-sorted.
+            if (payload?.new?.author_id && payload.new.author_id !== viewerId) {
+              playNotificationChime();
+            }
+            refreshSoon();
+          },
+        )
+        .subscribe((status) => setLive(status === "SUBSCRIBED"));
+
+      return () => void supabase.removeChannel(channel);
+    });
 
     return () => {
       if (pending.current) clearTimeout(pending.current);
-      void supabase.removeChannel(channel);
+      stop();
     };
   }, [viewerId, router]);
 

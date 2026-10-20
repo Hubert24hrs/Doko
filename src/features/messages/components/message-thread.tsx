@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldLabel, FieldTextarea } from "@/components/ui/field";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { createClient } from "@/lib/supabase/client";
+import { subscribeWhenAuthorised } from "@/lib/supabase/realtime";
 import { watDate, watDaysAgo, watTime, watYear } from "@/lib/format/datetime";
 import { isSupabaseConfigured } from "@/lib/env";
 import { cn } from "@/lib/utils/cn";
@@ -175,41 +176,43 @@ export function MessageThread({
     if (!isSupabaseConfigured()) return;
 
     const supabase = createClient();
-    const channel = supabase
-      .channel(`conversation:${conversationId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "messages",
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        (payload: { new?: { author_id?: string } }) => {
-          if (payload?.new?.author_id && payload.new.author_id !== viewerIdRef.current && !soundMutedRef.current) {
-            playNotificationChime();
+    // Joining before the session has loaded joins as anon, and RLS then
+    // delivers nothing -- see subscribeWhenAuthorised.
+    return subscribeWhenAuthorised(supabase, () => {
+      const channel = supabase
+        .channel(`conversation:${conversationId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "messages",
+            filter: `conversation_id=eq.${conversationId}`,
+          },
+          (payload: { new?: { author_id?: string } }) => {
+            if (payload?.new?.author_id && payload.new.author_id !== viewerIdRef.current && !soundMutedRef.current) {
+              playNotificationChime();
+            }
+            router.refresh();
+            void markConversationReadAction(conversationId);
+          },
+        )
+        .subscribe((status, err) => {
+          const joined = status === "SUBSCRIBED";
+          setLive(joined);
+          if (process.env.NODE_ENV === "development") {
+            if (joined) {
+              console.info("[realtime] message channel SUBSCRIBED — live delivery active", conversationId);
+            } else if (status === "CHANNEL_ERROR") {
+              console.warn("[realtime] message channel error", { err, conversationId });
+            } else if (status === "TIMED_OUT") {
+              console.warn("[realtime] message channel timed out", { conversationId });
+            }
           }
-          router.refresh();
-          void markConversationReadAction(conversationId);
-        },
-      )
-      .subscribe((status, err) => {
-        const joined = status === "SUBSCRIBED";
-        setLive(joined);
-        if (process.env.NODE_ENV === "development") {
-          if (joined) {
-            console.info("[realtime] message channel SUBSCRIBED — live delivery active", conversationId);
-          } else if (status === "CHANNEL_ERROR") {
-            console.warn("[realtime] message channel error", { err, conversationId });
-          } else if (status === "TIMED_OUT") {
-            console.warn("[realtime] message channel timed out", { conversationId });
-          }
-        }
-      });
+        });
 
-    return () => {
-      void supabase.removeChannel(channel);
-    };
+      return () => void supabase.removeChannel(channel);
+    });
   }, [conversationId, router]);
 
   // Day separators are computed BEFORE rendering rather than by carrying a

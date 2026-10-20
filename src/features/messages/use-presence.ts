@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
+import { subscribeWhenAuthorised } from "@/lib/supabase/realtime";
 import { isSupabaseConfigured } from "@/lib/env";
 
 /** How long a "typing" signal stays true after the last keystroke that sent one. */
@@ -60,65 +61,69 @@ export function usePresence(
     const supabase = createClient();
     const timers = timersRef.current;
 
-    const channel = supabase.channel(`presence:${conversationId}`, {
-      // Authorised by RLS on realtime.messages against the same
-      // in_conversation() that guards the messages. Without this, anybody
-      // holding the conversation id could watch the room.
-      config: { private: true, presence: { key: viewerRef.current.id } },
-    });
-
-    channel
-      .on("presence", { event: "sync" }, () => {
-        const state = channel.presenceState<{ userId: string; name: string }>();
-        const seen = new Map<string, PresentMember>();
-        for (const entries of Object.values(state)) {
-          for (const entry of entries) {
-            if (!entry?.userId || entry.userId === viewerRef.current.id) continue;
-            seen.set(entry.userId, { userId: entry.userId, name: entry.name });
-          }
-        }
-        setOthers([...seen.values()]);
-      })
-      .on("broadcast", { event: "typing" }, ({ payload }) => {
-        const userId = (payload as { userId?: string })?.userId;
-        if (!userId || userId === viewerRef.current.id) return;
-
-        setTypingIds((current) =>
-          current.includes(userId) ? current : [...current, userId],
-        );
-
-        // Typing is only ever asserted, never retracted: a client that closes
-        // its laptop mid-sentence sends no "stopped". So each signal carries
-        // its own expiry, and the label goes away on its own.
-        const existing = timers.get(userId);
-        if (existing) clearTimeout(existing);
-        timers.set(
-          userId,
-          setTimeout(() => {
-            setTypingIds((current) => current.filter((id) => id !== userId));
-            timers.delete(userId);
-          }, TYPING_LINGER_MS),
-        );
-      })
-      .subscribe((status) => {
-        const joined = status === "SUBSCRIBED";
-        setConnected(joined);
-        if (joined) {
-          void channel.track({
-            userId: viewerRef.current.id,
-            name: viewerRef.current.name,
-          });
-        }
+    // Joining before the session has loaded joins as anon, and the private
+    // channel's RLS then refuses it -- see subscribeWhenAuthorised.
+    return subscribeWhenAuthorised(supabase, () => {
+      const channel = supabase.channel(`presence:${conversationId}`, {
+        // Authorised by RLS on realtime.messages against the same
+        // in_conversation() that guards the messages. Without this, anybody
+        // holding the conversation id could watch the room.
+        config: { private: true, presence: { key: viewerRef.current.id } },
       });
 
-    channelRef.current = channel;
+      channel
+        .on("presence", { event: "sync" }, () => {
+          const state = channel.presenceState<{ userId: string; name: string }>();
+          const seen = new Map<string, PresentMember>();
+          for (const entries of Object.values(state)) {
+            for (const entry of entries) {
+              if (!entry?.userId || entry.userId === viewerRef.current.id) continue;
+              seen.set(entry.userId, { userId: entry.userId, name: entry.name });
+            }
+          }
+          setOthers([...seen.values()]);
+        })
+        .on("broadcast", { event: "typing" }, ({ payload }) => {
+          const userId = (payload as { userId?: string })?.userId;
+          if (!userId || userId === viewerRef.current.id) return;
 
-    return () => {
-      for (const timer of timers.values()) clearTimeout(timer);
-      timers.clear();
-      channelRef.current = null;
-      void supabase.removeChannel(channel);
-    };
+          setTypingIds((current) =>
+            current.includes(userId) ? current : [...current, userId],
+          );
+
+          // Typing is only ever asserted, never retracted: a client that closes
+          // its laptop mid-sentence sends no "stopped". So each signal carries
+          // its own expiry, and the label goes away on its own.
+          const existing = timers.get(userId);
+          if (existing) clearTimeout(existing);
+          timers.set(
+            userId,
+            setTimeout(() => {
+              setTypingIds((current) => current.filter((id) => id !== userId));
+              timers.delete(userId);
+            }, TYPING_LINGER_MS),
+          );
+        })
+        .subscribe((status) => {
+          const joined = status === "SUBSCRIBED";
+          setConnected(joined);
+          if (joined) {
+            void channel.track({
+              userId: viewerRef.current.id,
+              name: viewerRef.current.name,
+            });
+          }
+        });
+
+      channelRef.current = channel;
+
+      return () => {
+        for (const timer of timers.values()) clearTimeout(timer);
+        timers.clear();
+        channelRef.current = null;
+        void supabase.removeChannel(channel);
+      };
+    });
   }, [conversationId]);
 
   const notifyTyping = useCallback(() => {

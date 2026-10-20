@@ -2,8 +2,20 @@
 
 import React, { useState, useRef, useEffect, useTransition } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Bot, Sparkles, X, Send, Loader2, ArrowUpRight } from "lucide-react";
 import { askObaAiAction } from "@/features/ai/actions";
+
+/**
+ * Pages where the floating launcher is NOT drawn.
+ *
+ * It is pinned bottom-right on every page, which is exactly where a
+ * conversation pins its Send button. Found on 2026-10-20: on a phone-width
+ * screen the launcher sat on top of Send, so tapping Send opened Oba AI and
+ * the message never went. /ai is Oba AI already, with its own input in the
+ * same corner.
+ */
+const HIDDEN_ON = [/^\/messages\/[^/]+/, /^\/ai(\/|$)/];
 
 interface ChatMessage {
   role: "user" | "oba";
@@ -13,6 +25,7 @@ interface ChatMessage {
 }
 
 export function ObaAiWidget() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -70,6 +83,8 @@ export function ObaAiWidget() {
       }
     });
   };
+
+  if (HIDDEN_ON.some((pattern) => pattern.test(pathname ?? ""))) return null;
 
   return (
     <>

@@ -1,7 +1,13 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import type { AuditLogRow, ProfileRow, CommunityIssueRow, VerificationRequestRow } from "@/types/database";
+import type {
+  AuditLogRow,
+  ReadableProfile,
+  CommunityIssueRow,
+  VerificationRequestRow,
+} from "@/types/database";
+import { PROFILE_FIELDS } from "@/features/profile/fields";
 
 export interface AdminOverview {
   memberCount: number | null;
@@ -15,7 +21,7 @@ export interface AdminOverview {
   >[];
 }
 
-export interface AdminMemberItem extends ProfileRow {
+export interface AdminMemberItem extends ReadableProfile {
   village?: { name: string } | null;
   roles?: { role: string }[];
   is_delegate?: boolean;
@@ -58,7 +64,9 @@ export async function getAdminOverview(): Promise<AdminOverview> {
       settleCount("members", () =>
         supabase
           .from("profiles")
-          .select("*", { count: "exact", head: true })
+          // `id`, not `*`: a wildcard expands to the revoked contact columns
+          // and is refused even for a head-only count.
+          .select("id", { count: "exact", head: true })
           .is("deleted_at", null),
       ),
       settleCount("geo entities", () =>
@@ -70,7 +78,7 @@ export async function getAdminOverview(): Promise<AdminOverview> {
       settleCount("verified members", () =>
         supabase
           .from("profiles")
-          .select("*", { count: "exact", head: true })
+          .select("id", { count: "exact", head: true })
           .eq("is_verified", true)
           .is("deleted_at", null),
       ),
@@ -118,7 +126,7 @@ export async function getAdminMembers(options?: {
     let q = supabase
       .from("profiles")
       .select(`
-        *,
+        ${PROFILE_FIELDS},
         village:village_id ( name ),
         roles:user_roles ( role )
       `)

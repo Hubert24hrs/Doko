@@ -280,12 +280,22 @@ is listed under "Not yet done" and is honest about being open.
 
 * **Biometric sign-in (passkeys) is built but PARKED, not working.** Enrolment
   succeeds; sign-in has not been confirmed on real mobile hardware. See docs/SECURITY.md.
-* **Identity providers (OAuth) are switched off.** The Google OAuth integration is built;
-  it requires creating OAuth credentials in Google Cloud Console, adding them to Supabase,
-  and setting NEXT_PUBLIC_OAUTH_PROVIDERS="google".
-* **Registration verification is optional.** Email confirmation is currently disabled in Supabase,
-  and no OAuth provider is toggled on. Before inviting the public, either enable Google sign-in
-  or turn on "Confirm email" in Supabase Authentication settings (see docs/DEPLOYMENT.md §6).
+* **Google sign-in is ON (2026-10-20), first real sign-in not yet observed.** Supabase holds
+  the client; the Google client lists `https://djeeeshlaedelyeqsqwz.supabase.co/auth/v1/callback`
+  as its redirect URI (it was missing, and Google answered `redirect_uri_mismatch`);
+  `NEXT_PUBLIC_OAUTH_PROVIDERS=google` is set in Vercel. "Continue with Google" on the live
+  `/login` reaches Google's real sign-in screen. Still to confirm: the Google app is
+  PUBLISHED, not in Testing (Testing admits only listed test users), and one account
+  completing the round trip.
+* **"Confirm email" is ON in Supabase**, so a password registration proves its address
+  before signing in; the app sends it to `/register/check-email`. The built-in Supabase
+  mailer is rate-limited to a handful of emails an hour -- add custom SMTP before a launch
+  push.
+* **`vercel link` OVERWRITES `.env.local`** with only a `VERCEL_OIDC_TOKEN`. It happened on
+  2026-10-20; the file was rebuilt from the Vercel production values with
+  `NEXT_PUBLIC_SITE_URL=http://localhost:3000`. A local `SUPABASE_SERVICE_ROLE_KEY`, if
+  there was one, must be re-added by hand. The project is now linked (`.vercel/`), so
+  `vercel env` and `vercel redeploy` work without linking again.
 * **Live Paystack banking keys.** The Paystack checkout engine currently runs with an automated
   mock sandbox fallback for zero-config offline testing. Add PAYSTACK_SECRET_KEY and
   NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY in Vercel to activate real card/bank payments.
@@ -297,13 +307,11 @@ is listed under "Not yet done" and is honest about being open.
 
 Recommended order, and why:
 
-1. **Enable Google sign-in (or turn on Supabase Email Confirmation).**
-   Closes the registration gap. The code is built; enter client credentials in
-   Supabase Dashboard -> Authentication -> Providers -> Google, and set
-   NEXT_PUBLIC_OAUTH_PROVIDERS="google" in Vercel.
-2. **Verify Supabase Auth URL configuration.**
-   Ensure https://doko-delta.vercel.app is set as Site URL, and
-   https://doko-delta.vercel.app/auth/callback is added to Redirect URLs.
+1. **Confirm Google sign-in end to end.** Done except the last mile: check the
+   Google Auth Platform -> Audience page says "In production", then sign in once
+   with a Google account and land on /home.
+2. **Supabase Auth URL configuration -- verified 2026-10-20.** Site URL is
+   https://doko-delta.vercel.app and /auth/callback is on the allow list.
 3. **Add live Paystack keys & configure webhook.**
    Add PAYSTACK_SECRET_KEY and NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY to Vercel,
    and configure https://doko-delta.vercel.app/api/webhooks/paystack in Paystack Dashboard.
@@ -642,12 +650,11 @@ append-only is expressed with RLS, not with types.
 
 Nothing about Phases 1 and 2 is blocked. The hosted Supabase project
 (`ezike-oba`) holds the schema, the seed and every policy; the app is wired to
-it, deployed, and exercised end to end. Three things ARE blocked, and none of
-them are code:
+it, deployed, and exercised end to end. Two things ARE blocked, and neither
+is code (Google sign-in was the third, and is now switched on -- see section 2):
 
 | Blocked | On what | Consequence while it waits |
 |---|---|---|
-| Google sign-in | Google Cloud OAuth credentials + one env var | Registration verifies nothing -- see section 2 |
 | Apple sign-in | Paid Developer Program membership ($99/yr) | Deferred indefinitely; not on the critical path |
 | Passkey sign-in | A real device to complete the ceremony on | Enrolment works, sign-in unconfirmed; PARKED |
 

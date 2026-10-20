@@ -16,7 +16,7 @@ import { getMyVerificationStatus } from "@/features/verification/queries";
 import { VerificationApplicationForm } from "@/features/verification/components/verification-application-form";
 import { cancelVerificationRequestAction } from "@/features/verification/actions";
 import { VerifiedBadge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { watDate } from "@/lib/format/datetime";
 

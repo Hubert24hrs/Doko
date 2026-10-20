@@ -1,7 +1,7 @@
 ﻿import React from "react";
 import { SiteHeader } from "@/components/layout/site-header";
 import { AiChatInterface } from "./ai-chat-interface";
-import { Sparkles, Compass, ShieldCheck, MapPin } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 export const metadata = {
   title: "Oba AI • Civic Intelligence",

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertCircle, Layers, List, MapPin, Plus } from "lucide-react";
+import { AlertCircle, List, MapPin, Plus } from "lucide-react";
 
 import { EmptyState, ErrorState } from "@/components/ui/states";
-import { Badge } from "@/components/ui/badge";
+
 import { Logo } from "@/components/brand/logo";
 import { getSessionUser } from "@/features/auth/session";
 import {

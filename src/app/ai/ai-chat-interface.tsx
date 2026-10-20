@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useState, useTransition, useRef, useEffect } from "react";
-import { Bot, Send, Loader2, Sparkles, BookOpen, MapPin, CheckCircle2, ChevronRight } from "lucide-react";
+import { Bot, Send, Loader2, BookOpen, ChevronRight } from "lucide-react";
 import { askObaAiAction } from "@/features/ai/actions";
 
 interface ChatMessage {

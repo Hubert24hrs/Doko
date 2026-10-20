@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useState } from "react";
-import { PlusCircle, Sparkles, HeartHandshake } from "lucide-react";
+import { PlusCircle, HeartHandshake } from "lucide-react";
 import { CreateProjectModal } from "@/features/projects/components/create-project-modal";
 
 export function ProjectsHeader() {

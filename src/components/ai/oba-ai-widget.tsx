@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { Bot, Sparkles, X, Send, Loader2, ArrowUpRight, MessageSquare, Compass } from "lucide-react";
+import { Bot, Sparkles, X, Send, Loader2, ArrowUpRight } from "lucide-react";
 import { askObaAiAction } from "@/features/ai/actions";
 
 interface ChatMessage {

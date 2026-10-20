@@ -6,15 +6,16 @@ import { getSessionUser } from "@/features/auth/session";
 /**
  * The site header, as one component.
  *
- * Until 2026-10-19 every page wrote its own header inline, and some twenty
- * copies exist. The pages built later -- /projects, /ai, /verification and the
+ * Until 2026-10-19 every page wrote its own header inline. The pages built later -- /projects, /ai, /verification and the
  * payment return page -- were written without one at all, and without a
  * <main> either, so the root layout's skip link pointed at nothing and a
  * visitor arriving on them from the landing page or the sitemap had no way to
  * navigate anywhere. The rendered-page tests found all four.
  *
- * New pages should use this rather than paste another copy. The older inline
- * headers are equivalent and can move over when those pages are next touched.
+ * Use this for a page with no natural "back" destination. Most inline headers
+ * are NOT copies of it: they pair the logo with a back link that belongs to
+ * the page ("All jobs", "Back to events"), and replacing them would lose that
+ * navigation. Checked on 2026-10-20; leave them inline.
  */
 export async function SiteHeader({ width = "max-w-4xl" }: { width?: string }) {
   const viewer = await getSessionUser();

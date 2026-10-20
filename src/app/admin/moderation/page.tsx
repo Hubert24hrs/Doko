@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ScrollText, ShieldAlert } from "lucide-react";
+
 
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useTransition } from "react";
 import { moderateAdCampaignAction } from "@/features/ads/actions";
 import { AdStatus } from "@/types/database";
 import { Check, X, Pause, Play, Loader2 } from "lucide-react";

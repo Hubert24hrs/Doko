@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertCircle, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,6 @@ import { adminUpdateIssueStatusAction } from "@/features/admin/actions";
 import {
   issueStatuses,
   ISSUE_STATUS_LABEL,
-  issueCategories,
   ISSUE_CATEGORY_LABEL,
 } from "@/features/issues/schemas";
 

@@ -118,7 +118,6 @@ const SphereImageGrid: React.FC<SphereImageGridProps> = ({
   momentumDecay = 0.95,
   maxRotationSpeed = 5,
   baseImageScale = 0.14,
-  hoverScale = 1.2,
   perspective = 1000,
   autoRotate = false,
   autoRotateSpeed = 0.3,

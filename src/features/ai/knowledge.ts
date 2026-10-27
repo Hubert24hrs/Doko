@@ -18,7 +18,7 @@ export const IGBO_EZE_NORTH_KNOWLEDGE: CulturalArticle[] = [
     topic: "geography",
     keywords: ["history", "geography", "lga", "enugu ezike", "ogrute", "location", "headquarters", "population"],
     title: "Geography & Origins of Igbo-Eze North",
-    content: `Igbo-Eze North is a prominent Local Government Area in Enugu State, Nigeria, renowned for its rich agrarian economy, vibrant trading culture, and ancient traditions. Its administrative headquarters is situated at Ogrute. The LGA comprises over 33 autonomous communities and historic villages, including Amufie, Imufu, Umuida, Olido, Igugu, Aji, Essodo, Uda, Inyi, and Umuogbo-Agu. The people are proud descendants of Ezike Oba, celebrated for resilience, hospitality, and communal enterprise.`,
+    content: `Igbo-Eze North is a Local Government Area in Enugu State, Nigeria, renowned for its agrarian economy, vibrant trading culture, and ancient traditions. Its administrative headquarters is at Ogrute, in Enugu-Ezike. The LGA is made up of two towns, Enugu-Ezike and Ette. Enugu-Ezike itself is organised into four traditional districts -- Umuitodo, Umuozzi, Essodo and Ezzodo -- which together hold its 35 communities, among them Ogrute, Amufie, Imufu, Umuida, Olido, Aji, Inyi, Uda, Ugbaike, Umuopu and Aguibeje. The people are proud descendants of Ezike Oba, celebrated for resilience, hospitality, and communal enterprise.`,
   },
   {
     id: "traditional_governance",

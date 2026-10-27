@@ -16,12 +16,13 @@ citizens can find each other, discover their communities, share what matters,
 find opportunities, trade, attend events and report community issues.
 
 * Repository: <https://github.com/Hubert24hrs/Doko>
-* **Live: <https://doko-delta.vercel.app>** (Vercel, deploys from `main`)
+* **Live: <https://ezikeoba.com>** (Vercel, deploys from `main`; the old
+  `doko-delta.vercel.app` URL stays as an alias)
 * Database: hosted Supabase project `ezike-oba`
 * Local path: `C:\EzikeObaWebsite`
 * **Mobile App Companion:** `C:\EzikeObaMobileApp` (<https://github.com/Hubert24hrs/EzikeObaMobileApp>) — Built with React Native & Expo SDK 57, sharing the exact same Supabase database, RLS policies, storage buckets, and auth system. Features Community Pulse, Dual-Tier Verification, Diaspora Crowdfunding, Oba AI Assistant, Realtime Chat, and full commerce/civic modules.
 
-* Target platforms: responsive web (live at https://doko-delta.vercel.app), native Android + iOS mobile companion app (live repository: https://github.com/Hubert24hrs/EzikeObaMobileApp with 100% feature parity)
+* Target platforms: responsive web (live at https://ezikeoba.com), native Android + iOS mobile companion app (live repository: https://github.com/Hubert24hrs/EzikeObaMobileApp with 100% feature parity)
 
 **Product rules that constrain the design:**
 
@@ -320,11 +321,17 @@ Recommended order, and why:
 
 1. **Google sign-in -- verified 2026-10-20.** Published, and observed signing an
    existing member in.
-2. **Supabase Auth URL configuration -- verified 2026-10-20.** Site URL is
-   https://doko-delta.vercel.app and /auth/callback is on the allow list.
+2. **Supabase Auth URL configuration -- MUST BE RE-POINTED at the new domain.**
+   Verified 2026-10-20 with Site URL https://doko-delta.vercel.app and
+   /auth/callback on the allow list. The site now serves from
+   https://ezikeoba.com (2026-10-27), and Supabase refuses a redirect to an
+   origin that is not allow-listed, so https://ezikeoba.com must become the
+   Site URL and https://ezikeoba.com/auth/callback must join the Redirect
+   URLs or sign-in, email confirmation and password reset all fail from the
+   new domain.
 3. **Add live Paystack keys & configure webhook.**
    Add PAYSTACK_SECRET_KEY and NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY to Vercel,
-   and configure https://doko-delta.vercel.app/api/webhooks/paystack in Paystack Dashboard.
+   and configure https://ezikeoba.com/api/webhooks/paystack in Paystack Dashboard.
 4. **Add Gemini API Key in Vercel (Optional).**
    Set GEMINI_API_KEY to unlock multimodal/generative expansions for Oba AI.
 5. **Live inbox -- verified 2026-10-20** after fixing the anon-join defect below. Still

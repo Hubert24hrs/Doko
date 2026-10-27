@@ -4,7 +4,7 @@ The digital home of **Igbo-Eze North Local Government Area, Enugu State,
 Nigeria** — one place where citizens can find each other, discover their
 communities, share what matters, find opportunities and build together.
 
-**Live: <https://doko-delta.vercel.app>**
+**Live: <https://ezikeoba.com>**
 
 > **Status: Phases 1 through 5 complete.** Deployed and running
 > against a hosted Supabase project. 249 unit tests (18 test files) pass;
@@ -62,7 +62,7 @@ communities, share what matters, find opportunities and build together.
 1. **Google OAuth & Verification**: Enable Google Sign-In or turn on email confirmation in Supabase
 2. **Production Paystack Keys**: Add `PAYSTACK_SECRET_KEY` and `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` in Vercel
 3. **Gemini AI API Key**: Add `GEMINI_API_KEY` in Vercel to unlock dynamic LLM reasoning for Oba AI
-4. **Supabase Auth URL Configuration**: Confirm `https://doko-delta.vercel.app/auth/callback` is in Redirect URLs
+4. **Supabase Auth URL Configuration**: Confirm `https://ezikeoba.com/auth/callback` is in Redirect URLs
 
 ## Quick start
 

@@ -15,7 +15,7 @@ import { defineConfig, devices } from "@playwright/test";
  * database.
  *
  *   npm run test:e2e                      # against a dev server it starts
- *   PLAYWRIGHT_BASE_URL=https://doko-delta.vercel.app npm run test:e2e
+ *   PLAYWRIGHT_BASE_URL=https://ezikeoba.com npm run test:e2e
  */
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
 

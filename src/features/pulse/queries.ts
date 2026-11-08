@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { CommunityPulseItem, VerificationType } from "@/types/database";
 import type { ImageData } from "@/components/ui/img-sphere";
 import { getPostImages } from "@/features/posts/media-queries";
+import { isWithinPulseWindow, PULSE_WINDOW_MS } from "./window";
 
 export interface PulseMemberData extends ImageData {
   userId: string;
@@ -14,24 +15,8 @@ export interface PulseMemberData extends ImageData {
   latestPostId: string | null;
 }
 
-/** The pulse is a 24-hour window. Nothing older than this may appear in it. */
-export const PULSE_WINDOW_MS = 24 * 60 * 60 * 1000;
-
 /** How long a signed avatar link stays valid. */
 const AVATAR_URL_TTL_SECONDS = 60 * 60;
-
-/** True when `timestamp` falls inside the 24-hour pulse window. */
-export function isWithinPulseWindow(
-  timestamp: string | null | undefined,
-  now = Date.now(),
-): boolean {
-  if (!timestamp) return false;
-  const at = new Date(timestamp).getTime();
-  if (Number.isNaN(at)) return false;
-  // A clock-skewed future timestamp still counts: hiding somebody because a
-  // server clock drifted forwards would be worse than showing them.
-  return now - at < PULSE_WINDOW_MS;
-}
 
 /**
  * Members active in the community pulse in the last 24 hours.

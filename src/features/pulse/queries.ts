@@ -50,8 +50,11 @@ export function isWithinPulseWindow(
  * signed in one batch now, the way post media already is.
  *
  * And a member with no photograph was drawn with a stock Unsplash portrait of
- * a stranger, presented as that member's face. Missing is now missing, and the
- * component falls back to initials.
+ * a stranger, presented as that member's face. Missing is now missing.
+ *
+ * The bar shows VERIFIED members who have a photograph, and nobody else.
+ * `img-sphere` keeps its initials fallback for other callers, but nothing
+ * reaching it from here should need it.
  */
 export async function getCommunityPulseMembers(
   limit = 60,
@@ -69,8 +72,12 @@ export async function getCommunityPulseMembers(
       console.error("[pulse.get_community_pulse] RPC error", error.message);
     }
 
-    const items = ((rpcData as CommunityPulseItem[] | null) ?? []).filter((item) =>
-      isWithinPulseWindow(item.last_activity_at),
+    // Three entry conditions, all enforced on both paths: active inside the
+    // window, VERIFIED, and holding a photograph. The bar is a row of faces -
+    // a member without one has nothing to show there.
+    const items = ((rpcData as CommunityPulseItem[] | null) ?? []).filter(
+      (item) =>
+        isWithinPulseWindow(item.last_activity_at) && item.is_verified && !!item.avatar_path,
     );
 
     // Fallback: who actually posted inside the window. Over-fetched because
@@ -85,12 +92,13 @@ export async function getCommunityPulseMembers(
         .gte("created_at", cutoff)
         .is("deleted_at", null)
         .order("created_at", { ascending: false })
-        .limit(limit * 4);
+        .limit(limit * 6);
 
       const seen = new Set<string>();
       for (const row of (recentPosts ?? []) as unknown as PulseFallbackRow[]) {
         const author = row.author;
         if (!author || author.is_suspended || author.deleted_at) continue;
+        if (!author.is_verified || !author.avatar_path) continue;
         if (seen.has(author.id)) continue;
         seen.add(author.id);
 
@@ -114,19 +122,21 @@ export async function getCommunityPulseMembers(
       items.map((item) => item.avatar_path),
     );
 
-    return items.map((item) => ({
-      id: item.user_id,
-      userId: item.user_id,
-      src: resolveAvatar(item.avatar_path, urlByPath),
-      alt: item.full_name,
-      title: item.full_name,
-      description: "@" + item.username,
-      verificationType: (item.verification_type as VerificationType) ?? null,
-      username: item.username,
-      fullName: item.full_name,
-      lastActivityAt: item.last_activity_at,
-      latestPostId: item.latest_post_id,
-    }));
+    return items
+      .map((item) => ({
+        id: item.user_id,
+        userId: item.user_id,
+        src: resolveAvatar(item.avatar_path, urlByPath),
+        alt: item.full_name,
+        title: item.full_name,
+        description: "@" + item.username,
+        verificationType: (item.verification_type as VerificationType) ?? null,
+        username: item.username,
+        fullName: item.full_name,
+        lastActivityAt: item.last_activity_at,
+        latestPostId: item.latest_post_id,
+      }))
+      .filter((member) => member.src.length > 0);
   } catch (cause) {
     console.error("[pulse.getCommunityPulseMembers] unavailable", cause);
     return [];

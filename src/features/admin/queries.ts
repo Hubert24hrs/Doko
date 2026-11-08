@@ -123,12 +123,18 @@ export async function getAdminMembers(options?: {
     const supabase = await createClient();
     const limit = options?.limit ?? 50;
 
+    // `roles:user_roles ( role )` used to be embedded here and it broke the
+    // whole page. PostgREST can only embed across a declared foreign key, and
+    // `user_roles.user_id` references `auth.users`, not `public.profiles` --
+    // so the request failed with PGRST200, the catch returned [], and the
+    // admin screen showed "All Members 0" while the database held every one
+    // of them. An embed that cannot resolve does not degrade; it takes the
+    // entire query with it. Roles are fetched separately below.
     let q = supabase
       .from("profiles")
       .select(`
         ${PROFILE_FIELDS},
-        village:village_id ( name ),
-        roles:user_roles ( role )
+        village:village_id ( name )
       `)
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
@@ -156,16 +162,25 @@ export async function getAdminMembers(options?: {
     const members = (data ?? []) as unknown as AdminMemberItem[];
     if (members.length === 0) return [];
 
-    // Check which members are delegated verifiers
     const memberIds = members.map((m) => m.id);
-    const { data: delegates } = await supabase
-      .from("verification_delegates")
-      .select("user_id")
-      .in("user_id", memberIds);
+
+    const [{ data: delegates }, { data: roleRows }] = await Promise.all([
+      supabase.from("verification_delegates").select("user_id").in("user_id", memberIds),
+      supabase.from("user_roles").select("user_id, role").in("user_id", memberIds),
+    ]);
 
     const delegateSet = new Set((delegates ?? []).map((d) => d.user_id));
+
+    const rolesByUser = new Map<string, { role: string }[]>();
+    for (const row of roleRows ?? []) {
+      const list = rolesByUser.get(row.user_id) ?? [];
+      list.push({ role: row.role });
+      rolesByUser.set(row.user_id, list);
+    }
+
     return members.map((m) => ({
       ...m,
+      roles: rolesByUser.get(m.id) ?? [],
       is_delegate: delegateSet.has(m.id),
     }));
   } catch (cause) {
@@ -241,12 +256,14 @@ export async function getAdminVerificationRequests(options?: {
     const limit = options?.limit ?? 50;
     const status = options?.status ?? "pending";
 
+    // Same trap as the member list: `profile:user_id ( … )` cannot be embedded
+    // because `verification_requests.user_id` references `auth.users`, not
+    // `public.profiles`. The request failed with PGRST200 and the page said
+    // "No pending verification requests" while a member sat waiting in the
+    // table. The applicant's profile is fetched separately.
     const { data, error } = await supabase
       .from("verification_requests")
-      .select(`
-        *,
-        profile:user_id ( username, full_name, avatar_path )
-      `)
+      .select("*")
       .eq("status", status)
       .order("created_at", { ascending: false })
       .limit(limit);
@@ -256,7 +273,20 @@ export async function getAdminVerificationRequests(options?: {
       return [];
     }
 
-    return (data ?? []) as unknown as AdminVerificationRequestItem[];
+    const requests = (data ?? []) as unknown as AdminVerificationRequestItem[];
+    if (requests.length === 0) return [];
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, username, full_name, avatar_path")
+      .in("id", requests.map((r) => r.user_id));
+
+    const byId = new Map((profiles ?? []).map((p) => [p.id, p]));
+
+    return requests.map((request) => ({
+      ...request,
+      profile: byId.get(request.user_id) ?? null,
+    }));
   } catch (cause) {
     console.error("[admin.verification_requests] unavailable", cause);
     return [];

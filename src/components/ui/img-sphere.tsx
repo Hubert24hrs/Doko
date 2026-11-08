@@ -34,6 +34,18 @@ export interface WorldPosition extends Position3D {
   originalIndex: number;
 }
 
+/** First letter of the first two words, e.g. "Chinedu Eze" -> "CE". */
+function initialsOf(name: string): string {
+  return (
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? "")
+      .join("") || "?"
+  );
+}
+
 export interface ImageData {
   id: string;
   src: string;
@@ -491,13 +503,25 @@ const SphereImageGrid: React.FC<SphereImageGridProps> = ({
         }}
       >
         <div className="relative w-full h-full rounded-full overflow-hidden shadow-lg border-2 border-white/30 dark:border-border">
-          <img
-            src={image.src}
-            alt={image.alt}
-            className="w-full h-full object-cover"
-            draggable={false}
-            loading={index < 3 ? 'eager' : 'lazy'}
-          />
+          {image.src ? (
+            <img
+              src={image.src}
+              alt={image.alt}
+              className="w-full h-full object-cover"
+              draggable={false}
+              loading={index < 3 ? 'eager' : 'lazy'}
+            />
+          ) : (
+            // No photograph. This used to be a stock portrait of a stranger
+            // standing in for a real member, which is exactly the kind of
+            // invented data this platform must not present as real.
+            <div
+              className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground font-semibold"
+              aria-label={image.alt}
+            >
+              {initialsOf(image.title ?? image.alt)}
+            </div>
+          )}
         </div>
         {image.verificationType ? (
           <div className="absolute -bottom-1 -right-1 z-20 rounded-full bg-surface shadow-xs p-0.5 pointer-events-none">
@@ -527,11 +551,20 @@ const SphereImageGrid: React.FC<SphereImageGridProps> = ({
           }}
         >
           <div className="relative aspect-square">
-            <img
-              src={selectedImage.src}
-              alt={selectedImage.alt}
-              className="w-full h-full object-cover"
-            />
+            {selectedImage.src ? (
+              <img
+                src={selectedImage.src}
+                alt={selectedImage.alt}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div
+                className="flex h-full w-full items-center justify-center bg-muted text-6xl font-semibold text-muted-foreground"
+                aria-label={selectedImage.alt}
+              >
+                {initialsOf(selectedImage.title ?? selectedImage.alt)}
+              </div>
+            )}
             <button
               onClick={() => setSelectedImage(null)}
               className="absolute top-2 right-2 size-8 bg-black/60 rounded-full text-white flex items-center justify-center hover:bg-black/80 transition-all cursor-pointer"

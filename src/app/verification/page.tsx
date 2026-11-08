@@ -210,15 +210,19 @@ export default async function VerificationPage() {
             <ul className="mt-4 space-y-2 text-xs text-muted-foreground">
               <li className="flex items-start gap-2">
                 <Sparkles className="size-3.5 shrink-0 text-amber-500 mt-0.5" />
+                <span>The Local Government Chairman and other public office holders</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Sparkles className="size-3.5 shrink-0 text-amber-500 mt-0.5" />
                 <span>Eze / Igwe royal cabinets, traditional elders, and village heads</span>
               </li>
               <li className="flex items-start gap-2">
                 <Sparkles className="size-3.5 shrink-0 text-amber-500 mt-0.5" />
-                <span>Elected councilors, LGA chairmen, and public office holders</span>
+                <span>Elected councilors and political aspirants</span>
               </li>
               <li className="flex items-start gap-2">
                 <Sparkles className="size-3.5 shrink-0 text-amber-500 mt-0.5" />
-                <span>Town union executives and diaspora development patrons</span>
+                <span>Influential personnel, town union executives and diaspora development patrons</span>
               </li>
               <li className="flex items-start gap-2">
                 <Sparkles className="size-3.5 shrink-0 text-amber-500 mt-0.5" />
@@ -254,7 +258,7 @@ export default async function VerificationPage() {
               </li>
               <li className="flex items-start gap-2">
                 <ShieldCheck className="size-3.5 shrink-0 text-sky-500 mt-0.5" />
-                <span>Youth leaders, students, and community participants</span>
+                <span>Youth leaders, students, active members, and community participants</span>
               </li>
               <li className="flex items-start gap-2">
                 <ShieldCheck className="size-3.5 shrink-0 text-sky-500 mt-0.5" />

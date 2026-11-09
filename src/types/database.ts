@@ -335,6 +335,8 @@ export type ProfileRow = {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  /** Stamped by `profiles_guard_username_rate`; never written by a client. */
+  username_changed_at: string | null;
   /** Maintained by trigger; see recount_follows() for repair. */
   follower_count: number;
   following_count: number;

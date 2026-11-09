@@ -16,5 +16,6 @@ export const PROFILE_FIELDS = `
   id, username, full_name, avatar_path, bio, occupation, website, gender,
   town_id, community_id, village_id, visibility, is_verified, verified_at,
   verification_type, is_suspended, suspended_until, onboarded_at,
-  created_at, updated_at, deleted_at, follower_count, following_count
+  created_at, updated_at, deleted_at, username_changed_at,
+  follower_count, following_count
 `;
